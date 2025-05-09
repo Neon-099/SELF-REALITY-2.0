@@ -109,4 +109,8 @@ export interface User {
   lastActive: Date;
   rank: Rank;
   lastUpdate?: number;
+  // Shadow Penalty System Properties
+  chanceCounter?: number;
+  isCursed?: boolean;
+  hasShadowFatigue?: boolean;
 }

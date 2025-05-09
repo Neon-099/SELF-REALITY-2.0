@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSoloLevelingStore } from '@/lib/store';
 import { StatCard } from '@/components/ui/stat-card';
-import { DumbbellIcon, BrainIcon, HeartIcon, SmileIcon, Clock3Icon, SparklesIcon, Coins, Star, Crown, Trophy, Info } from 'lucide-react';
+import { DumbbellIcon, BrainIcon, HeartIcon, SmileIcon, Clock3Icon, SparklesIcon, Coins, Star, Crown, Trophy, Info, AlertCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -291,6 +291,15 @@ const RankDetailsDialog = () => {
 
 const Character = () => {
   const user = useSoloLevelingStore(state => state.user);
+  const chanceCounter = useSoloLevelingStore(state => state.chanceCounter) || 0;
+  const isCursed = useSoloLevelingStore(state => state.isCursed) || false;
+  const hasShadowFatigue = useSoloLevelingStore(state => state.hasShadowFatigue) || false;
+  const canUseRedemption = useSoloLevelingStore(state => state.canUseRedemption) || false;
+  const attemptRedemption = useSoloLevelingStore(state => state.attemptRedemption);
+  
+  // State for redemption dialog
+  const [showRedemptionDialog, setShowRedemptionDialog] = useState(false);
+  
   const [lastUpdate, setLastUpdate] = useState(Date.now());
   const [animatedExp, setAnimatedExp] = useState(user?.exp || 0);
   const [expPercentage, setExpPercentage] = useState(
@@ -398,6 +407,137 @@ const Character = () => {
                   className="bg-gradient-to-r from-solo-primary to-solo-secondary h-full rounded-full transition-all duration-700 ease-out" 
                   style={{ width: `${expPercentage}%` }} 
                 />
+              </div>
+              
+              {/* Shadow Chance Counter */}
+              <div className="mt-2">
+                <div className="flex justify-between items-center mb-1">
+                  <div className="flex items-center gap-1">
+                    <p className="text-sm text-gray-400">Shadow Chances</p>
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <button className="text-gray-500 hover:text-gray-300">
+                          <Info size={14} />
+                        </button>
+                      </DialogTrigger>
+                      <DialogContent className="bg-gray-900 text-white max-w-md">
+                        <DialogHeader>
+                          <DialogTitle>Shadow Chance System</DialogTitle>
+                        </DialogHeader>
+                        <div className="space-y-3 text-sm">
+                          <p>You have 5 chances per week before becoming cursed. Each missed deadline uses one chance.</p>
+                          <div className="space-y-2">
+                            <div className="flex justify-between">
+                              <span>0-1 chance used:</span>
+                              <span className="text-green-400">Safe</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span>2-3 chances used:</span>
+                              <span className="text-yellow-400">Warning</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span>4-5 chances used:</span>
+                              <span className="text-red-400">Danger</span>
+                            </div>
+                          </div>
+                          <p className="mt-2 text-red-400">Once all 5 chances are used, you'll be cursed until the end of the week, receiving only 50% EXP from all activities.</p>
+                          <p className="text-gray-400 text-xs mt-2">Chances reset every Sunday.</p>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <p className={cn(
+                      "text-xs font-medium",
+                      chanceCounter === 0 ? "text-green-400" :
+                      chanceCounter <= 2 ? "text-green-400" :
+                      chanceCounter <= 3 ? "text-yellow-400" :
+                      "text-red-400"
+                    )}>
+                      {chanceCounter}/5 used
+                    </p>
+                    {isCursed && (
+                      <span className="bg-red-500/20 text-red-400 text-xs px-1.5 py-0.5 rounded animate-pulse">
+                        CURSED
+                      </span>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="w-full bg-gray-800 h-1.5 rounded-full overflow-hidden">
+                  {isCursed ? (
+                    <div className="h-full bg-red-500 w-full animate-pulse" />
+                  ) : (
+                    <div 
+                      className={cn(
+                        "h-full transition-all duration-500",
+                        chanceCounter === 0 ? "bg-green-500" :
+                        chanceCounter <= 2 ? "bg-green-500" :
+                        chanceCounter <= 3 ? "bg-yellow-500" :
+                        "bg-red-500"
+                      )}
+                      style={{ width: `${(chanceCounter / 5) * 100}%` }} 
+                    />
+                  )}
+                </div>
+                
+                {hasShadowFatigue && (
+                  <div className="mt-1 text-xs text-amber-400 flex items-center gap-1">
+                    <AlertCircle size={12} />
+                    <span>Shadow Fatigue active: 75% EXP from tasks</span>
+                  </div>
+                )}
+                
+                {/* Redemption Section */}
+                {isCursed && canUseRedemption && (
+                  <div className="mt-2 border-t border-gray-800 pt-2">
+                    <div className="flex items-center justify-between">
+                      <div className="text-xs text-red-400">
+                        <p>Curse active: 50% EXP penalty on all activities</p>
+                      </div>
+                      <Dialog open={showRedemptionDialog} onOpenChange={setShowRedemptionDialog}>
+                        <DialogTrigger asChild>
+                          <Button 
+                            variant="destructive" 
+                            size="sm"
+                            className="text-xs h-7 bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/20"
+                          >
+                            Attempt Redemption
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="bg-gray-900 text-white max-w-md">
+                          <DialogHeader>
+                            <DialogTitle className="text-red-400">Attempt Redemption?</DialogTitle>
+                          </DialogHeader>
+                          <div className="space-y-3 py-2">
+                            <p>You can attempt to redeem yourself to lift the curse, but it's risky.</p>
+                            <p className="text-red-400">If you fail the redemption challenge, you'll lose a level!</p>
+                            <p>Success will lift the curse and give you one more chance this week.</p>
+                          </div>
+                          <div className="flex gap-2 justify-end pt-4">
+                            <Button
+                              variant="outline"
+                              onClick={() => setShowRedemptionDialog(false)}
+                            >
+                              Cancel
+                            </Button>
+                            <Button
+                              variant="destructive"
+                              onClick={() => {
+                                // 50% chance of success
+                                const success = Math.random() > 0.5;
+                                attemptRedemption(success);
+                                setShowRedemptionDialog(false);
+                              }}
+                            >
+                              Take the Risk
+                            </Button>
+                          </div>
+                        </DialogContent>
+                      </Dialog>
+                    </div>
+                  </div>
+                )}
               </div>
               
               <div className="grid grid-cols-2 gap-4 mt-4">
