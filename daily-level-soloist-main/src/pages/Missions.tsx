@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Lock, Plus } from 'lucide-react';
 import { useSoloLevelingStore } from '@/lib/store';
-import { Rank, Mission } from '@/lib/types';
+import { Rank, Mission, Difficulty } from '@/lib/types';
 import { PredefinedMission } from '@/data/predefined-missions';
 import RankMissionProgress from '@/components/missions/RankMissionProgress';
 import RankBadgesTimeline from '@/components/missions/RankBadgesTimeline';
@@ -38,7 +38,7 @@ const createRankLevels = (): RankLevel[] => [
     id: 'F',
     name: 'F Rank',
     color: 'from-gray-400 to-gray-600',
-    daysRequired: 12,
+    daysRequired: 6,
     isLocked: false,
     missions: []
   },
@@ -46,7 +46,7 @@ const createRankLevels = (): RankLevel[] => [
     id: 'E',
     name: 'E Rank',
     color: 'from-orange-400 to-orange-600',
-    daysRequired: 18,
+    daysRequired: 10,
     isLocked: false,
     missions: []
   },
@@ -54,7 +54,7 @@ const createRankLevels = (): RankLevel[] => [
     id: 'D',
     name: 'D Rank',
     color: 'from-blue-400 to-blue-600',
-    daysRequired: 30,
+    daysRequired: 15,
     isLocked: true,
     missions: []
   },
@@ -62,7 +62,7 @@ const createRankLevels = (): RankLevel[] => [
     id: 'C',
     name: 'C Rank',
     color: 'from-green-400 to-green-600',
-    daysRequired: 60,
+    daysRequired: 25,
     isLocked: true,
     missions: []
   },
@@ -70,7 +70,7 @@ const createRankLevels = (): RankLevel[] => [
     id: 'B',
     name: 'B Rank',
     color: 'from-purple-400 to-purple-600',
-    daysRequired: 90,
+    daysRequired: 40,
     isLocked: true,
     missions: []
   },
@@ -78,7 +78,7 @@ const createRankLevels = (): RankLevel[] => [
     id: 'A',
     name: 'A Rank',
     color: 'from-red-400 to-red-600',
-    daysRequired: 120,
+    daysRequired: 60,
     isLocked: true,
     missions: []
   },
@@ -86,7 +86,7 @@ const createRankLevels = (): RankLevel[] => [
     id: 'S',
     name: 'S Rank',
     color: 'from-yellow-400 to-yellow-600',
-    daysRequired: 150,
+    daysRequired: 80,
     isLocked: true,
     missions: []
   },
@@ -94,7 +94,7 @@ const createRankLevels = (): RankLevel[] => [
     id: 'SS',
     name: 'SS Rank',
     color: 'from-emerald-400 to-emerald-600',
-    daysRequired: 180,
+    daysRequired: 100,
     isLocked: true,
     missions: []
   },
@@ -102,7 +102,7 @@ const createRankLevels = (): RankLevel[] => [
     id: 'SSS',
     name: 'SSS Rank',
     color: 'from-indigo-400 to-indigo-600',
-    daysRequired: 200,
+    daysRequired: 120,
     isLocked: true,
     missions: []
   }
@@ -125,9 +125,9 @@ const Missions = () => {
   const [newMission, setNewMission] = useState({
     title: '',
     description: '',
-    expReward: 10,
     day: 1,
     rank: 'F',
+    difficulty: 'medium' as Difficulty
   });
 
   const handleNewMissionChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -137,17 +137,33 @@ const Missions = () => {
   const handleCreateMission = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Use XP reward based on difficulty level
+    const difficultyExpRewards = {
+      'easy': 15,
+      'medium': 30,
+      'hard': 60,
+      'boss': 100
+    };
+    
+    const expReward = difficultyExpRewards[newMission.difficulty as keyof typeof difficultyExpRewards] || 30;
+    
     // Use the updated addMission function that now accepts rank and day
     addMission(
       newMission.title,
       newMission.description,
-      Number(newMission.expReward),
+      expReward,
       newMission.rank,
       Number(newMission.day)
     );
     
     setShowModal(false);
-    setNewMission({ title: '', description: '', expReward: 10, day: 1, rank: 'F' });
+    setNewMission({ 
+      title: '', 
+      description: '', 
+      day: 1, 
+      rank: 'F', 
+      difficulty: 'medium' 
+    });
     
     toast({ title: 'Mission Created', description: 'Your new mission has been added!' });
   };
@@ -290,19 +306,6 @@ const Missions = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="mission-exp">EXP Reward</Label>
-                  <Input
-                    id="mission-exp"
-                    name="expReward"
-                    type="number"
-                    min="1"
-                    placeholder="EXP Reward"
-                    value={newMission.expReward}
-                    onChange={handleNewMissionChange}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
                   <Label htmlFor="mission-day">Day</Label>
                   <Input
                     id="mission-day"
@@ -314,6 +317,20 @@ const Missions = () => {
                     onChange={handleNewMissionChange}
                     required
                   />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="mission-difficulty">Difficulty</Label>
+                  <Select name="difficulty" value={newMission.difficulty} onValueChange={val => setNewMission(n => ({ ...n, difficulty: val as Difficulty }))}>
+                    <SelectTrigger id="mission-difficulty">
+                      <SelectValue placeholder="Select difficulty" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="easy">Easy (15 XP)</SelectItem>
+                      <SelectItem value="medium">Medium (30 XP)</SelectItem>
+                      <SelectItem value="hard">Hard (60 XP)</SelectItem>
+                      <SelectItem value="boss">Boss (100 XP)</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="mission-rank">Rank</Label>

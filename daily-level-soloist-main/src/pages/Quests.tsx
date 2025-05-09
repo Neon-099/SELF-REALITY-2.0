@@ -16,7 +16,6 @@ const AddQuestDialog = ({ onClose }: { onClose: () => void }) => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [questType, setQuestType] = useState<QuestType>('side');
-  const [expReward, setExpReward] = useState('50');
   const [difficulty, setDifficulty] = useState<Difficulty>('medium');
   const [deadline, setDeadline] = useState('');
   const [category, setCategory] = useState<DailyWinCategory>('mental');
@@ -31,8 +30,14 @@ const AddQuestDialog = ({ onClose }: { onClose: () => void }) => {
       return;
     }
 
-    // Convert expReward to number
-    const expPoints = parseInt(expReward, 10) || 50;
+    // Get exp reward based on difficulty
+    const expRewards = {
+      easy: 15,
+      medium: 30,
+      hard: 60,
+      boss: 100
+    };
+    const expPoints = expRewards[difficulty];
     
     // Convert deadline string to Date object if provided
     const deadlineDate = deadline ? new Date(deadline) : undefined;
@@ -52,7 +57,6 @@ const AddQuestDialog = ({ onClose }: { onClose: () => void }) => {
     setTitle('');
     setDescription('');
     setQuestType('side');
-    setExpReward('50');
     setDifficulty('medium');
     setDeadline('');
     setCategory('mental');
@@ -111,10 +115,6 @@ const AddQuestDialog = ({ onClose }: { onClose: () => void }) => {
             Daily
           </Button>
         </div>
-        
-        {questType === 'daily' && (
-          <p className="text-xs text-amber-400 mt-1 italic">Note: Daily quests feature is still under development.</p>
-        )}
       </div>
       
       <div className="space-y-2">
@@ -134,23 +134,11 @@ const AddQuestDialog = ({ onClose }: { onClose: () => void }) => {
           onChange={(e) => setDifficulty(e.target.value as Difficulty)}
           className="w-full px-3 py-2 rounded-md border border-gray-800 bg-solo-dark"
         >
-          <option value="easy">Easy</option>
-          <option value="medium">Medium</option>
-          <option value="hard">Hard</option>
-          <option value="boss">Boss</option>
+          <option value="easy">Easy (15 XP)</option>
+          <option value="medium">Medium (30 XP)</option>
+          <option value="hard">Hard (60 XP)</option>
+          <option value="boss">Boss (100 XP)</option>
         </select>
-      </div>
-      
-      <div className="space-y-2">
-        <label className="text-sm font-medium">EXP Reward</label>
-        <input
-          type="number"
-          value={expReward}
-          onChange={(e) => setExpReward(e.target.value)}
-          className="w-full px-3 py-2 rounded-md border border-gray-800 bg-solo-dark"
-          placeholder="EXP reward amount"
-          min="1"
-        />
       </div>
       
       {questType === 'daily' && (

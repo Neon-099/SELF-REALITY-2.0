@@ -14,7 +14,7 @@ import { predefinedMissions } from '@/data/predefined-missions';
 const rankDetails = [
   {
     rank: 'SSS',
-    levelReq: 365,
+    levelReq: 200,
     icon: <Crown size={16} />,
     color: 'text-yellow-400',
     description: 'Ultimate hunter status - the pinnacle of achievement.',
@@ -27,7 +27,7 @@ const rankDetails = [
   },
   {
     rank: 'SS',
-    levelReq: 270,
+    levelReq: 160,
     icon: <Trophy size={16} />,
     color: 'text-purple-400',
     description: 'Elite hunter with increased rewards and rare quest access.',
@@ -40,7 +40,7 @@ const rankDetails = [
   },
   {
     rank: 'S',
-    levelReq: 180,
+    levelReq: 120,
     icon: <Star size={16} />,
     color: 'text-blue-400',
     description: 'Advanced hunter with bonus rewards and special missions.',
@@ -53,7 +53,7 @@ const rankDetails = [
   },
   {
     rank: 'A',
-    levelReq: 150,
+    levelReq: 90,
     icon: 'A',
     color: 'text-green-400',
     description: 'Skilled hunter with improved rewards.',
@@ -66,7 +66,7 @@ const rankDetails = [
   },
   {
     rank: 'B',
-    levelReq: 120,
+    levelReq: 60,
     icon: 'B',
     color: 'text-emerald-400',
     description: 'Experienced hunter with decent rewards.',
@@ -79,7 +79,7 @@ const rankDetails = [
   },
   {
     rank: 'C',
-    levelReq: 90,
+    levelReq: 40,
     icon: 'C',
     color: 'text-teal-400',
     description: 'Progressing hunter with standard rewards.',
@@ -92,7 +92,7 @@ const rankDetails = [
   },
   {
     rank: 'D',
-    levelReq: 60,
+    levelReq: 25,
     icon: 'D',
     color: 'text-cyan-400',
     description: 'Developing hunter with basic rewards.',
@@ -105,7 +105,7 @@ const rankDetails = [
   },
   {
     rank: 'E',
-    levelReq: 30,
+    levelReq: 15,
     icon: 'E',
     color: 'text-orange-500',
     description: 'Beginning hunter with standard rewards.',

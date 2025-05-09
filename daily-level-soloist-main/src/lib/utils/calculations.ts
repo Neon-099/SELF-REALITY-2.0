@@ -1,23 +1,25 @@
 import { Difficulty, Rank } from '../types';
 
-export const calculateExpToNextLevel = (level: number) => Math.floor(100 * Math.pow(1.2, level - 1));
+export const calculateExpToNextLevel = (level: number) => Math.floor(100 * Math.pow(1.15, level - 1));
 
 export const getExpForDifficulty = (difficulty: Difficulty): number => {
   const rewards = {
-    easy: 5,
-    medium: 10
+    easy: 15,
+    medium: 30,
+    hard: 60,
+    boss: 100
   };
-  return rewards[difficulty];
+  return rewards[difficulty as keyof typeof rewards] || 15;
 };
 
 export const calculateRank = (level: number): Rank => {
-  if (level >= 360) return 'SSS';
-  if (level >= 270) return 'SS';
-  if (level >= 180) return 'S';
-  if (level >= 150) return 'A';
-  if (level >= 120) return 'B';
-  if (level >= 90) return 'C';
-  if (level >= 60) return 'D';
-  if (level >= 30) return 'E';
+  if (level >= 200) return 'SSS';
+  if (level >= 160) return 'SS';
+  if (level >= 120) return 'S';
+  if (level >= 90) return 'A';
+  if (level >= 60) return 'B';
+  if (level >= 40) return 'C';
+  if (level >= 25) return 'D';
+  if (level >= 15) return 'E';
   return 'F';
 };

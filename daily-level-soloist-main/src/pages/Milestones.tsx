@@ -136,22 +136,22 @@ const Milestones = () => {
             {[
               { level: 1, rank: 'F', title: 'Novice Hunter' },
               { level: 5, rank: 'F+', title: 'Aspiring Hunter' },
-              { level: 10, rank: 'E', title: 'Beginner Hunter' },
-              { level: 20, rank: 'E+', title: 'Developing Hunter' },
-              { level: 30, rank: 'D', title: 'Competent Hunter' },
-              { level: 45, rank: 'D+', title: 'Skilled Hunter' },
-              { level: 60, rank: 'C', title: 'Proficient Hunter' },
-              { level: 80, rank: 'C+', title: 'Advanced Hunter' },
-              { level: 100, rank: 'B', title: 'Expert Hunter' },
-              { level: 125, rank: 'B+', title: 'Elite Hunter' },
-              { level: 150, rank: 'A', title: 'Master Hunter' },
-              { level: 180, rank: 'A+', title: 'Grand Master Hunter' },
-              { level: 210, rank: 'S', title: 'Legendary Hunter' },
-              { level: 240, rank: 'S+', title: 'Mythical Hunter' },
-              { level: 270, rank: 'SS', title: 'Transcendent Hunter' },
-              { level: 300, rank: 'SS+', title: 'Divine Hunter' },
-              { level: 330, rank: 'SSS', title: 'Sovereign Hunter' },
-              { level: 365, rank: 'SSS+', title: 'Supreme Hunter' }
+              { level: 10, rank: 'F++', title: 'Developing Hunter' },
+              { level: 15, rank: 'E', title: 'Beginner Hunter' },
+              { level: 20, rank: 'E+', title: 'Competent Hunter' },
+              { level: 25, rank: 'D', title: 'Skilled Hunter' },
+              { level: 35, rank: 'D+', title: 'Proficient Hunter' },
+              { level: 40, rank: 'C', title: 'Advanced Hunter' },
+              { level: 50, rank: 'C+', title: 'Expert Hunter' },
+              { level: 60, rank: 'B', title: 'Elite Hunter' },
+              { level: 75, rank: 'B+', title: 'Master Hunter' },
+              { level: 90, rank: 'A', title: 'Grand Master Hunter' },
+              { level: 105, rank: 'A+', title: 'Legendary Hunter' },
+              { level: 120, rank: 'S', title: 'Mythical Hunter' },
+              { level: 140, rank: 'S+', title: 'Transcendent Hunter' },
+              { level: 160, rank: 'SS', title: 'Divine Hunter' },
+              { level: 180, rank: 'SS+', title: 'Sovereign Hunter' },
+              { level: 200, rank: 'SSS', title: 'Supreme Hunter' }
             ].map(({ level, rank, title }) => {
               const achieved = user.level >= level;
               const milestoneText = `Rank ${rank} - ${title}`;

@@ -28,6 +28,10 @@ export function getDifficultyColor(difficulty: Difficulty): string {
       return 'bg-green-500';
     case 'medium':
       return 'bg-yellow-500';
+    case 'hard':
+      return 'bg-orange-500';
+    case 'boss':
+      return 'bg-red-500';
     default:
       return 'bg-blue-500';
   }
