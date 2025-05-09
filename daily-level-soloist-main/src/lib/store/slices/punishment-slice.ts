@@ -172,29 +172,41 @@ export const createPunishmentSlice: StateCreator<PunishmentSlice & any> = (set, 
     
     // Check tasks with deadlines
     if (tasks && Array.isArray(tasks)) {
+      let missedTasksCount = 0;
+      
       tasks.forEach(task => {
         if (!task.completed && task.deadline && new Date(task.deadline) < now && !task.missed) {
           // Apply missed deadline penalty
           const { markTaskAsMissed } = get();
           markTaskAsMissed(task.id);
-          
-          toast({
-            title: "Deadline Missed!",
-            description: `The deadline for "${task.title}" has passed. Shadow Penalty applied.`,
-            variant: "destructive"
-          });
+          missedTasksCount++;
         }
       });
+      
+      // Show a single aggregated notification if multiple tasks were missed
+      if (missedTasksCount > 1) {
+        toast({
+          title: `${missedTasksCount} Deadlines Missed!`,
+          description: `${missedTasksCount} tasks have passed their deadlines. Shadow Penalty applied to all.`,
+          variant: "destructive"
+        });
+      } else if (missedTasksCount === 1) {
+        // The individual notification is shown in markTaskAsMissed
+      }
     }
     
     // Check quests with deadlines
     if (quests && Array.isArray(quests)) {
+      let missedQuestsCount = 0;
+      
       quests.forEach(quest => {
         if (!quest.completed && quest.deadline && new Date(quest.deadline) < now && !quest.missed) {
           // Apply missed deadline penalty
           const { applyMissedDeadlinePenalty } = get();
           applyMissedDeadlinePenalty('quest', quest.id);
+          missedQuestsCount++;
           
+          // Individual notifications for quests
           toast({
             title: "Quest Deadline Missed!",
             description: `The deadline for "${quest.title}" has passed. Shadow Penalty applied.`,

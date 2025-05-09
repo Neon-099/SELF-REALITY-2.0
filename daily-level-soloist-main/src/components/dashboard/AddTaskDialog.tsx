@@ -228,17 +228,22 @@ export function AddTaskDialog() {
               </div>
               {hasDeadline && (
                 <div className="text-xs text-indigo-300 flex items-center">
-                  <CalendarClock className="h-3 w-3 mr-1" /> Deadline enforced by Shadow Penalty
+                  <CalendarClock className="h-3 w-3 mr-1" /> Automatic deadline enforcement
                 </div>
               )}
             </div>
             
             {hasDeadline && (
-              <DateTimePicker 
-                date={deadline || new Date(Date.now() + 24 * 60 * 60 * 1000)} // Default to tomorrow
-                setDate={setDeadline}
-                className="mt-2"
-              />
+              <>
+                <DateTimePicker 
+                  date={deadline || new Date(Date.now() + 24 * 60 * 60 * 1000)} // Default to tomorrow
+                  setDate={setDeadline}
+                  className="mt-2"
+                />
+                <p className="text-xs text-gray-400 mt-1">
+                  Missing a deadline will automatically apply Shadow Penalty, reducing EXP reward by 50%.
+                </p>
+              </>
             )}
           </div>
           

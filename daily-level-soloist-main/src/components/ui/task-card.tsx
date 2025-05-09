@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Task } from '@/lib/types';
 import { getDifficultyColor, getCategoryColor } from '@/lib/utils';
-import { Edit, Trash2, CheckCircle, AlertCircle, XCircle, Clock } from 'lucide-react';
+import { Edit, Trash2, CheckCircle, AlertCircle, Clock } from 'lucide-react';
 import { useSoloLevelingStore } from '@/lib/store';
 import { cn } from '@/lib/utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -22,7 +22,6 @@ interface TaskCardProps {
 
 export function TaskCard({ task }: TaskCardProps) {
   const completeTask = useSoloLevelingStore(state => state.completeTask);
-  const markTaskAsMissed = useSoloLevelingStore(state => state.markTaskAsMissed);
   const deleteTask = useSoloLevelingStore(state => state.deleteTask);
   const addTask = useSoloLevelingStore(state => state.addTask);
   const user = useSoloLevelingStore(state => state.user);
@@ -113,20 +112,6 @@ export function TaskCard({ task }: TaskCardProps) {
     }
   };
   
-  // Function to handle marking a task as missed
-  const handleMissedTask = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent card click from triggering
-    if (!task.completed) {
-      markTaskAsMissed(task.id);
-      
-      if (isEditDialogOpen) {
-        setTimeout(() => {
-          setIsEditDialogOpen(false);
-        }, 100);
-      }
-    }
-  };
-  
   // Format deadline for display
   const formatDeadline = (deadline: Date | undefined) => {
     if (!deadline) return null;
@@ -137,6 +122,22 @@ export function TaskCard({ task }: TaskCardProps) {
     // Check if deadline is past
     const isPast = deadlineDate < now;
     
+    // Calculate time remaining
+    const timeRemaining = deadlineDate.getTime() - now.getTime();
+    const hoursRemaining = timeRemaining / (1000 * 60 * 60);
+    
+    // Determine urgency level
+    let urgencyLevel = "";
+    if (isPast) {
+      urgencyLevel = "overdue";
+    } else if (hoursRemaining < 2) {
+      urgencyLevel = "critical"; // Less than 2 hours
+    } else if (hoursRemaining < 6) {
+      urgencyLevel = "urgent"; // Less than 6 hours
+    } else if (hoursRemaining < 24) {
+      urgencyLevel = "warning"; // Less than 24 hours
+    }
+    
     // If deadline is today, show time only
     const isToday = 
       deadlineDate.getDate() === now.getDate() &&
@@ -146,7 +147,8 @@ export function TaskCard({ task }: TaskCardProps) {
     if (isToday) {
       return {
         text: `Today at ${deadlineDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
-        isPast
+        isPast,
+        urgencyLevel
       };
     }
     
@@ -161,14 +163,16 @@ export function TaskCard({ task }: TaskCardProps) {
     if (isTomorrow) {
       return {
         text: `Tomorrow at ${deadlineDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
-        isPast
+        isPast,
+        urgencyLevel
       };
     }
     
     // Otherwise, show date and time
     return {
       text: `${deadlineDate.toLocaleDateString()} at ${deadlineDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
-      isPast
+      isPast,
+      urgencyLevel
     };
   };
 
@@ -213,7 +217,13 @@ export function TaskCard({ task }: TaskCardProps) {
                 <div className={cn(
                   "flex items-center text-xs px-2 py-1 rounded-full",
                   deadlineInfo.isPast 
-                    ? "bg-red-500/20 text-red-400" 
+                    ? "bg-red-500/20 text-red-400 animate-pulse" 
+                    : deadlineInfo.urgencyLevel === "critical"
+                      ? "bg-red-500/20 text-red-400 animate-pulse"
+                    : deadlineInfo.urgencyLevel === "urgent"
+                      ? "bg-amber-500/20 text-amber-400"
+                    : deadlineInfo.urgencyLevel === "warning"
+                      ? "bg-yellow-500/20 text-yellow-400"
                     : "bg-indigo-500/20 text-indigo-300"
                 )}>
                   <Clock className="h-3 w-3 mr-1" />
@@ -251,21 +261,13 @@ export function TaskCard({ task }: TaskCardProps) {
         {/* Mark as Complete Button */}
         {!task.completed && (
           <div className="mt-4 border-t border-gray-800 pt-3">
-            <div className="flex gap-2">
+            <div className="flex justify-center">
               <button 
                 onClick={handleCompleteTask}
                 className="flex-1 flex items-center justify-center gap-2 py-2 rounded bg-green-500/10 hover:bg-green-500/20 text-green-500 transition-colors"
               >
                 <CheckCircle size={16} />
                 <span>Mark as Complete</span>
-              </button>
-              
-              <button 
-                onClick={handleMissedTask}
-                className="flex-1 flex items-center justify-center gap-2 py-2 rounded bg-red-500/10 hover:bg-red-500/20 text-red-500 transition-colors"
-              >
-                <XCircle size={16} />
-                <span>Mark as Missed</span>
               </button>
             </div>
           </div>
@@ -336,7 +338,7 @@ export function TaskCard({ task }: TaskCardProps) {
                     categoryType === 'dailyWin' 
                       ? "bg-solo-primary/10 border-b-2 border-solo-primary font-medium text-solo-primary" 
                       : "text-gray-400 hover:bg-gray-800/50 border-b-2 border-transparent",
-                    allDailyWinsCompleted && categoryType !== 'dailyWin' && "opacity-50 cursor-not-allowed hover:bg-transparent"
+                    allDailyWinsCompleted && categoryType !== 'dailyWin' && "opacity-50 cursor-not-allowed"
                   )}
                 >
                   Daily Win
