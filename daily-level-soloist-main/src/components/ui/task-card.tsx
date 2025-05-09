@@ -1,0 +1,322 @@
+import React, { useState, useEffect } from 'react';
+import { Task } from '@/lib/types';
+import { getDifficultyColor, getCategoryColor } from '@/lib/utils';
+import { Edit, Trash2, CheckCircle, AlertCircle } from 'lucide-react';
+import { useSoloLevelingStore } from '@/lib/store';
+import { cn } from '@/lib/utils';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Difficulty, DailyWinCategory } from '@/lib/types';
+import { v4 as uuidv4 } from 'uuid';
+import { getExpForDifficulty } from '@/lib/utils/calculations';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { areAllDailyWinsCompleted } from '@/lib/utils';
+
+interface TaskCardProps {
+  task: Task;
+}
+
+export function TaskCard({ task }: TaskCardProps) {
+  const completeTask = useSoloLevelingStore(state => state.completeTask);
+  const deleteTask = useSoloLevelingStore(state => state.deleteTask);
+  const addTask = useSoloLevelingStore(state => state.addTask);
+  const user = useSoloLevelingStore(state => state.user);
+  
+  // State for the edit dialog
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editTitle, setEditTitle] = useState(task.title);
+  const [editDescription, setEditDescription] = useState(task.description || '');
+  const [editDifficulty, setEditDifficulty] = useState<Difficulty>(task.difficulty);
+  const [categoryType, setCategoryType] = useState<'dailyWin' | 'attribute'>('dailyWin');
+  const [editCategory, setEditCategory] = useState<string>(task.category);
+  
+  // Daily win categories and attribute categories
+  const dailyWinCategories = ["mental", "physical", "spiritual", "intelligence"];
+  const attributeCategories = ["physical", "cognitive", "emotional", "spiritual", "social"];
+  
+  // Check if all daily wins are completed
+  const allDailyWinsCompleted = areAllDailyWinsCompleted(user.dailyWins);
+  
+  // Determine the initial category type
+  useEffect(() => {
+    if (isEditDialogOpen) {
+      if (dailyWinCategories.includes(task.category)) {
+        setCategoryType('dailyWin');
+      } else {
+        setCategoryType('attribute');
+      }
+    }
+  }, [isEditDialogOpen, task.category]);
+  
+  // Reset category when category type changes
+  useEffect(() => {
+    if (categoryType === 'dailyWin') {
+      if (!dailyWinCategories.includes(editCategory)) {
+        setEditCategory('mental');
+      }
+    } else {
+      if (!attributeCategories.includes(editCategory) || dailyWinCategories.includes(editCategory)) {
+        setEditCategory('physical');
+      }
+    }
+  }, [categoryType, editCategory]);
+  
+  // Function to handle opening the edit dialog
+  const handleEditClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent card click event
+    setIsEditDialogOpen(true);
+  };
+  
+  // Function to handle saving edits
+  const handleSaveEdit = () => {
+    // Delete the old task
+    deleteTask(task.id);
+    
+    // Create a new task with the updated values
+    const updatedTask: Task = {
+      id: uuidv4(),
+      title: editTitle,
+      description: editDescription,
+      completed: false,
+      category: editCategory as DailyWinCategory,
+      difficulty: editDifficulty,
+      expReward: getExpForDifficulty(editDifficulty),
+      createdAt: task.createdAt,
+      scheduledFor: task.scheduledFor,
+    };
+    
+    // Add the updated task
+    addTask(updatedTask);
+    setIsEditDialogOpen(false);
+  };
+  
+  // Function to handle task completion
+  const handleCompleteTask = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent card click from triggering
+    // Ensure the task completion happens
+    if (!task.completed) {
+      completeTask(task.id);
+      
+      // Add a small delay to close the dialog if it's open
+      if (isEditDialogOpen) {
+        setTimeout(() => {
+          setIsEditDialogOpen(false);
+        }, 100);
+      }
+    }
+  };
+  
+  return (
+    <>
+      <div 
+        className={cn(
+          "rounded-lg border border-gray-800 bg-solo-dark p-4 transition-all cursor-pointer",
+          task.completed ? "opacity-70" : "hover:border-solo-primary hover:shadow-md"
+        )}
+        onClick={handleEditClick}
+      >
+        <div className="flex justify-between items-start">
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-2">
+              <div className={`h-2 w-2 rounded-full ${getDifficultyColor(task.difficulty)}`} />
+              <span className="text-xs text-gray-400 uppercase">{task.difficulty}</span>
+              <div className={`ml-2 px-2 py-0.5 text-xs rounded ${getCategoryColor(task.category)}`}>
+                {task.category}
+              </div>
+            </div>
+            
+            <h3 className={cn(
+              "font-medium mb-1",
+              task.completed ? "line-through text-gray-500" : "text-solo-text"
+            )}>
+              {task.title}
+            </h3>
+            
+            {task.description && (
+              <p className="text-sm text-gray-400 mb-3">{task.description}</p>
+            )}
+            
+            <div className="text-xs text-solo-primary font-semibold">
+              +{task.expReward} EXP
+            </div>
+          </div>
+          
+          <div className="flex space-x-2">
+            <button 
+              onClick={(e) => {
+                e.stopPropagation(); // Prevent card click from triggering
+                handleEditClick(e);
+              }}
+              className="p-1.5 rounded hover:bg-blue-500/20 text-blue-500"
+              aria-label="Edit task"
+            >
+              <Edit size={18} />
+            </button>
+            
+            <button 
+              onClick={(e) => {
+                e.stopPropagation(); // Prevent card click from triggering
+                deleteTask(task.id);
+              }}
+              className="p-1.5 rounded hover:bg-red-500/20 text-red-500"
+              aria-label="Delete task"
+            >
+              <Trash2 size={18} />
+            </button>
+          </div>
+        </div>
+        
+        {/* Mark as Complete Button */}
+        {!task.completed && (
+          <div className="mt-4 border-t border-gray-800 pt-3">
+            <button 
+              onClick={handleCompleteTask}
+              className="w-full flex items-center justify-center gap-2 py-2 rounded bg-green-500/10 hover:bg-green-500/20 text-green-500 transition-colors"
+            >
+              <CheckCircle size={16} />
+              <span>Mark as Complete</span>
+            </button>
+          </div>
+        )}
+      </div>
+      
+      {/* Edit Task Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="bg-solo-dark border-gray-800 text-solo-text sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Edit Task</DialogTitle>
+          </DialogHeader>
+          
+          {allDailyWinsCompleted && categoryType === 'dailyWin' && (
+            <Alert className="bg-green-500/20 border-green-500/30 text-green-500 mb-4">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>All Daily Wins Completed!</AlertTitle>
+              <AlertDescription>
+                You've completed all daily wins for today. Consider switching to attribute tasks.
+              </AlertDescription>
+            </Alert>
+          )}
+          
+          <div className="space-y-4 pt-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-title">Title</Label>
+              <Input
+                id="edit-title"
+                value={editTitle}
+                onChange={(e) => setEditTitle(e.target.value)}
+                placeholder="Enter task title"
+                className="border-gray-700 bg-gray-900"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="edit-description">Description (optional)</Label>
+              <Textarea
+                id="edit-description"
+                value={editDescription}
+                onChange={(e) => setEditDescription(e.target.value)}
+                placeholder="Enter task description"
+                className="border-gray-700 bg-gray-900"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label>Category</Label>
+              <div className="grid grid-cols-2 gap-0 rounded-md overflow-hidden border border-gray-800">
+                <button
+                  type="button"
+                  onClick={() => setCategoryType('attribute')}
+                  className={cn(
+                    "py-2 px-4 text-center transition-all duration-200",
+                    categoryType === 'attribute' 
+                      ? "bg-solo-primary/10 border-b-2 border-solo-primary font-medium text-solo-primary" 
+                      : "text-gray-400 hover:bg-gray-800/50 border-b-2 border-transparent"
+                  )}
+                >
+                  Attribute
+                </button>
+                <button
+                  type="button"
+                  onClick={() => !allDailyWinsCompleted && setCategoryType('dailyWin')}
+                  disabled={allDailyWinsCompleted && categoryType !== 'dailyWin'}
+                  className={cn(
+                    "py-2 px-4 text-center transition-all duration-200",
+                    categoryType === 'dailyWin' 
+                      ? "bg-solo-primary/10 border-b-2 border-solo-primary font-medium text-solo-primary" 
+                      : "text-gray-400 hover:bg-gray-800/50 border-b-2 border-transparent",
+                    allDailyWinsCompleted && categoryType !== 'dailyWin' && "opacity-50 cursor-not-allowed hover:bg-transparent"
+                  )}
+                >
+                  Daily Win
+                </button>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-difficulty">Difficulty</Label>
+                <Select 
+                  value={editDifficulty} 
+                  onValueChange={(value) => setEditDifficulty(value as Difficulty)}
+                >
+                  <SelectTrigger id="edit-difficulty" className="border-gray-700 bg-gray-900">
+                    <SelectValue placeholder="Select difficulty" />
+                  </SelectTrigger>
+                  <SelectContent className="border-gray-700 bg-gray-900">
+                    <SelectItem value="easy">Easy</SelectItem>
+                    <SelectItem value="medium">Medium</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="edit-category">Type</Label>
+                <Select 
+                  value={editCategory} 
+                  onValueChange={(value) => setEditCategory(value)}
+                >
+                  <SelectTrigger id="edit-category" className="border-gray-700 bg-gray-900">
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent className="border-gray-700 bg-gray-900">
+                    {categoryType === 'dailyWin' ? (
+                      // Daily Win Categories
+                      <>
+                        <SelectItem value="mental">Mental</SelectItem>
+                        <SelectItem value="physical">Physical</SelectItem>
+                        <SelectItem value="spiritual">Spiritual</SelectItem>
+                        <SelectItem value="intelligence">Intelligence</SelectItem>
+                      </>
+                    ) : (
+                      // Attribute Categories
+                      <>
+                        <SelectItem value="physical">Physical</SelectItem>
+                        <SelectItem value="cognitive">Cognitive</SelectItem>
+                        <SelectItem value="emotional">Emotional</SelectItem>
+                        <SelectItem value="spiritual">Spiritual</SelectItem>
+                        <SelectItem value="social">Social</SelectItem>
+                      </>
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            
+            <div className="flex justify-end gap-2 pt-2">
+              <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleSaveEdit} className="bg-solo-primary hover:bg-solo-primary/80">
+                Save Changes
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
