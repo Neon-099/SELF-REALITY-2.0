@@ -4,6 +4,7 @@ import { TaskCard } from '@/components/ui/task-card';
 import { CompletedTaskCard } from '@/components/ui/completed-task-card';
 import { DailyWinCard } from '@/components/ui/daily-win-card';
 import { AddTaskDialog } from '@/components/dashboard/AddTaskDialog';
+import { ShadowPenalty } from '@/components/punishment';
 import { Brain, Dumbbell, Heart, BookOpen, Award, CalendarDays, CheckSquare, ChevronDown, ChevronUp, EyeOff, Eye } from 'lucide-react';
 import { areAllDailyWinsCompleted, isSameDay } from '@/lib/utils';
 import { useToast } from '@/components/ui/use-toast';
@@ -103,6 +104,9 @@ const Index = () => {
           </div>
         </div>
       </div>
+      
+      {/* Shadow Penalty Status */}
+      <ShadowPenalty />
       
       {/* User Info Card */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">

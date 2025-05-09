@@ -7,12 +7,14 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Difficulty, DailyWinCategory, Task } from '@/lib/types';
 import { useSoloLevelingStore } from '@/lib/store';
-import { Plus } from 'lucide-react';
+import { Plus, Clock, CalendarClock } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
 import { areAllDailyWinsCompleted, isDailyWinCompleted, hasPendingDailyWinTask, isAttributeLimitReached, getAttributeTaskCount } from '@/lib/utils';
 import { v4 as uuidv4 } from 'uuid';
 import { getExpForDifficulty } from '@/lib/utils/calculations';
+import { Switch } from '@/components/ui/switch';
+import { DateTimePicker } from '@/components/ui/date-time-picker';
 
 export function AddTaskDialog() {
   // Added this log to confirm component is refreshing
@@ -29,6 +31,8 @@ export function AddTaskDialog() {
   const [difficulty, setDifficulty] = React.useState<Difficulty>('medium');
   const [categoryType, setCategoryType] = React.useState<'dailyWin' | 'attribute'>('dailyWin');
   const [category, setCategory] = React.useState<string>('mental');
+  const [hasDeadline, setHasDeadline] = React.useState(false);
+  const [deadline, setDeadline] = React.useState<Date | undefined>(undefined);
   
   // Daily win categories and attribute categories
   const dailyWinCategories = ["mental", "physical", "spiritual", "intelligence"];
@@ -49,6 +53,20 @@ export function AddTaskDialog() {
     return isCompleted || hasPending;
   })();
   
+  // Reset fields when dialog opens/closes
+  React.useEffect(() => {
+    if (!open) {
+      // Reset form when dialog closes
+      setTitle('');
+      setDescription('');
+      setDifficulty('medium');
+      setCategoryType('dailyWin');
+      setCategory('mental');
+      setHasDeadline(false);
+      setDeadline(undefined);
+    }
+  }, [open]);
+  
   // Reset category when category type changes
   React.useEffect(() => {
     if (categoryType === 'dailyWin') {
@@ -58,44 +76,11 @@ export function AddTaskDialog() {
     }
   }, [categoryType]);
   
-  // Automatically switch to attributes if all daily wins are completed
-  React.useEffect(() => {
-    if (allDailyWinsCompleted && categoryType === 'dailyWin') {
-      setCategoryType('attribute');
-    }
-  }, [allDailyWinsCompleted]);
-
-  // Update the toast notifications effect
-  React.useEffect(() => {
-    if (open) {
-      if (allDailyWinsCompleted) {
-        toast({
-          title: "All Daily Wins Completed!",
-          description: "You've completed all daily wins for today. You can still add attribute tasks.",
-          variant: "default",
-          className: "bg-green-500/20 border-green-500/30 text-green-500",
-          duration: 2000
-        });
-      } else if (isSelectedCategoryCompleted) {
-        const isDailyWinDone = isDailyWinCompleted(user.dailyWins, category as DailyWinCategory);
-        const hasPendingTask = hasPendingDailyWinTask(tasks, category as DailyWinCategory, new Date());
-        
-        toast({
-          title: `${category.charAt(0).toUpperCase() + category.slice(1)} Win ${isDailyWinDone ? 'Completed' : 'Already Planned'}!`,
-          description: isDailyWinDone 
-            ? `You've already completed your ${category} daily win for today. Try another category or select attribute tasks.`
-            : `You already have a pending ${category} daily win task for today. Complete it first or choose another category.`,
-          variant: "default",
-          className: "bg-amber-500/20 border-amber-500/30 text-amber-500",
-          duration: 2000
-        });
-      }
-    }
-  }, [open, allDailyWinsCompleted, isSelectedCategoryCompleted, category]);
-  
-  // Add a function to check if an attribute category is at its limit
-  const isAttributeCategoryLimited = (cat: string) => {
-    return isAttributeLimitReached(tasks, cat, new Date());
+  // Calculate attribute task counts
+  const getAttributeTaskCountText = (attributeCategory: string) => {
+    const count = getAttributeTaskCount(tasks, attributeCategory, new Date());
+    const max = 5;
+    return `${count}/${max}`;
   };
   
   // Update the handleSubmit function
@@ -158,6 +143,8 @@ export function AddTaskDialog() {
       expReward: getExpForDifficulty(difficulty),
       scheduledFor: new Date(), // Schedule for today
       createdAt: new Date(),
+      // Add deadline if set
+      ...(hasDeadline && deadline ? { deadline } : {})
     };
     
     // Add the task
@@ -165,7 +152,9 @@ export function AddTaskDialog() {
     
     toast({
       title: "Task added",
-      description: "Your task has been added successfully",
+      description: hasDeadline && deadline 
+        ? `Your task has been added with a deadline of ${deadline.toLocaleString()}`
+        : "Your task has been added successfully",
       duration: 2000
     });
     
@@ -175,6 +164,8 @@ export function AddTaskDialog() {
     setDifficulty('medium');
     setCategoryType('dailyWin');
     setCategory('mental');
+    setHasDeadline(false);
+    setDeadline(undefined);
     setOpen(false);
   };
   
@@ -223,16 +214,45 @@ export function AddTaskDialog() {
           </div>
           
           <div className="space-y-1.5 sm:space-y-2">
+            <Label className="text-white/80 font-medium">Deadline</Label>
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="has-deadline"
+                  checked={hasDeadline}
+                  onCheckedChange={setHasDeadline}
+                />
+                <Label htmlFor="has-deadline" className="cursor-pointer">
+                  Set a deadline
+                </Label>
+              </div>
+              {hasDeadline && (
+                <div className="text-xs text-indigo-300 flex items-center">
+                  <CalendarClock className="h-3 w-3 mr-1" /> Deadline enforced by Shadow Penalty
+                </div>
+              )}
+            </div>
+            
+            {hasDeadline && (
+              <DateTimePicker 
+                date={deadline || new Date(Date.now() + 24 * 60 * 60 * 1000)} // Default to tomorrow
+                setDate={setDeadline}
+                className="mt-2"
+              />
+            )}
+          </div>
+          
+          <div className="space-y-1.5 sm:space-y-2">
             <Label className="text-white/80 font-medium">Category</Label>
-            <div className="grid grid-cols-2 gap-0 rounded-md overflow-hidden border border-indigo-500/20 bg-gray-800/90">
+            <div className="grid grid-cols-2 gap-0 rounded-md overflow-hidden border border-indigo-500/20 bg-gray-800/80">
               <button
                 type="button"
                 onClick={() => setCategoryType('attribute')}
                 className={cn(
-                  "py-1 px-3 text-center transition-all duration-200",
+                  "py-2 px-4 text-center transition-all duration-200",
                   categoryType === 'attribute' 
-                    ? "bg-gradient-to-r from-solo-primary/20 to-indigo-500/20 border-b-2 border-solo-primary font-medium text-solo-primary" 
-                    : "text-gray-300 hover:bg-white/5 border-b-2 border-transparent"
+                    ? "bg-indigo-500/10 border-b-2 border-indigo-500 font-medium text-indigo-300" 
+                    : "text-gray-400 hover:bg-gray-800/50 border-b-2 border-transparent"
                 )}
               >
                 Attribute
@@ -240,13 +260,13 @@ export function AddTaskDialog() {
               <button
                 type="button"
                 onClick={() => !allDailyWinsCompleted && setCategoryType('dailyWin')}
-                disabled={allDailyWinsCompleted}
+                disabled={allDailyWinsCompleted && categoryType !== 'dailyWin'}
                 className={cn(
-                  "py-1 px-3 text-center transition-all duration-200",
+                  "py-2 px-4 text-center transition-all duration-200",
                   categoryType === 'dailyWin' 
-                    ? "bg-gradient-to-r from-solo-primary/20 to-indigo-500/20 border-b-2 border-solo-primary font-medium text-solo-primary" 
-                    : "text-gray-300 hover:bg-white/5 border-b-2 border-transparent",
-                  allDailyWinsCompleted && "opacity-50 cursor-not-allowed"
+                    ? "bg-indigo-500/10 border-b-2 border-indigo-500 font-medium text-indigo-300" 
+                    : "text-gray-400 hover:bg-gray-800/50 border-b-2 border-transparent",
+                  allDailyWinsCompleted && categoryType !== 'dailyWin' && "opacity-50 cursor-not-allowed hover:bg-transparent"
                 )}
               >
                 Daily Win
@@ -254,19 +274,21 @@ export function AddTaskDialog() {
             </div>
           </div>
           
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5 sm:space-y-2">
               <Label htmlFor="difficulty" className="text-white/80 font-medium">Difficulty</Label>
               <Select 
                 value={difficulty} 
                 onValueChange={(value) => setDifficulty(value as Difficulty)}
               >
-                <SelectTrigger id="difficulty" className="border-indigo-500/20 bg-gray-800/90 h-9 sm:h-10 focus:ring-1 focus:ring-indigo-500/30 focus:border-indigo-500/50">
+                <SelectTrigger id="difficulty" className="border-indigo-500/20 bg-gray-800/90 h-9 focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all">
                   <SelectValue placeholder="Select difficulty" />
                 </SelectTrigger>
-                <SelectContent className="border-indigo-500/20 bg-gray-800 backdrop-blur-md">
+                <SelectContent className="border-indigo-500/20 bg-gray-800/90">
                   <SelectItem value="easy">Easy</SelectItem>
                   <SelectItem value="medium">Medium</SelectItem>
+                  <SelectItem value="hard">Hard</SelectItem>
+                  <SelectItem value="boss">Boss</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -275,64 +297,60 @@ export function AddTaskDialog() {
               <Label htmlFor="category" className="text-white/80 font-medium">Type</Label>
               <Select 
                 value={category} 
-                onValueChange={(value) => setCategory(value as string)}
+                onValueChange={(value) => setCategory(value)}
               >
-                <SelectTrigger id="category" className="border-indigo-500/20 bg-gray-800/90 h-9 sm:h-10 focus:ring-1 focus:ring-indigo-500/30 focus:border-indigo-500/50">
+                <SelectTrigger 
+                  id="category" 
+                  className={cn(
+                    "border-indigo-500/20 bg-gray-800/90 h-9 focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all",
+                    isSelectedCategoryCompleted && "border-orange-500/30 text-orange-400"
+                  )}
+                >
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
-                <SelectContent className="border-indigo-500/20 bg-gray-800 backdrop-blur-md">
+                <SelectContent className="border-indigo-500/20 bg-gray-800/90">
                   {categoryType === 'dailyWin' ? (
                     // Daily Win Categories
-                    <>
-                      {dailyWinCategories.map((cat) => {
-                        const isCompleted = isDailyWinCompleted(user.dailyWins, cat as DailyWinCategory);
-                        const hasPending = hasPendingDailyWinTask(tasks, cat as DailyWinCategory, new Date());
-                        const isDisabled = isCompleted || hasPending;
-                        
-                        return (
-                          <SelectItem 
-                            key={cat}
-                            value={cat} 
-                            disabled={isDisabled}
-                            className={isDisabled ? "opacity-50" : ""}
-                          >
-                            {cat.charAt(0).toUpperCase() + cat.slice(1)}{' '}
-                            {isCompleted ? "✓" : hasPending ? "(Pending)" : ""}
-                          </SelectItem>
-                        );
-                      })}
-                    </>
+                    dailyWinCategories.map(cat => (
+                      <SelectItem 
+                        key={cat} 
+                        value={cat}
+                        disabled={isDailyWinCompleted(user.dailyWins, cat as DailyWinCategory) || 
+                                 hasPendingDailyWinTask(tasks, cat as DailyWinCategory, new Date())}
+                        className={cn(
+                          (isDailyWinCompleted(user.dailyWins, cat as DailyWinCategory) || 
+                          hasPendingDailyWinTask(tasks, cat as DailyWinCategory, new Date())) &&
+                          "opacity-50 line-through"
+                        )}
+                      >
+                        {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                      </SelectItem>
+                    ))
                   ) : (
                     // Attribute Categories
-                    <>
-                      {attributeCategories.map((cat) => {
-                        const isLimited = isAttributeCategoryLimited(cat);
-                        return (
-                          <SelectItem 
-                            key={cat} 
-                            value={cat} 
-                            disabled={isLimited}
-                            className={isLimited ? "opacity-50" : ""}
-                          >
-                            {cat.charAt(0).toUpperCase() + cat.slice(1)}{' '}
-                            {isLimited ? `(Limit: 5/5)` : `(${getAttributeTaskCount(tasks, cat, new Date())}/5)`}
-                          </SelectItem>
-                        );
-                      })}
-                    </>
+                    attributeCategories.map(cat => (
+                      <SelectItem 
+                        key={cat} 
+                        value={cat}
+                        disabled={isAttributeLimitReached(tasks, cat, new Date())}
+                        className={cn(
+                          isAttributeLimitReached(tasks, cat, new Date()) && "opacity-50 line-through"
+                        )}
+                      >
+                        {cat.charAt(0).toUpperCase() + cat.slice(1)} {getAttributeTaskCountText(cat)}
+                      </SelectItem>
+                    ))
                   )}
                 </SelectContent>
               </Select>
             </div>
           </div>
           
-          <Button 
-            type="submit" 
-            className="w-full mt-2 bg-gradient-to-r from-solo-primary to-indigo-600 hover:from-solo-primary/90 hover:to-indigo-600/90 shadow-md shadow-indigo-500/20"
-            disabled={categoryType === 'dailyWin' && isSelectedCategoryCompleted}
-          >
-            Add Task
-          </Button>
+          <div className="pt-2">
+            <Button type="submit" className="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-medium">
+              Create Task
+            </Button>
+          </div>
         </form>
       </DialogContent>
     </Dialog>

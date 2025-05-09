@@ -57,14 +57,13 @@ export const createMissionSlice: StateCreator<MissionSlice & any> = (set, get) =
       return;
     }
 
-    // First mark the mission as completed
-    const updatedMission = {
-      ...mission,
-      completed: true,
-      completedAt: new Date()
-    };
+    // Get experience modifier from punishment system
+    const expModifier = state.getExpModifier();
+    
+    // Calculate final exp with modifier
+    const finalExpReward = Math.floor(mission.expReward * expModifier);
 
-    // Create completed mission object
+    // Create completed mission object with modified EXP
     const completedMission: CompletedMission = {
       id: mission.id,
       title: mission.title,
@@ -73,114 +72,81 @@ export const createMissionSlice: StateCreator<MissionSlice & any> = (set, get) =
       rank: (mission as any).rank || 'F',
       day: (mission as any).day || 1,
       completedAt: new Date(),
-      expEarned: mission.expReward,
+      expEarned: finalExpReward, // Store the actual exp earned
     };
 
     try {
-      console.log("Starting mission completion for:", mission.title);
+      // Check if the mission is overdue (should have a releaseDate property)
+      let missedDeadline = false;
+      const now = new Date();
       
-      // We no longer need to save to a separate store
-      // Just update the Zustand store, which will be persisted to IndexedDB
-
+      // TODO: Implement proper deadline checking if missions have deadline dates
+      // For now, let's consider a mission overdue if it's from a previous day
+      if (mission.releaseDate) {
+        const releaseDate = new Date(mission.releaseDate);
+        const releaseDateDay = releaseDate.setHours(0,0,0,0);
+        const today = now.setHours(0,0,0,0);
+        
+        if (releaseDateDay < today) {
+          missedDeadline = true;
+          
+          // Apply the missed deadline penalty
+          const { applyMissedDeadlinePenalty } = get();
+          applyMissedDeadlinePenalty('mission', id);
+        }
+      }
+      
       // Update in-memory state with immediate change
       set((state: any) => {
-        console.log("Current user state:", state.user);
-        
         // Instead of removing, update the mission to mark it as completed
         const updatedMissions = state.missions.map((m: Mission) => 
-          m.id === id ? { ...m, completed: true, completedAt: new Date() } : m
+          m.id === id ? { 
+            ...m, 
+            completed: true, 
+            completedAt: new Date(),
+            missed: missedDeadline
+          } : m
         );
         
         // Add to completed history and IDs
         const updatedCompletedMissionIds = [...state.completedMissionIds, mission.id];
         const updatedCompletedMissionHistory = [...state.completedMissionHistory, completedMission];
 
-        // Update user exp/gold/level directly
-        const currentExp = state.user.exp || 0;
-        const currentLevel = state.user.level || 1;
-        const currentExpToNextLevel = state.user.expToNextLevel || 100;
-        
-        let exp = currentExp + mission.expReward;
-        let level = currentLevel;
-        let expToNextLevel = currentExpToNextLevel;
-        const goldReward = Math.floor(mission.expReward / 5) * 2;
-        let leveledUp = false;
-
-        // Level up if enough exp
-        while (exp >= expToNextLevel) {
-          level++;
-          exp -= expToNextLevel;
-          expToNextLevel = calculateExpToNextLevel(level);
-          leveledUp = true;
-        }
-
-        console.log("New exp state:", { 
-          oldExp: currentExp, 
-          newExp: exp, 
-          oldLevel: currentLevel, 
-          newLevel: level, 
-          reward: mission.expReward 
-        });
-
-        // Show notifications
-        toast({
-          title: "Mission Completed!",
-          description: `You earned ${mission.expReward} EXP and ${goldReward} Gold`,
-          variant: "default"
-        });
-
-        if (leveledUp) {
-          setTimeout(() => {
-            toast({
-              title: "Level Up!",
-              description: `You reached level ${level}!`,
-              variant: "default"
-            });
-          }, 500);
-        }
-
-        // Add attribute experience
-        setTimeout(() => {
-          ['physical', 'cognitive', 'emotional', 'spiritual', 'social'].forEach(stat => {
-            get().addStatExp(stat as Stat, 7);
-          });
-          toast({
-            title: `+7 EXP to All Attributes`,
-            description: `You gained experience for completing a mission!`,
-            variant: "default"
-          });
-        }, 1000);
-
-        // Return updated state with a timestamp to force re-render
         return {
           missions: updatedMissions,
           completedMissionIds: updatedCompletedMissionIds,
-          completedMissionHistory: updatedCompletedMissionHistory,
-          user: {
-            ...state.user,
-            exp,
-            level,
-            expToNextLevel,
-            gold: state.user.gold + goldReward,
-            rank: calculateRank(level),
-            lastUpdate: Date.now() // Add timestamp to force re-render
-          }
+          completedMissionHistory: updatedCompletedMissionHistory
         };
       });
-
-      // Force a second update to ensure UI refresh
-      setTimeout(() => {
-        set((state: any) => ({
-          user: {
-            ...state.user,
-            lastUpdate: Date.now()
-          }
-        }));
-      }, 100);
       
-      console.log("Mission completion finished");
+      // Add experience points with the modifier applied
+      state.addExp(finalExpReward);
+      
+      // Calculate gold
+      const goldReward = Math.floor(finalExpReward / 5) * 2;
+      state.addGold(goldReward);
+      
+      // Set notification message based on status
+      let title = "Mission Completed!";
+      let description = `You earned ${finalExpReward} EXP and ${goldReward} Gold`;
+      
+      if (expModifier < 1) {
+        description += ` (${Math.round(expModifier * 100)}% rate due to penalty)`;
+      }
+      
+      if (missedDeadline) {
+        title = "Mission Completed Late";
+        description += " (Deadline missed)";
+      }
+      
+      toast({
+        title,
+        description,
+        variant: missedDeadline ? "warning" : "default"
+      });
+      
     } catch (error) {
-      console.error('Error completing mission:', error);
+      console.error("Error completing mission:", error);
       toast({
         title: "Error",
         description: "Failed to complete mission. Please try again.",

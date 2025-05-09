@@ -11,6 +11,7 @@ export interface TaskSlice {
   addTask: (task: Task) => void;
   completeTask: (taskId: string) => void;
   deleteTask: (id: string) => void;
+  markTaskAsMissed: (id: string) => void;
 }
 
 // Helper to map daily win categories to attribute stats
@@ -61,58 +62,113 @@ export const createTaskSlice: StateCreator<
       tasks: [...state.tasks, task],
     }));
   },
-  completeTask: (taskId) => {
-    const task = get().tasks.find((t) => t.id === taskId);
-    if (!task) return;
-
-    set((state) => ({
-      tasks: state.tasks.map((t) =>
-        t.id === taskId ? { ...t, completed: true, completedAt: new Date() } : t
-      ),
-    }));
-
-    // Show completion toast
-    toast({
-      title: "Task Completed!",
-      description: `${task.title} has been marked as complete.`,
-      variant: "default",
-      duration: 1000 // 1 second
-    });
-
-    // Determine if this is a daily win category or an attribute category
-    const dailyWinCategories = ['mental', 'physical', 'spiritual', 'intelligence'];
-    let dailyWinCategory: DailyWinCategory;
-    let attributeStat: Stat;
+  completeTask: (id) => {
+    const { tasks, addExp, addStatExp, updateDailyWin, getExpModifier } = get();
+    const task = tasks.find(t => t.id === id);
     
-    if (dailyWinCategories.includes(task.category)) {
-      // It's a standard daily win category
-      dailyWinCategory = task.category as DailyWinCategory;
-      attributeStat = categoryToStat(dailyWinCategory);
-    } else {
-      // It's an attribute category, map it back to a daily win
-      const mappedDailyWin = attributeToDailyWin(task.category);
-      if (mappedDailyWin) {
-        dailyWinCategory = mappedDailyWin;
-        attributeStat = task.category as Stat;
-      } else {
-        // Default fallback if no mapping exists
-        dailyWinCategory = 'mental';
-        attributeStat = 'emotional';
-      }
+    if (!task || task.completed) return;
+    
+    // Check if deadline has passed (automatically apply missed deadline penalty)
+    if (task.deadline && new Date(task.deadline) < new Date()) {
+      // Task was completed after deadline passed
+      const { markTaskAsMissed } = get();
+      markTaskAsMissed(task.id);
+      return;
     }
-
-    // Update daily win progress for the appropriate category
-    get().updateDailyWin(dailyWinCategory, taskId);
-
-    // Update experience points
-    get().addExp(task.expReward);
     
-    // Add EXP to the corresponding attribute
-    get().addStatExp(attributeStat, 5);
+    // Get experience modifier from punishment system
+    const expModifier = getExpModifier();
+    
+    // Calculate final exp with modifier
+    const finalExpReward = Math.floor(task.expReward * expModifier);
+    
+    // Update task status
+    set((state: TaskSlice) => ({
+      tasks: state.tasks.map(t => 
+        t.id === id ? { ...t, completed: true, completedAt: new Date() } : t
+      )
+    }));
+    
+    // Add experience points with modifier applied
+    addExp(finalExpReward);
+    
+    // Add stat experience
+    let stat;
+    switch (task.category) {
+      case 'mental':
+        stat = 'cognitive';
+        break;
+      case 'physical':
+        stat = 'physical';
+        break;
+      case 'spiritual':
+        stat = 'spiritual';
+        break;
+      case 'intelligence':
+        stat = 'cognitive';
+        break;
+      default:
+        stat = 'emotional';
+    }
+    addStatExp(stat, Math.floor(finalExpReward / 2));
+    
+    // Update daily win progress
+    updateDailyWin(task.category, task.id);
+    
+    // Show notification with exp modifier info if applicable
+    if (expModifier < 1) {
+      toast({
+        title: `${task.title} Completed!`,
+        description: `You earned ${finalExpReward} EXP (${Math.round(expModifier * 100)}% rate due to penalty)`,
+      });
+    } else {
+      toast({
+        title: `${task.title} Completed!`,
+        description: `You earned ${finalExpReward} EXP`,
+      });
+    }
+    
+    // Check if Shadow Fatigue should be cleared after this completion
+    const { hasShadowFatigue } = get();
+    if (hasShadowFatigue) {
+      set({ hasShadowFatigue: false, shadowFatigueUntil: null });
+      
+      toast({
+        title: "Shadow Fatigue Relieved",
+        description: "You've worked through your fatigue. Future tasks will earn full EXP again.",
+      });
+    }
   },
   deleteTask: (id) => {
     set((state: TaskSlice) => ({
       tasks: state.tasks.filter(task => task.id !== id)
     }));
   },
+  markTaskAsMissed: (id) => {
+    const { tasks, applyMissedDeadlinePenalty } = get();
+    const task = tasks.find(t => t.id === id);
+    
+    if (!task || task.completed) return;
+    
+    // Apply the missed deadline penalty through the punishment system
+    applyMissedDeadlinePenalty('task', id);
+    
+    // Mark the task as completed but with a miss flag
+    set((state: TaskSlice) => ({
+      tasks: state.tasks.map(t => 
+        t.id === id ? { 
+          ...t, 
+          completed: true, 
+          completedAt: new Date(),
+          missed: true // Add a flag to indicate it was missed
+        } : t
+      )
+    }));
+    
+    toast({
+      title: "Task Marked as Missed",
+      description: "The task has been marked as missed and penalties applied.",
+      variant: "destructive"
+    });
+  }
 });

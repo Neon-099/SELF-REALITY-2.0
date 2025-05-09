@@ -170,75 +170,90 @@ export const createQuestSlice: StateCreator<QuestSlice & any> = (set, get) => ({
     });
   },
   canCompleteQuest: (id) => {
-    const state = get();
-    const quest = state.quests.find((q: Quest) => q.id === id);
-    if (!quest || !quest.isMainQuest) return true;
-    return quest.tasks.length > 0 && quest.tasks.every(task => task.completed);
+    const { quests, areSideQuestsLocked } = get();
+    const quest = quests.find(q => q.id === id);
+    
+    // Quest not found
+    if (!quest) return false;
+    
+    // Check if side quests are locked (only if this is a side quest)
+    if (!quest.isMainQuest && areSideQuestsLocked()) {
+      toast({
+        title: "Side Quests Locked",
+        description: "You must complete main quests first to unlock side quests.",
+        variant: "destructive"
+      });
+      return false;
+    }
+    
+    // Already completed
+    if (quest.completed) return false;
+    
+    // If quest has tasks, all tasks must be completed
+    if (quest.tasks.length > 0) {
+      return quest.tasks.every(task => task.completed);
+    }
+    
+    // Quest with no tasks can be completed
+    return true;
   },
   completeQuest: (id) => {
-    set((state: any) => {
-      const quest = state.quests.find((q: Quest) => q.id === id);
-      if (!quest || quest.completed) return state;
+    const { quests, user, addExp, addGold, getExpModifier } = get();
+    const quest = quests.find(q => q.id === id);
+    
+    if (!quest || quest.completed) return;
+    
+    // Get experience modifier from punishment system
+    const expModifier = getExpModifier();
+    
+    // Calculate final exp with modifier
+    const finalExpReward = Math.floor(quest.expReward * expModifier);
+    
+    const now = new Date();
+    
+    // Check if quest has a deadline and whether it's missed
+    let missedDeadline = false;
+    if (quest.deadline && now > quest.deadline) {
+      missedDeadline = true;
       
-      // For main quests, check if all tasks are completed
-      if (quest.isMainQuest) {
-        const canComplete = get().canCompleteQuest(id);
-        if (!canComplete) return state;
-      }
-
-      const updatedQuests = state.quests.map((q: Quest) => 
-        q.id === id ? { ...q, completed: true, completedAt: new Date() } : q
-      );
-
-      let { exp, level, expToNextLevel } = state.user;
-      
-      // For main quests, only add remaining exp (since tasks gave partial exp)
-      const remainingExp = quest.isMainQuest 
-        ? Math.floor(quest.expReward / 2) // Give remaining 50% on completion
-        : quest.expReward;
-      
-      exp += remainingExp;
-      const goldReward = Math.floor(remainingExp / 5) * 2; // Convert EXP to gold (5 EXP = 2 gold)
-
-      while (exp >= expToNextLevel) {
-        level++;
-        exp -= expToNextLevel;
-        expToNextLevel = calculateExpToNextLevel(level);
-      }
-      
-      // Call increaseStatFree after the state update
-      setTimeout(() => {
-        // Since quests might not have a category, we'll give a boost to all attributes
-        // Or can use quest.category if it exists
-        if (quest.category) {
-          const attributeStat = categoryToStat(quest.category);
-          get().addStatExp(attributeStat, 10);
-          // Toast handled by addStatExp
-        } else {
-          // Give small boost to all attributes
-          ['physical', 'cognitive', 'emotional', 'spiritual', 'social'].forEach(stat => {
-            get().addStatExp(stat as Stat, 5);
-          });
-          
-          toast({
-            title: `+5 EXP to All Attributes`,
-            description: `You gained experience for completing a quest!`,
-            variant: "default"
-          });
-        }
-      }, 500);
-
-      return {
-        quests: updatedQuests,
-        user: {
-          ...state.user,
-          exp,
-          level,
-          expToNextLevel,
-          gold: state.user.gold + goldReward,
-          rank: calculateRank(level)
-        }
-      };
+      // Apply the missed deadline penalty
+      const { applyMissedDeadlinePenalty } = get();
+      applyMissedDeadlinePenalty('quest', id);
+    }
+    
+    // Update quest status
+    set((state: QuestSlice) => ({
+      quests: state.quests.map(q => 
+        q.id === id ? {
+          ...q,
+          completed: true,
+          completedAt: now,
+          missed: missedDeadline
+        } : q
+      )
+    }));
+    
+    // Add experience and gold
+    addExp(finalExpReward);
+    addGold(Math.floor(finalExpReward / 10));
+    
+    // Set notification message based on status
+    let title = "Quest Completed!";
+    let description = `${quest.title} - You earned ${finalExpReward} EXP and ${Math.floor(finalExpReward / 10)} gold`;
+    
+    if (expModifier < 1) {
+      description += ` (${Math.round(expModifier * 100)}% rate due to penalty)`;
+    }
+    
+    if (missedDeadline) {
+      title = "Quest Completed Late";
+      description += " (Deadline missed)";
+    }
+    
+    toast({
+      title,
+      description,
+      variant: missedDeadline ? "warning" : "default",
     });
   },
   updateQuest: (id, updates) => {

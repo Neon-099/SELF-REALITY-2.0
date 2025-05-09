@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Layout } from "./components/layout/Layout";
 import Index from "./pages/Index";
 import Character from "./pages/Character";
@@ -13,31 +13,112 @@ import Milestones from "./pages/Milestones";
 import Missions from "./pages/Missions";
 import Planner from "./pages/Planner";
 import LandingPage from "./pages/LandingPage";
+import { useEffect } from "react";
+import { useSoloLevelingStore } from "./lib/store";
+
+// Import UserSetup component dynamically if it exists
+// Note: Remove this dynamic import approach once UserSetup component is properly created
+const UserSetup = () => (
+  <div className="min-h-screen flex items-center justify-center bg-gray-900">
+    <div className="text-center p-8 bg-gray-800 rounded-lg shadow-lg">
+      <h1 className="text-3xl font-bold text-white mb-4">Welcome to Solo Leveling</h1>
+      <p className="text-gray-300 mb-6">
+        Let's set up your character to begin your journey
+      </p>
+      <button 
+        className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
+        onClick={() => {
+          // Create a temporary user
+          const store = useSoloLevelingStore.getState();
+          if (store && typeof store.addExp === 'function') {
+            // The store exists, let's create a user
+            store.user = { 
+              ...store.user, 
+              name: "Hunter" 
+            };
+          }
+          window.location.reload();
+        }}
+      >
+        Start Journey
+      </button>
+    </div>
+  </div>
+);
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<LandingPage />} />
-          <Route element={<Layout />}>
-            <Route path="/home" element={<Index />} />
-            <Route path="/character" element={<Character />} />
-            <Route path="/planner" element={<Planner />} />
-            <Route path="/quests" element={<Quests />} />
-            <Route path="/missions" element={<Missions />} />
-            <Route path="/shop" element={<Shop />} />
-            <Route path="/milestones" element={<Milestones />} />
-          </Route>
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+// Component to check for curse status and missed deadlines
+function CurseChecker() {
+  const store = useSoloLevelingStore();
+  
+  useEffect(() => {
+    // Check if the functions exist before trying to use them
+    const checkCurseStatus = store.checkCurseStatus;
+    const resetWeeklyChances = store.resetWeeklyChances;
+    
+    // Only run checks if the functions exist
+    if (typeof checkCurseStatus === 'function' && typeof resetWeeklyChances === 'function') {
+      // Initial check
+      checkCurseStatus();
+      resetWeeklyChances();
+      
+      // Set up intervals for periodic checks
+      const deadlineCheckInterval = setInterval(() => {
+        checkCurseStatus();
+      }, 60000); // Check every minute
+      
+      const weeklyResetInterval = setInterval(() => {
+        resetWeeklyChances();
+      }, 3600000); // Check every hour
+      
+      return () => {
+        clearInterval(deadlineCheckInterval);
+        clearInterval(weeklyResetInterval);
+      };
+    }
+    
+    return undefined;
+  }, [store]);
+  
+  return null;
+}
+
+const App = () => {
+  const store = useSoloLevelingStore();
+  
+  // Safely handle potential undefined user with better type checking
+  const user = store.user || { name: "" };
+  
+  // Check if user needs setup (either no user or no name)
+  if (!user || !user.name) {
+    return <UserSetup />;
+  }
+  
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <CurseChecker />
+          <Routes>
+            <Route path="/" element={<LandingPage />} />
+            <Route element={<Layout />}>
+              <Route path="/home" element={<Index />} />
+              <Route path="/character" element={<Character />} />
+              <Route path="/planner" element={<Planner />} />
+              <Route path="/quests" element={<Quests />} />
+              <Route path="/missions" element={<Missions />} />
+              <Route path="/shop" element={<Shop />} />
+              <Route path="/milestones" element={<Milestones />} />
+            </Route>
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;

@@ -22,6 +22,8 @@ export interface Task {
   expReward: number;
   createdAt?: Date;
   scheduledFor?: Date;
+  missed?: boolean; // To track if the deadline was missed
+  deadline?: Date; // To track task deadline for the Shadow Penalty system
 }
 
 export interface Quest {
@@ -38,6 +40,7 @@ export interface Quest {
   deadline?: Date;
   difficulty: Difficulty;
   category: DailyWinCategory;
+  missed?: boolean; // To track if the deadline was missed
 }
 
 export interface Mission {
@@ -51,6 +54,7 @@ export interface Mission {
   rank?: string;
   day?: number;
   releaseDate?: Date;
+  missed?: boolean; // To track if the deadline was missed
 }
 
 export type Stat = 'physical' | 'cognitive' | 'emotional' | 'spiritual' | 'social';

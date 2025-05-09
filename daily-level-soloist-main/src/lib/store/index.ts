@@ -6,9 +6,10 @@ import { createQuestSlice, QuestSlice } from './slices/quest-slice';
 import { createMissionSlice, MissionSlice } from './slices/mission-slice';
 import { createUserSlice, UserSlice } from './slices/user-slice';
 import { createShopSlice, ShopSlice } from './slices/shop-slice';
+import { createPunishmentSlice, PunishmentSlice } from './slices/punishment-slice';
 import { getDB } from '../db';
 
-export type StoreState = TaskSlice & QuestSlice & MissionSlice & UserSlice & ShopSlice;
+export type StoreState = TaskSlice & QuestSlice & MissionSlice & UserSlice & ShopSlice & PunishmentSlice;
 
 // Custom async storage for IndexedDB (store and retrieve strings only)
 const indexedDBStorage = {
@@ -36,6 +37,7 @@ export const useSoloLevelingStore = create<StoreState>()(
       ...createMissionSlice(...a),
       ...createUserSlice(...a),
       ...createShopSlice(...a),
+      ...createPunishmentSlice(...a),
     }),
     {
       name: 'soloist-store',

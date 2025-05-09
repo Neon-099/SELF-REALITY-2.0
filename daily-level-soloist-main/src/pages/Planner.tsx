@@ -15,7 +15,9 @@ import {
   Eye,
   Plus,
   Check,
-  Trophy
+  Trophy,
+  XCircle,
+  AlertTriangle
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -936,25 +938,63 @@ const Planner = () => {
                           <div>
                             <h5 className="text-sm font-medium text-gray-400 mb-2 ml-1">Completed Tasks</h5>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                              {completedTasks.map(task => (
-                                <div 
-                                  key={task.id}
-                                  className="bg-gray-800/30 border border-green-500/30 rounded-lg px-4 py-3 transition-all"
-                                >
-                                  <div className="flex justify-between items-start">
-                                    <div className="flex items-center">
-                                      <Check className="h-4 w-4 text-green-500 mr-2" />
-                                      <span className="font-medium text-gray-400 truncate line-through">{task.title}</span>
+                              {completedTasks.map(task => {
+                                // Check task completion status
+                                const isMissed = task.missed === true;
+                                const isLate = task.deadline && task.completedAt 
+                                  ? new Date(task.completedAt) > new Date(task.deadline) 
+                                  : false;
+                                
+                                return (
+                                  <div 
+                                    key={task.id}
+                                    className={cn(
+                                      "bg-gray-800/30 rounded-lg px-4 py-3 transition-all",
+                                      isMissed 
+                                        ? "border border-red-500/30" 
+                                        : isLate
+                                          ? "border border-orange-500/30"
+                                          : "border border-green-500/30"
+                                    )}
+                                  >
+                                    <div className="flex justify-between items-start">
+                                      <div className="flex items-center">
+                                        {isMissed ? (
+                                          <XCircle className="h-4 w-4 text-red-500 mr-2" />
+                                        ) : isLate ? (
+                                          <AlertTriangle className="h-4 w-4 text-orange-500 mr-2" />
+                                        ) : (
+                                          <Check className="h-4 w-4 text-green-500 mr-2" />
+                                        )}
+                                        <span className="font-medium text-gray-400 truncate line-through">{task.title}</span>
+                                      </div>
+                                      <span className={cn(
+                                        "ml-2 text-xs px-2 py-0.5 rounded-full",
+                                        isMissed 
+                                          ? "bg-red-500/20 text-red-400" 
+                                          : isLate
+                                            ? "bg-orange-500/20 text-orange-400"
+                                            : "bg-green-500/20 text-green-400"
+                                      )}>
+                                        {isMissed ? "Missed" : isLate ? "Late" : "Completed"}
+                                      </span>
                                     </div>
-                                    <span className="ml-2 text-xs px-2 py-0.5 bg-green-500/20 text-green-400 rounded-full">
-                                      Completed
-                                    </span>
+                                    <div className="text-xs text-gray-500 mt-1 truncate pl-6">
+                                      {task.category}
+                                      {task.deadline && (
+                                        <span className="ml-2">
+                                          {new Date(task.deadline).toLocaleString([], { 
+                                            month: 'short', 
+                                            day: 'numeric', 
+                                            hour: '2-digit', 
+                                            minute: '2-digit' 
+                                          })}
+                                        </span>
+                                      )}
+                                    </div>
                                   </div>
-                                  <div className="text-xs text-gray-500 mt-1 truncate pl-6">
-                                    {task.category}
-                                  </div>
-                                </div>
-                              ))}
+                                );
+                              })}
                             </div>
                           </div>
                         )}
