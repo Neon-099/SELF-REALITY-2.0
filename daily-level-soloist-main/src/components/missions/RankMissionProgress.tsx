@@ -8,6 +8,8 @@ import { updateMission } from '@/lib/db';
 import { useToast } from '@/components/ui/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { Rank } from '@/lib/types';
+import { PredefinedMission } from '@/data/predefined-missions';
+import { CompletedMission } from '@/lib/store/slices/mission-slice';
 
 interface RankMissionProgressProps {
   missions: PredefinedMission[];
@@ -22,6 +24,10 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
   const completeMission = useSoloLevelingStore(state => state.completeMission);
   const completedMissionIds = useSoloLevelingStore(state => state.completedMissionIds);
   const [isLoading, setIsLoading] = useState(false);
+  const [showAll, setShowAll] = useState(false);
+  
+  // Access store state
+  const { completedMissionHistory } = useSoloLevelingStore();
   
   // Ensure missions is always an array
   const safeMissions = Array.isArray(missions) ? missions : [];
@@ -60,14 +66,40 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
       return;
     }
     // Complete the mission in the store and persist in IndexedDB
-    completeMission(mission.id);
-    await updateMission({ ...mission, completed: true });
-    toast({
-      title: "Mission Reward Claimed!",
-      description: `You earned ${mission.expReward} EXP from "${mission.title}"`,
-      variant: "default",
-    });
+    try {
+      await completeMission(mission.id);
+      toast({
+        title: "Mission Completed!",
+        description: `You've completed: ${mission.title}`,
+        variant: "default",
+      });
+    } catch (error) {
+      console.error("Error completing mission:", error);
+      toast({
+        title: "Error",
+        description: "Failed to complete mission",
+        variant: "destructive",
+      });
+    }
   };
+  
+  // Get total completed missions for this rank
+  const completedCount = missions.filter(m => completedMissionIds.includes(m.id)).length;
+  const completionPercentage = Math.round((completedCount / missions.length) * 100);
+  
+  // Group missions by day
+  const missionsByDay = missions.reduce((acc, mission) => {
+    const dayKey = mission.day;
+    if (!acc[dayKey]) {
+      acc[dayKey] = [];
+    }
+    acc[dayKey].push(mission);
+    return acc;
+  }, {} as Record<number, PredefinedMission[]>);
+  
+  // Determine days to show
+  const days = Object.keys(missionsByDay).map(Number).sort((a, b) => a - b);
+  const visibleDays = showAll ? days : days.slice(0, Math.min(7, days.length));
   
   // Render mission cards safely
   const renderMissionCards = () => {
@@ -90,6 +122,9 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
     
     return dayMissions.map(mission => {
       const isCompleted = mission.completed || completedMissionIds.includes(mission.id);
+      // Try to find the completed mission in history to get actual EXP earned
+      const completedMission = completedMissionHistory.find(cm => cm.id === mission.id);
+      
       return (
         <Card 
           key={mission.id} 
@@ -117,7 +152,14 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
               </div>
               <p className={`mb-4 ${isCompleted ? 'text-gray-400' : 'text-muted-foreground'}`}>{mission.description}</p>
               {isCompleted && (
-                <div className="text-blue-500 text-sm font-semibold mt-2">+{mission.expReward} EXP (earned)</div>
+                <div className="text-blue-500 text-sm font-semibold mt-2">
+                  {/* If we have direct access to the earned EXP */}
+                  {completedMission ? (
+                    <>+{completedMission.expEarned} EXP (earned)</>
+                  ) : (
+                    <>+{mission.expReward} EXP (earned)</>
+                  )}
+                </div>
               )}
             </div>
             {/* Mission action button */}

@@ -50,36 +50,20 @@ const queryClient = new QueryClient();
 
 // Component to check for curse status and missed deadlines
 function CurseChecker() {
-  const store = useSoloLevelingStore();
+  const checkCurseStatus = useSoloLevelingStore(state => state.checkCurseStatus);
   
   useEffect(() => {
-    // Check if the functions exist before trying to use them
-    const checkCurseStatus = store.checkCurseStatus;
-    const resetWeeklyChances = store.resetWeeklyChances;
+    // Check curse status on initial load
+    checkCurseStatus();
     
-    // Only run checks if the functions exist
-    if (typeof checkCurseStatus === 'function' && typeof resetWeeklyChances === 'function') {
-      // Initial check
+    // Set up interval to check curse status every 5 minutes
+    const interval = setInterval(() => {
       checkCurseStatus();
-      resetWeeklyChances();
-      
-      // Set up intervals for periodic checks
-      const deadlineCheckInterval = setInterval(() => {
-        checkCurseStatus();
-      }, 60000); // Check every minute
-      
-      const weeklyResetInterval = setInterval(() => {
-        resetWeeklyChances();
-      }, 3600000); // Check every hour
-      
-      return () => {
-        clearInterval(deadlineCheckInterval);
-        clearInterval(weeklyResetInterval);
-      };
-    }
+    }, 5 * 60 * 1000); // every 5 minutes
     
-    return undefined;
-  }, [store]);
+    // Clean up interval on unmount
+    return () => clearInterval(interval);
+  }, [checkCurseStatus]);
   
   return null;
 }

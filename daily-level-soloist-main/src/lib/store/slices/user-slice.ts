@@ -39,6 +39,10 @@ export const createUserSlice: StateCreator<UserSlice> = (set, get) => ({
   user: initialUser,
   addExp: (exp) => {
     set((state: any) => {
+      // Get the current EXP modifier from punishment system
+      // We're explicitly NOT applying it here because callers should handle this
+      // This prevents double-applying the modifier
+      
       let { exp: currentExp, level, expToNextLevel } = state.user;
       currentExp += exp;
       
@@ -180,11 +184,26 @@ export const createUserSlice: StateCreator<UserSlice> = (set, get) => ({
       const newCount = 1;
       const isCompleted = true;
       
+      // Get the EXP modifier from the punishment system
+      const { getExpModifier } = get();
+      const expModifier = getExpModifier();
+      
       // Give attribute EXP reward for completing daily win
-        setTimeout(() => {
-          const statToIncrease = dailyWinToStat(category);
-          get().addStatExp(statToIncrease, 10);
-        }, 500);
+      setTimeout(() => {
+        const statToIncrease = dailyWinToStat(category);
+        // Apply the EXP modifier to the stat EXP reward
+        const statExpReward = Math.floor(10 * expModifier);
+        get().addStatExp(statToIncrease, statExpReward);
+        
+        // Notify user if a penalty was applied
+        if (expModifier < 1) {
+          toast({
+            title: `Daily Win - ${category}`,
+            description: `Earned ${statExpReward} stat EXP (${Math.round(expModifier * 100)}% rate due to penalty)`,
+            variant: "default"
+          });
+        }
+      }, 500);
 
       return {
         user: {

@@ -141,8 +141,15 @@ export const createQuestSlice: StateCreator<QuestSlice & any> = (set, get) => ({
         }
       }
 
+      // Get the experience modifier from punishment system
+      const getExpModifier = get().getExpModifier;
+      const expModifier = getExpModifier();
+      
+      // Calculate the modified EXP reward
+      const finalExpReward = Math.floor(completedTask.expReward * expModifier);
+
       let { exp, level, expToNextLevel } = state.user;
-      exp += completedTask.expReward;
+      exp += finalExpReward;
       
       while (exp >= expToNextLevel) {
         level++;
@@ -152,9 +159,18 @@ export const createQuestSlice: StateCreator<QuestSlice & any> = (set, get) => ({
       
       // Call increaseStatFree after the state update
       setTimeout(() => {
-        // Add 2 points to the attribute
-        get().addStatExp(attributeStat, 8);
-        // Toast handled by addStatExp
+        // Add stat points with modifier applied
+        const statExpReward = Math.floor(8 * expModifier);
+        get().addStatExp(attributeStat, statExpReward);
+        
+        // Notify user if a penalty was applied
+        if (expModifier < 1) {
+          toast({
+            title: "Quest Task Completed",
+            description: `You earned ${finalExpReward} EXP and ${statExpReward} attribute points (${Math.round(expModifier * 100)}% rate due to penalty)`,
+            variant: "default"
+          });
+        }
       }, 500);
 
       return {

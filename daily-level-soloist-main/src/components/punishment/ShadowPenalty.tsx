@@ -7,6 +7,7 @@ import { Progress } from '@/components/ui/progress';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { cn } from '@/lib/utils';
 
 export default function ShadowPenalty() {
   const [redemptionDialogOpen, setRedemptionDialogOpen] = useState(false);
@@ -67,7 +68,7 @@ export default function ShadowPenalty() {
             <Skull className="h-5 w-5 text-red-500" />
             <CardTitle className="text-lg font-bold text-red-500">The Shadow Penalty</CardTitle>
           </div>
-          <Badge variant={expModifier < 1 ? "destructive" : "outline"} className="font-mono">
+          <Badge variant={expModifier < 1 ? "destructive" : "outline"} className="font-mono text-sm">
             {Math.round(expModifier * 100)}% EXP Rate
           </Badge>
         </div>
@@ -77,22 +78,37 @@ export default function ShadowPenalty() {
       </CardHeader>
       
       <CardContent className="pb-3">
-        {/* Chances Counter */}
+        {/* Strike Counter  */}
         <div className="mb-4">
           <div className="flex justify-between items-center mb-1">
             <span className="text-sm text-gray-300">Weekly Chances</span>
-            <span className="text-sm font-mono">{chanceCounter}/5 used</span>
+            <span className="text-sm text-gray-300">{chanceCounter}/5 used</span>
           </div>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Progress value={chanceCounter * 20} className="h-2 w-full" />
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>You have {5 - chanceCounter} chances remaining this week</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          <div className="w-full h-2 bg-gray-800 rounded-full overflow-hidden">
+            <div 
+              className={cn(
+                "h-full transition-all",
+                isCursed
+                  ? "bg-red-500 animate-pulse" 
+                  : chanceCounter <= 2
+                  ? "bg-green-500"
+                  : chanceCounter <= 3
+                  ? "bg-yellow-500"
+                  : "bg-red-500"
+              )}
+              style={{ width: `${(chanceCounter / 5) * 100}%` }}
+            />
+          </div>
+          
+          {/* Make this message stand out more */}
+          {expModifier < 1 && (
+            <div className="mt-2 p-2 border border-yellow-500/30 bg-yellow-950/30 rounded text-center">
+              <p className="text-yellow-300 font-medium">
+                All EXP rewards are reduced to {Math.round(expModifier * 100)}% 
+                until your penalty expires
+              </p>
+            </div>
+          )}
         </div>
         
         {/* Status Indicators */}
@@ -148,49 +164,53 @@ export default function ShadowPenalty() {
                 Attempt Redemption Challenge
               </Button>
             </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Redemption Challenge</DialogTitle>
-                <DialogDescription>
-                  Complete this challenge to lift your curse and restore your experience gain rate.
-                  <div className="my-4 p-3 border border-amber-500/30 bg-amber-950/20 rounded-md">
-                    <h4 className="font-semibold text-amber-400 mb-2">Challenge Requirements:</h4>
-                    <ul className="space-y-2 text-sm text-amber-200/90">
-                      <li className="flex items-center gap-2">
-                        <CheckCircle className="h-4 w-4 text-amber-500" />
-                        Take a cold shower
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <CheckCircle className="h-4 w-4 text-amber-500" />
-                        Complete 10,000 steps
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <CheckCircle className="h-4 w-4 text-amber-500" />
-                        Full digital detox for 4 hours
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <CheckCircle className="h-4 w-4 text-amber-500" />
-                        Complete 3 delayed tasks today
-                      </li>
-                    </ul>
-                  </div>
-                  <div className="mt-4 text-red-300">
-                    <AlertCircle className="inline-block mr-2 h-4 w-4" />
-                    Failing the challenge will cost you one rank level!
-                  </div>
-                </DialogDescription>
+            <DialogContent className="max-w-md w-full p-3 sm:p-4 max-h-[95vh] overflow-y-auto">
+              <DialogHeader className="pb-1 sm:pb-2">
+                <DialogTitle className="text-lg sm:text-xl">Redemption Challenge</DialogTitle>
               </DialogHeader>
+              
+              <div className="text-sm text-muted-foreground mt-1 mb-3">
+                Complete this challenge to lift your curse and restore your experience gain rate.
+              </div>
+              
+              <div className="mb-3 p-2.5 border border-amber-500/30 bg-amber-950/20 rounded-md">
+                <h4 className="font-semibold text-amber-400 mb-1.5">Challenge Requirements:</h4>
+                <ul className="space-y-1 text-sm text-amber-200/90">
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="h-3.5 w-3.5 flex-shrink-0 text-amber-500" />
+                    <span>Take a cold shower</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="h-3.5 w-3.5 flex-shrink-0 text-amber-500" />
+                    <span>Complete 10,000 steps</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="h-3.5 w-3.5 flex-shrink-0 text-amber-500" />
+                    <span>Full digital detox for 4 hours</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="h-3.5 w-3.5 flex-shrink-0 text-amber-500" />
+                    <span>Complete 3 delayed tasks today</span>
+                  </li>
+                </ul>
+              </div>
+              
+              <div className="mb-4 text-sm text-red-300 flex items-center">
+                <AlertCircle className="mr-2 h-4 w-4 flex-shrink-0" />
+                <span>Failing the challenge will cost you one rank level!</span>
+              </div>
+              
               <DialogFooter className="flex flex-col sm:flex-row gap-2">
-                <Button variant="ghost" className="w-full" onClick={() => setRedemptionDialogOpen(false)}>
-                  <X className="mr-2 h-4 w-4" />
+                <Button variant="ghost" size="sm" className="w-full" onClick={() => setRedemptionDialogOpen(false)}>
+                  <X className="mr-1.5 h-4 w-4" />
                   Cancel
                 </Button>
-                <Button variant="destructive" className="w-full" onClick={handleRedemptionFailure}>
-                  <X className="mr-2 h-4 w-4" />
+                <Button variant="destructive" size="sm" className="w-full" onClick={handleRedemptionFailure}>
+                  <X className="mr-1.5 h-4 w-4" />
                   Failed Challenge
                 </Button>
-                <Button variant="default" className="w-full" onClick={handleRedemptionSuccess}>
-                  <Zap className="mr-2 h-4 w-4" />
+                <Button variant="default" size="sm" className="w-full" onClick={handleRedemptionSuccess}>
+                  <Zap className="mr-1.5 h-4 w-4" />
                   Completed Challenge
                 </Button>
               </DialogFooter>

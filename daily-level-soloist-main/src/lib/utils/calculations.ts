@@ -12,14 +12,24 @@ export const getExpForDifficulty = (difficulty: Difficulty): number => {
   return rewards[difficulty as keyof typeof rewards] || 15;
 };
 
+/**
+ * Applies an EXP modifier (such as from Shadow Fatigue or Curse)
+ * @param baseExp The original EXP amount
+ * @param modifier The modifier to apply (e.g., 0.75 for 75% EXP)
+ * @returns The modified EXP amount, rounded down to nearest integer
+ */
+export const applyExpModifier = (baseExp: number, modifier: number): number => {
+  return Math.floor(baseExp * modifier);
+};
+
 export const calculateRank = (level: number): Rank => {
-  if (level >= 200) return 'SSS';
-  if (level >= 160) return 'SS';
-  if (level >= 120) return 'S';
-  if (level >= 90) return 'A';
-  if (level >= 60) return 'B';
-  if (level >= 40) return 'C';
-  if (level >= 25) return 'D';
-  if (level >= 15) return 'E';
+  if (level >= 100) return 'SSS';
+  if (level >= 90) return 'SS';
+  if (level >= 80) return 'S';
+  if (level >= 70) return 'A';
+  if (level >= 50) return 'B';
+  if (level >= 30) return 'C';
+  if (level >= 20) return 'D';
+  if (level >= 10) return 'E';
   return 'F';
 };
