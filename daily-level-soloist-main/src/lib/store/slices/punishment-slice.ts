@@ -244,26 +244,16 @@ export const createPunishmentSlice: StateCreator<PunishmentSlice & any> = (set, 
     
     // Check if already redeemed this week
     if (lastRedemptionDate) {
-      try {
-        const redemptionDate = new Date(lastRedemptionDate);
-        
-        // Make sure we have valid dates before calculating
-        if (!isNaN(redemptionDate.getTime())) {
-          const lastRedemptionWeek = Math.floor(redemptionDate.getTime() / (7 * 24 * 60 * 60 * 1000));
-          const currentWeek = Math.floor(now.getTime() / (7 * 24 * 60 * 60 * 1000));
-          
-          if (lastRedemptionWeek === currentWeek) {
-            toast({
-              title: "Redemption Failed",
-              description: "You've already attempted redemption this week.",
-              variant: "destructive"
-            });
-            return;
-          }
-        }
-      } catch (error) {
-        console.error("Error checking lastRedemptionDate:", error);
-        // Continue with redemption if there's an error
+      const lastRedemptionWeek = Math.floor(lastRedemptionDate.getTime() / (7 * 24 * 60 * 60 * 1000));
+      const currentWeek = Math.floor(now.getTime() / (7 * 24 * 60 * 60 * 1000));
+      
+      if (lastRedemptionWeek === currentWeek) {
+        toast({
+          title: "Redemption Failed",
+          description: "You've already attempted redemption this week.",
+          variant: "destructive"
+        });
+        return;
       }
     }
     
@@ -329,24 +319,11 @@ export const createPunishmentSlice: StateCreator<PunishmentSlice & any> = (set, 
     
     // Check if already redeemed this week
     if (lastRedemptionDate) {
-      try {
-        const now = new Date();
-        const redemptionDate = new Date(lastRedemptionDate);
-        
-        // Make sure we have valid dates before calculating
-        if (isNaN(redemptionDate.getTime())) {
-          console.warn("Invalid lastRedemptionDate encountered");
-          return true; // Allow redemption if date is invalid
-        }
-        
-        const lastRedemptionWeek = Math.floor(redemptionDate.getTime() / (7 * 24 * 60 * 60 * 1000));
-        const currentWeek = Math.floor(now.getTime() / (7 * 24 * 60 * 60 * 1000));
-        
-        if (lastRedemptionWeek === currentWeek) return false;
-      } catch (error) {
-        console.error("Error checking redemption date:", error);
-        return true; // Allow redemption if there's an error
-      }
+      const now = new Date();
+      const lastRedemptionWeek = Math.floor(lastRedemptionDate.getTime() / (7 * 24 * 60 * 60 * 1000));
+      const currentWeek = Math.floor(now.getTime() / (7 * 24 * 60 * 60 * 1000));
+      
+      if (lastRedemptionWeek === currentWeek) return false;
     }
     
     return true;

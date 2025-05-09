@@ -164,55 +164,53 @@ export default function ShadowPenalty() {
                 Attempt Redemption Challenge
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-md w-full p-3 sm:p-4 max-h-[95vh] overflow-y-auto">
-              <DialogHeader className="pb-1 sm:pb-2">
-                <DialogTitle className="text-lg sm:text-xl">Redemption Challenge</DialogTitle>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle className="text-xl">Redemption Challenge</DialogTitle>
+                <DialogDescription>
+                  Complete this challenge to lift your curse and restore your experience gain rate.
+                  <div className="my-4 p-3 border border-amber-500/30 bg-amber-950/20 rounded-md">
+                    <h4 className="font-semibold text-amber-400 mb-2">Challenge Requirements:</h4>
+                    <ul className="space-y-2 text-sm text-amber-200/90">
+                      <li className="flex items-center gap-2">
+                        <CheckCircle className="h-4 w-4 text-amber-500 flex-shrink-0" />
+                        <span>Take a cold shower</span>
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <CheckCircle className="h-4 w-4 text-amber-500 flex-shrink-0" />
+                        <span>Complete 10,000 steps</span>
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <CheckCircle className="h-4 w-4 text-amber-500 flex-shrink-0" />
+                        <span>Full digital detox for 4 hours</span>
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <CheckCircle className="h-4 w-4 text-amber-500 flex-shrink-0" />
+                        <span>Complete 3 delayed tasks today</span>
+                      </li>
+                    </ul>
+                  </div>
+                  <div className="mt-4 text-red-300 flex items-start gap-2">
+                    <AlertCircle className="h-4 w-4 flex-shrink-0 mt-0.5" />
+                    <span>Failing the challenge will cost you one rank level!</span>
+                  </div>
+                </DialogDescription>
               </DialogHeader>
-              
-              <div className="text-sm text-muted-foreground mt-1 mb-3">
-                Complete this challenge to lift your curse and restore your experience gain rate.
-              </div>
-              
-              <div className="mb-3 p-2.5 border border-amber-500/30 bg-amber-950/20 rounded-md">
-                <h4 className="font-semibold text-amber-400 mb-1.5">Challenge Requirements:</h4>
-                <ul className="space-y-1 text-sm text-amber-200/90">
-                  <li className="flex items-center gap-2">
-                    <CheckCircle className="h-3.5 w-3.5 flex-shrink-0 text-amber-500" />
-                    <span>Take a cold shower</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle className="h-3.5 w-3.5 flex-shrink-0 text-amber-500" />
-                    <span>Complete 10,000 steps</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle className="h-3.5 w-3.5 flex-shrink-0 text-amber-500" />
-                    <span>Full digital detox for 4 hours</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle className="h-3.5 w-3.5 flex-shrink-0 text-amber-500" />
-                    <span>Complete 3 delayed tasks today</span>
-                  </li>
-                </ul>
-              </div>
-              
-              <div className="mb-4 text-sm text-red-300 flex items-center">
-                <AlertCircle className="mr-2 h-4 w-4 flex-shrink-0" />
-                <span>Failing the challenge will cost you one rank level!</span>
-              </div>
-              
-              <DialogFooter className="flex flex-col sm:flex-row gap-2">
-                <Button variant="ghost" size="sm" className="w-full" onClick={() => setRedemptionDialogOpen(false)}>
-                  <X className="mr-1.5 h-4 w-4" />
+              <DialogFooter className="flex sm:justify-between gap-2 mt-4">
+                <Button variant="ghost" onClick={() => setRedemptionDialogOpen(false)}>
+                  <X className="mr-2 h-4 w-4" />
                   Cancel
                 </Button>
-                <Button variant="destructive" size="sm" className="w-full" onClick={handleRedemptionFailure}>
-                  <X className="mr-1.5 h-4 w-4" />
-                  Failed Challenge
-                </Button>
-                <Button variant="default" size="sm" className="w-full" onClick={handleRedemptionSuccess}>
-                  <Zap className="mr-1.5 h-4 w-4" />
-                  Completed Challenge
-                </Button>
+                <div className="flex gap-2">
+                  <Button variant="destructive" onClick={handleRedemptionFailure}>
+                    <X className="mr-2 h-4 w-4" />
+                    Failed Challenge
+                  </Button>
+                  <Button variant="default" onClick={handleRedemptionSuccess}>
+                    <Zap className="mr-2 h-4 w-4" />
+                    Completed
+                  </Button>
+                </div>
               </DialogFooter>
             </DialogContent>
           </Dialog>
