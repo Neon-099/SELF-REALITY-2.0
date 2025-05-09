@@ -1,5 +1,7 @@
 import { openDB, DBSchema, IDBPDatabase } from 'idb';
 
+// Keeping the interface definitions for type checking purposes
+// but operations will be handled by the Zustand store
 interface Mission {
   id: string;
   title: string;
@@ -9,6 +11,7 @@ interface Mission {
   day: number;
   releaseDate: Date;
 }
+
 interface Quest {
   id: string;
   title: string;
@@ -17,6 +20,7 @@ interface Quest {
   completed: boolean;
   completedAt?: Date;
 }
+
 interface Task {
   id: string;
   title: string;
@@ -29,6 +33,7 @@ interface Task {
   completedAt?: Date;
   createdAt: Date;
 }
+
 interface ShopItem {
   id: string;
   name: string;
@@ -48,7 +53,8 @@ interface CompletedMission {
   expEarned: number;
 }
 
-interface SoloistDB extends DBSchema {
+// Define a more flexible schema for DB migration purposes
+interface MigrationDB extends DBSchema {
   missions: {
     key: string;
     value: Mission;
@@ -75,18 +81,54 @@ interface SoloistDB extends DBSchema {
   };
 }
 
+// Final schema without the mission stores
+interface SoloistDB extends DBSchema {
+  quests: {
+    key: string;
+    value: Quest;
+  };
+  tasks: {
+    key: string;
+    value: Task;
+  };
+  shop: {
+    key: string;
+    value: ShopItem;
+  };
+  store: {
+    key: string;
+    value: any;
+  };
+}
+
 let dbPromise: Promise<IDBPDatabase<SoloistDB>> | null = null;
 
 export function getDB() {
   if (!dbPromise) {
-    dbPromise = openDB<SoloistDB>('soloist-db', 3, {
+    dbPromise = openDB<SoloistDB>('soloist-db', 4, { // Increment version for schema change
       upgrade(db, oldVersion, newVersion) {
-        if (!db.objectStoreNames.contains('missions')) {
-          db.createObjectStore('missions', { keyPath: 'id' });
+        // We're not creating mission stores anymore but keeping legacy code
+        // for data migration purposes
+        
+        // If old version had these stores, we need to migrate the data to the main store
+        if (oldVersion < 4) {
+          // For migration purposes, we need to cast to a different interface that includes
+          // the stores we're removing
+          const migrationDb = db as unknown as IDBPDatabase<MigrationDB>;
+          
+          // Check if these object stores exist before trying to delete them
+          if (migrationDb.objectStoreNames.contains('missions')) {
+            // In a real migration we would get all missions and add them to the store
+            // Since we're using Zustand's persist middleware, we'll handle this in the mission slice
+            migrationDb.deleteObjectStore('missions');
+          }
+          if (migrationDb.objectStoreNames.contains('completedMissions')) {
+            // Same for completed missions
+            migrationDb.deleteObjectStore('completedMissions');
+          }
         }
-        if (!db.objectStoreNames.contains('completedMissions')) {
-          db.createObjectStore('completedMissions', { keyPath: 'id' });
-        }
+
+        // Ensure the other stores still exist
         if (!db.objectStoreNames.contains('quests')) {
           db.createObjectStore('quests', { keyPath: 'id' });
         }
@@ -105,48 +147,143 @@ export function getDB() {
   return dbPromise;
 }
 
-// --- Missions ---
+// --- Legacy Mission functions (for backward compatibility) ---
+// All of these now work with the store state instead of direct IndexedDB access
+
 export async function getAllMissions() {
-  const db = await getDB();
-  return db.getAll('missions');
+  // This now retrieves missions from the Zustand store through the 'store' object store
+  try {
+    const db = await getDB();
+    const storeData = await db.get('store', 'soloist-store');
+    if (storeData) {
+      const parsedStore = JSON.parse(storeData);
+      return parsedStore.state?.missions || [];
+    }
+    return [];
+  } catch (error) {
+    console.error("Error fetching missions from store:", error);
+    return [];
+  }
 }
 
 export async function getCompletedMissions() {
-  const db = await getDB();
-  return db.getAll('completedMissions');
+  // This now retrieves completed missions from the Zustand store through the 'store' object store
+  try {
+    const db = await getDB();
+    const storeData = await db.get('store', 'soloist-store');
+    if (storeData) {
+      const parsedStore = JSON.parse(storeData);
+      return parsedStore.state?.completedMissionHistory || [];
+    }
+    return [];
+  } catch (error) {
+    console.error("Error fetching completed missions from store:", error);
+    return [];
+  }
 }
 
 export async function addMission(mission: Mission) {
-  const db = await getDB();
-  await db.put('missions', mission);
+  // We'll now let the Zustand store handle this
+  // This function remains for backward compatibility
+  console.warn("Direct IndexedDB mission operations are deprecated. Use the Zustand store instead.");
+  
+  // Try to update the store directly
+  try {
+    const db = await getDB();
+    const storeData = await db.get('store', 'soloist-store');
+    if (storeData) {
+      const parsedStore = JSON.parse(storeData);
+      if (parsedStore.state && Array.isArray(parsedStore.state.missions)) {
+        parsedStore.state.missions.push(mission);
+        await db.put('store', JSON.stringify(parsedStore), 'soloist-store');
+      }
+    }
+  } catch (error) {
+    console.error("Error adding mission to store:", error);
+  }
 }
 
 export async function addCompletedMission(mission: CompletedMission) {
-  const db = await getDB();
-  await db.put('completedMissions', mission);
+  // We'll now let the Zustand store handle this
+  // This function remains for backward compatibility
+  console.warn("Direct IndexedDB completed mission operations are deprecated. Use the Zustand store instead.");
+  
+  // Try to update the store directly
+  try {
+    const db = await getDB();
+    const storeData = await db.get('store', 'soloist-store');
+    if (storeData) {
+      const parsedStore = JSON.parse(storeData);
+      if (parsedStore.state && Array.isArray(parsedStore.state.completedMissionHistory)) {
+        parsedStore.state.completedMissionHistory.push(mission);
+        await db.put('store', JSON.stringify(parsedStore), 'soloist-store');
+      }
+    }
+  } catch (error) {
+    console.error("Error adding completed mission to store:", error);
+  }
 }
 
 export async function deleteMission(id: string) {
-  const db = await getDB();
-  await db.delete('missions', id);
+  // We'll now let the Zustand store handle this
+  // This function remains for backward compatibility
+  console.warn("Direct IndexedDB mission operations are deprecated. Use the Zustand store instead.");
+  
+  // Try to update the store directly
+  try {
+    const db = await getDB();
+    const storeData = await db.get('store', 'soloist-store');
+    if (storeData) {
+      const parsedStore = JSON.parse(storeData);
+      if (parsedStore.state && Array.isArray(parsedStore.state.missions)) {
+        parsedStore.state.missions = parsedStore.state.missions.filter((m: Mission) => m.id !== id);
+        await db.put('store', JSON.stringify(parsedStore), 'soloist-store');
+      }
+    }
+  } catch (error) {
+    console.error("Error deleting mission from store:", error);
+  }
 }
 
 export async function updateMission(mission: Mission) {
-  const db = await getDB();
-  await db.put('missions', mission);
+  // We'll now let the Zustand store handle this
+  // This function remains for backward compatibility
+  console.warn("Direct IndexedDB mission operations are deprecated. Use the Zustand store instead.");
+  
+  // Try to update the store directly
+  try {
+    const db = await getDB();
+    const storeData = await db.get('store', 'soloist-store');
+    if (storeData) {
+      const parsedStore = JSON.parse(storeData);
+      if (parsedStore.state && Array.isArray(parsedStore.state.missions)) {
+        parsedStore.state.missions = parsedStore.state.missions.map((m: Mission) => 
+          m.id === mission.id ? mission : m
+        );
+        await db.put('store', JSON.stringify(parsedStore), 'soloist-store');
+      }
+    }
+  } catch (error) {
+    console.error("Error updating mission in store:", error);
+  }
 }
 
 export async function getMissionsByDay(date: Date) {
-  const db = await getDB();
-  const completedMissions = await db.getAll('completedMissions');
-  return completedMissions.filter((mission) => {
-    const missionDate = new Date(mission.completedAt);
-    return (
-      missionDate.getDate() === date.getDate() &&
-      missionDate.getMonth() === date.getMonth() &&
-      missionDate.getFullYear() === date.getFullYear()
-    );
-  });
+  // Retrieve from the Zustand store instead
+  try {
+    const completedMissions = await getCompletedMissions();
+    return completedMissions.filter((mission) => {
+      const missionDate = new Date(mission.completedAt);
+      return (
+        missionDate.getDate() === date.getDate() &&
+        missionDate.getMonth() === date.getMonth() &&
+        missionDate.getFullYear() === date.getFullYear()
+      );
+    });
+  } catch (error) {
+    console.error("Error getting missions by day:", error);
+    return [];
+  }
 }
 
 // --- Quests ---

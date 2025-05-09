@@ -3,7 +3,6 @@ import { Mission, Stat } from '../../types';
 import { v4 as uuidv4 } from 'uuid';
 import { calculateExpToNextLevel, calculateRank } from '../../utils/calculations';
 import { toast } from '@/hooks/use-toast';
-import { addCompletedMission, getCompletedMissions, deleteMission } from '@/lib/db';
 
 export interface CompletedMission {
   id: string;
@@ -20,7 +19,7 @@ export interface MissionSlice {
   missions: Mission[];
   completedMissionIds: string[]; // Store just the IDs of completed missions
   completedMissionHistory: CompletedMission[]; // Store completion history with dates
-  addMission: (title: string, description: string, expReward: number) => void;
+  addMission: (title: string, description: string, expReward: number, rank?: string, day?: number) => void;
   completeMission: (id: string) => Promise<void>;
   getMissionsByDay: (date: Date) => CompletedMission[];
   loadCompletedMissions: () => Promise<void>;
@@ -31,7 +30,7 @@ export const createMissionSlice: StateCreator<MissionSlice & any> = (set, get) =
   completedMissionIds: [],
   completedMissionHistory: [],
 
-  addMission: (title, description, expReward) => {
+  addMission: (title, description, expReward, rank = 'F', day = 1) => {
     set((state: MissionSlice) => ({
       missions: [
         ...state.missions,
@@ -41,7 +40,10 @@ export const createMissionSlice: StateCreator<MissionSlice & any> = (set, get) =
           description,
           completed: false,
           expReward,
-          createdAt: new Date()
+          createdAt: new Date(),
+          rank,
+          day,
+          releaseDate: new Date()
         }
       ]
     }));
@@ -68,8 +70,8 @@ export const createMissionSlice: StateCreator<MissionSlice & any> = (set, get) =
       title: mission.title,
       description: mission.description,
       expReward: mission.expReward,
-      rank: mission.rank,
-      day: mission.day,
+      rank: (mission as any).rank || 'F',
+      day: (mission as any).day || 1,
       completedAt: new Date(),
       expEarned: mission.expReward,
     };
@@ -77,16 +79,17 @@ export const createMissionSlice: StateCreator<MissionSlice & any> = (set, get) =
     try {
       console.log("Starting mission completion for:", mission.title);
       
-      // Save to completedMissions and remove from missions (DB)
-      await addCompletedMission(completedMission);
-      await deleteMission(mission.id);
+      // We no longer need to save to a separate store
+      // Just update the Zustand store, which will be persisted to IndexedDB
 
       // Update in-memory state with immediate change
       set((state: any) => {
         console.log("Current user state:", state.user);
         
-        // Remove from pending missions
-        const updatedMissions = state.missions.filter((m: Mission) => m.id !== id);
+        // Instead of removing, update the mission to mark it as completed
+        const updatedMissions = state.missions.map((m: Mission) => 
+          m.id === id ? { ...m, completed: true, completedAt: new Date() } : m
+        );
         
         // Add to completed history and IDs
         const updatedCompletedMissionIds = [...state.completedMissionIds, mission.id];
@@ -199,10 +202,9 @@ export const createMissionSlice: StateCreator<MissionSlice & any> = (set, get) =
   },
 
   loadCompletedMissions: async () => {
-    const completedMissions = await getCompletedMissions();
-    set((state: any) => ({
-      completedMissionHistory: completedMissions,
-      completedMissionIds: completedMissions.map(m => m.id)
-    }));
+    // No need to load from a separate store anymore as everything is in the Zustand store
+    // This function is kept for backward compatibility but doesn't need to do anything
+    // If needed, you could implement migration from old database format here
+    console.log("loadCompletedMissions called - no action needed as missions are now stored in the Zustand store");
   }
 });

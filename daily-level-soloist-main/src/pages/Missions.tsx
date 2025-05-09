@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Lock, Plus } from 'lucide-react';
 import { useSoloLevelingStore } from '@/lib/store';
-import { Rank } from '@/lib/types';
+import { Rank, Mission } from '@/lib/types';
 import { PredefinedMission } from '@/data/predefined-missions';
 import RankMissionProgress from '@/components/missions/RankMissionProgress';
 import RankBadgesTimeline from '@/components/missions/RankBadgesTimeline';
-import { getAllMissions, addMission as addMissionToDB } from '@/lib/db';
 import { useToast } from '@/components/ui/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -13,6 +12,16 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
+// Utility function to convert Mission to PredefinedMission format
+const convertMissionToPredefined = (mission: Mission): PredefinedMission => {
+  return {
+    ...mission,
+    rank: (mission.rank || 'F') as Rank,
+    day: mission.day || 1,
+    releaseDate: mission.releaseDate || mission.createdAt || new Date()
+  };
+};
 
 interface RankLevel {
   id: Rank;
@@ -101,13 +110,17 @@ const createRankLevels = (): RankLevel[] => [
 
 const Missions = () => {
   const [currentRankIndex, setCurrentRankIndex] = useState(0);
-  const user = useSoloLevelingStore(state => state.user);
+  const { user, missions, addMission, completeMission } = useSoloLevelingStore(state => ({
+    user: state.user,
+    missions: state.missions,
+    addMission: state.addMission,
+    completeMission: state.completeMission
+  }));
   const [rankLevels, setRankLevels] = useState<RankLevel[]>(createRankLevels());
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [recentMissions, setRecentMissions] = useState<PredefinedMission[]>([]);
   const { toast } = useToast();
-  // New Mission Modal State
   const [showModal, setShowModal] = useState(false);
   const [newMission, setNewMission] = useState({
     title: '',
@@ -116,8 +129,6 @@ const Missions = () => {
     day: 1,
     rank: 'F',
   });
-  const [missionRefresh, setMissionRefresh] = useState(0);
-  const [allMissions, setAllMissions] = useState<PredefinedMission[]>([]);
 
   const handleNewMissionChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setNewMission({ ...newMission, [e.target.name]: e.target.value });
@@ -125,33 +136,22 @@ const Missions = () => {
 
   const handleCreateMission = async (e: React.FormEvent) => {
     e.preventDefault();
-    const newMissionObj = {
-      id: Math.random().toString(36).substr(2, 9),
-      title: newMission.title,
-      description: newMission.description,
-      expReward: Number(newMission.expReward),
-      day: Number(newMission.day),
-      rank: newMission.rank as any,
-      releaseDate: new Date(),
-      completed: false,
-    };
-    await addMissionToDB(newMissionObj);
+    
+    // Use the updated addMission function that now accepts rank and day
+    addMission(
+      newMission.title,
+      newMission.description,
+      Number(newMission.expReward),
+      newMission.rank,
+      Number(newMission.day)
+    );
+    
     setShowModal(false);
     setNewMission({ title: '', description: '', expReward: 10, day: 1, rank: 'F' });
-    setMissionRefresh(m => m + 1);
+    
     toast({ title: 'Mission Created', description: 'Your new mission has been added!' });
   };
 
-  // Load all missions from IndexedDB on mount and when missionRefresh changes
-  useEffect(() => {
-    async function loadMissions() {
-      const missions = await getAllMissions();
-      setAllMissions(missions);
-    }
-    loadMissions();
-  }, [missionRefresh]);
-
-  // Fetch missions data from backend
   useEffect(() => {
     const fetchMissions = async () => {
       if (!user?.rank) {
@@ -165,10 +165,24 @@ const Missions = () => {
         const userRankIndex = rankOrder.indexOf(user.rank);
         const unlockedRanks = rankOrder.slice(0, userRankIndex + 1);
         const missionsByRank: Record<Rank, PredefinedMission[]> = {} as Record<Rank, PredefinedMission[]>;
+        
         for (const rank of unlockedRanks) {
-          missionsByRank[rank] = allMissions.filter(m => m.rank === rank);
+          // Include all missions for this rank, both active and completed
+          const filteredMissions = missions
+            .filter(m => m.rank === rank)
+            .map(convertMissionToPredefined);
+          
+          missionsByRank[rank] = filteredMissions;
         }
-        setRecentMissions([]);
+        
+        // Set recent missions to show most recently created ones
+        const recentlyCreatedMissions = [...missions]
+          .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+          .slice(0, 3)
+          .map(convertMissionToPredefined);
+        
+        setRecentMissions(recentlyCreatedMissions);
+        
         const updatedRankLevels = rankLevels.map((rankLevel, index) => {
           const isLocked = index > userRankIndex;
           const rankMissions = missionsByRank[rankLevel.id] || [];
@@ -191,7 +205,7 @@ const Missions = () => {
       }
     };
     fetchMissions();
-  }, [user?.rank, allMissions]);
+  }, [user?.rank, missions]);
 
   const handlePrevRank = () => {
     setCurrentRankIndex(prev => Math.max(0, prev - 1));
@@ -381,7 +395,7 @@ const Missions = () => {
             </div>
           ) : (
             <RankMissionProgress 
-              key={currentRank.id + '-' + missionRefresh}
+              key={currentRank.id}
               missions={currentRank.missions} 
               rankName={currentRank.name} 
               totalDays={currentRank.daysRequired}

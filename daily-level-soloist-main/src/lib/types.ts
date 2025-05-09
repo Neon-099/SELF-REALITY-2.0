@@ -48,6 +48,9 @@ export interface Mission {
   expReward: number;
   createdAt: Date;
   completedAt?: Date;
+  rank?: string;
+  day?: number;
+  releaseDate?: Date;
 }
 
 export type Stat = 'physical' | 'cognitive' | 'emotional' | 'spiritual' | 'social';
