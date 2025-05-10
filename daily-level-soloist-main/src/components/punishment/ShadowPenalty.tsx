@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSoloLevelingStore } from '@/lib/store';
-import { Skull, Shield, Clock, AlertCircle, CheckCircle, X, Zap, Play } from 'lucide-react';
+import { Skull, Shield, Clock, AlertCircle, CheckCircle, X, Zap, Play, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -8,37 +8,89 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
+import { toast } from '@/hooks/use-toast';
+import { endOfDay, isBefore, isAfter, format } from 'date-fns';
 
 // Challenge requirements for redemption
-const REDEMPTION_CHALLENGES = [
+interface RecoveryTask {
+  title: string;
+  description: string;
+  category: string;
+  difficulty: string;
+}
+
+interface RecoveryChallenge {
+  title: string;
+  description: string;
+  difficulty: string;
+  category: string;
+  tasks: RecoveryTask[];
+}
+
+const REDEMPTION_CHALLENGES: RecoveryChallenge[] = [
   {
-    title: "Take a cold shower",
-    description: "Complete a cold shower for at least 5 minutes",
+    title: "Cold Shower Challenge",
+    description: "Demonstrate your resolve by taking a cold shower for at least 5 minutes",
     difficulty: "medium",
-    category: "physical"
+    category: "physical",
+    tasks: [
+      {
+        title: "Take a cold shower",
+        description: "Complete a cold shower for at least 5 minutes",
+        category: "physical",
+        difficulty: "medium"
+      }
+    ]
   },
   {
-    title: "Complete 10,000 steps",
-    description: "Walk at least 10,000 steps today",
+    title: "10,000 Steps Challenge",
+    description: "Push your physical limits by completing 10,000 steps in a single day",
     difficulty: "hard",
-    category: "physical"
+    category: "physical",
+    tasks: [
+      {
+        title: "Complete 10,000 steps",
+        description: "Walk at least 10,000 steps today",
+        category: "physical",
+        difficulty: "hard"
+      }
+    ]
   },
   {
-    title: "Digital detox for 4 hours",
-    description: "Stay away from all digital devices for 4 hours",
+    title: "Digital Detox Challenge",
+    description: "Free your mind from digital distractions for 4 hours",
     difficulty: "medium",
-    category: "mental"
+    category: "mental",
+    tasks: [
+      {
+        title: "Digital detox for 4 hours",
+        description: "Stay away from all digital devices for 4 hours",
+        category: "mental",
+        difficulty: "medium"
+      }
+    ]
   },
   {
-    title: "Complete 3 delayed tasks",
-    description: "Finish 3 tasks that you've been putting off",
+    title: "Delayed Tasks Conquest",
+    description: "Face your procrastination head-on by completing 3 delayed tasks",
     difficulty: "hard",
-    category: "intelligence"
+    category: "intelligence",
+    tasks: [
+      {
+        title: "Complete 3 delayed tasks",
+        description: "Finish 3 tasks that you've been putting off",
+        category: "intelligence",
+        difficulty: "hard"
+      }
+    ]
   }
 ];
 
 export default function ShadowPenalty() {
   const [redemptionDialogOpen, setRedemptionDialogOpen] = useState(false);
+  const [recoveryQuestIds, setRecoveryQuestIds] = useState<string[]>([]);
+  const [hasPendingRecovery, setHasPendingRecovery] = useState(false);
+  const [recoveryDeadline, setRecoveryDeadline] = useState<Date | null>(null);
   const { 
     chanceCounter, 
     isCursed, 
@@ -50,12 +102,91 @@ export default function ShadowPenalty() {
     areSideQuestsLocked,
     attemptRedemption,
     getExpModifier,
-    createTask
+    addQuest,
+    addQuestTask,
+    quests
   } = useSoloLevelingStore();
 
   // Check if we need to show the component
   const showComponent = chanceCounter > 0 || isCursed || hasShadowFatigue || areSideQuestsLocked();
   const expModifier = getExpModifier();
+  
+  // Check for existing recovery quests on component mount
+  useEffect(() => {
+    const recoveryQuests = quests.filter(quest => quest.isRecoveryQuest && !quest.completed);
+    if (recoveryQuests.length > 0) {
+      // We have active recovery quests
+      setHasPendingRecovery(true);
+      
+      // Store their IDs
+      const ids = recoveryQuests.map(quest => quest.id);
+      setRecoveryQuestIds(ids);
+      
+      // Get the deadline from the first quest
+      if (recoveryQuests[0].deadline) {
+        setRecoveryDeadline(new Date(recoveryQuests[0].deadline));
+      }
+      
+      // Check if any deadline has passed
+      const now = new Date();
+      const expiredQuests = recoveryQuests.filter(quest => 
+        quest.deadline && isAfter(now, new Date(quest.deadline))
+      );
+      
+      if (expiredQuests.length > 0) {
+        // Mark expired recovery quests as failed
+        toast({
+          title: "Recovery Challenge Failed",
+          description: "You didn't complete the recovery quests in time. The curse remains.",
+          variant: "destructive"
+        });
+        
+        // Clear recovery tracking
+        setRecoveryQuestIds([]);
+        setHasPendingRecovery(false);
+        setRecoveryDeadline(null);
+      }
+    } else {
+      // No active recovery quests
+      setHasPendingRecovery(false);
+      setRecoveryQuestIds([]);
+      setRecoveryDeadline(null);
+    }
+  }, [quests]);
+  
+  // Check if all recovery quests are completed to remove the curse
+  useEffect(() => {
+    if (!isCursed || recoveryQuestIds.length === 0) return;
+    
+    const allRecoveryQuests = quests.filter(quest => 
+      recoveryQuestIds.includes(quest.id)
+    );
+    
+    // If no recovery quests found, return
+    if (allRecoveryQuests.length === 0) return;
+    
+    // Check if all recovery quests are completed
+    const allCompleted = allRecoveryQuests.every(quest => quest.completed);
+    
+    if (allCompleted) {
+      // All recovery quests completed, remove the curse
+      useSoloLevelingStore.setState({ 
+        isCursed: false,
+        cursedUntil: null 
+      });
+      
+      toast({
+        title: "Redemption Complete!",
+        description: "You've completed all recovery quests! The curse has been lifted.",
+        variant: "default"
+      });
+      
+      // Clear recovery quest tracking
+      setRecoveryQuestIds([]);
+      setHasPendingRecovery(false);
+      setRecoveryDeadline(null);
+    }
+  }, [isCursed, quests, recoveryQuestIds]);
   
   if (!showComponent) return null;
   
@@ -89,24 +220,89 @@ export default function ShadowPenalty() {
     setRedemptionDialogOpen(false);
   };
   
-  // Create challenge tasks with today's deadline
+  // Create redemption side quests with today's deadline
   const startRedemptionChallenge = () => {
-    // Create end of day deadline
-    const today = new Date();
-    today.setHours(23, 59, 59, 999);
+    // If already has pending recovery, prevent creating more
+    if (hasPendingRecovery) {
+      toast({
+        title: "Recovery In Progress",
+        description: "You already have active recovery quests. Complete them first.",
+        variant: "destructive"
+      });
+      setRedemptionDialogOpen(false);
+      return;
+    }
     
-    // Create tasks for each challenge
+    // Create end of day deadline
+    const today = endOfDay(new Date());
+    
+    // Track the IDs of recovery quests
+    const newRecoveryQuestIds: string[] = [];
+    
+    // Create side quests for each challenge
     REDEMPTION_CHALLENGES.forEach(challenge => {
-      createTask(
-        challenge.title, 
-        challenge.description, 
-        challenge.difficulty as any, 
-        challenge.category as any, 
-        today
+      // Calculate reward based on difficulty
+      const baseReward = 100;
+      const difficultyMultiplier = challenge.difficulty === 'easy' ? 1 : 
+                                 challenge.difficulty === 'medium' ? 2 : 
+                                 challenge.difficulty === 'hard' ? 3 : 4;
+      const expReward = baseReward * difficultyMultiplier;
+      
+      // Create the side quest
+      const isMainQuest = false; // These are side quests
+      addQuest(
+        `[RECOVERY] ${challenge.title}`,
+        challenge.description,
+        isMainQuest,
+        expReward,
+        today,
+        challenge.difficulty as any
       );
+      
+      // Get the newly created quest ID (the last one in the list)
+      setTimeout(() => {
+        const quests = useSoloLevelingStore.getState().quests;
+        const questId = quests[quests.length - 1].id;
+        
+        // Mark as recovery quest
+        useSoloLevelingStore.getState().updateQuest(questId, { 
+          isRecoveryQuest: true 
+        });
+        
+        // Track this recovery quest ID
+        newRecoveryQuestIds.push(questId);
+        
+        // Add the tasks to the quest
+        challenge.tasks.forEach(task => {
+          addQuestTask(
+            questId,
+            task.title,
+            task.description,
+            task.category as any,
+            task.difficulty as any
+          );
+        });
+        
+        // Mark the quest as started
+        useSoloLevelingStore.getState().startQuest(questId);
+        
+        // Update recovery quest IDs after all have been created
+        if (newRecoveryQuestIds.length === REDEMPTION_CHALLENGES.length) {
+          setRecoveryQuestIds(newRecoveryQuestIds);
+          setHasPendingRecovery(true);
+          setRecoveryDeadline(today);
+        }
+      }, 100);
     });
     
     setRedemptionDialogOpen(false);
+    
+    // Show toast notification
+    toast({
+      title: "Recovery Quests Created",
+      description: "Complete all recovery quests by the end of today to lift your curse!",
+      variant: "default"
+    });
   };
   
   return (
@@ -200,6 +396,22 @@ export default function ShadowPenalty() {
               </div>
             </div>
           )}
+          
+          {/* Recovery Quest Status */}
+          {hasPendingRecovery && (
+            <div className="flex items-center justify-between bg-amber-950/20 p-2 rounded">
+              <div className="flex items-center gap-2">
+                <Shield className="h-4 w-4 text-amber-500" />
+                <span className="text-sm text-amber-300">Recovery In Progress</span>
+              </div>
+              <div className="text-xs text-amber-300/70">
+                {recoveryDeadline 
+                  ? `Expires ${format(recoveryDeadline, "h:mm a")}`
+                  : "Complete all quests today"
+                }
+              </div>
+            </div>
+          )}
         </div>
       </CardContent>
       
@@ -208,16 +420,29 @@ export default function ShadowPenalty() {
         <CardFooter className="pt-0">
           <Dialog open={redemptionDialogOpen} onOpenChange={setRedemptionDialogOpen}>
             <DialogTrigger asChild>
-              <Button variant="destructive" className="w-full">
-                <Shield className="mr-2 h-4 w-4" />
-                Attempt Redemption Challenge
+              <Button 
+                variant="destructive" 
+                className="w-full"
+                disabled={hasPendingRecovery}
+              >
+                {hasPendingRecovery ? (
+                  <>
+                    <Lock className="mr-2 h-4 w-4" />
+                    Recovery In Progress
+                  </>
+                ) : (
+                  <>
+                    <Shield className="mr-2 h-4 w-4" />
+                    Attempt Redemption Challenge
+                  </>
+                )}
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-md">
               <DialogHeader>
                 <DialogTitle className="text-xl">Redemption Challenge</DialogTitle>
                 <DialogDescription>
-                  Complete this challenge to lift your curse and restore your experience gain rate.
+                  Complete these special recovery quests to lift your curse and restore your experience gain rate.
                   <div className="my-4 p-3 border border-amber-500/30 bg-amber-950/20 rounded-md">
                     <h4 className="font-semibold text-amber-400 mb-2">Challenge Requirements:</h4>
                     <ul className="space-y-2 text-sm text-amber-200/90">
@@ -229,9 +454,22 @@ export default function ShadowPenalty() {
                       ))}
                     </ul>
                   </div>
-                  <div className="mt-4 text-red-300 flex items-start gap-2">
-                    <AlertCircle className="h-4 w-4 flex-shrink-0 mt-0.5" />
-                    <span>Failing the challenge will cost you one rank level!</span>
+                  <div className="mt-2 p-3 border border-amber-500/30 bg-amber-950/20 rounded-md">
+                    <h4 className="font-semibold text-amber-400 mb-2">Important Notes:</h4>
+                    <ul className="space-y-1 text-sm text-amber-200/90">
+                      <li className="flex items-start gap-2">
+                        <AlertCircle className="h-4 w-4 text-amber-500 flex-shrink-0 mt-0.5" />
+                        <span>All quests must be completed by the end of today</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <AlertCircle className="h-4 w-4 text-amber-500 flex-shrink-0 mt-0.5" />
+                        <span>This challenge can only be attempted once per curse</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <AlertCircle className="h-4 w-4 text-amber-500 flex-shrink-0 mt-0.5" />
+                        <span>Failing will cost you one rank level!</span>
+                      </li>
+                    </ul>
                   </div>
                 </DialogDescription>
               </DialogHeader>

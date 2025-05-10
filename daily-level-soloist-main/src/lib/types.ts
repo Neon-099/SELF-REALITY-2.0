@@ -41,6 +41,8 @@ export interface Quest {
   difficulty: Difficulty;
   category: DailyWinCategory;
   missed?: boolean; // To track if the deadline was missed
+  isRecoveryQuest?: boolean; // To mark quests that are part of redemption challenges
+  isDaily?: boolean; // To mark quests that are daily quests
 }
 
 export interface Mission {
