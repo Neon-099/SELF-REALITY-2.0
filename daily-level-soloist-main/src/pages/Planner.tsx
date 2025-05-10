@@ -17,7 +17,8 @@ import {
   Check,
   Trophy,
   XCircle,
-  AlertTriangle
+  AlertTriangle,
+  CalendarClock
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -32,6 +33,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { getExpForDifficulty } from '@/lib/utils/calculations';
 import { areAllDailyWinsCompleted, isDailyWinCompleted, hasPendingDailyWinTask, isAttributeLimitReached, getAttributeTaskCount } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { DateTimePicker } from '@/components/ui/date-time-picker';
 
 // Type guard to check if a string is a valid DailyWinCategory
 const isDailyWinCategory = (category: string): category is DailyWinCategory => {
@@ -66,6 +68,7 @@ const TaskDialog = ({
       'dailyWin'
   );
   const [category, setCategory] = React.useState<string>(editingTask?.category || 'mental');
+  const [deadline, setDeadline] = React.useState<Date | undefined>(editingTask?.deadline || new Date(Date.now() + 24 * 60 * 60 * 1000));
   
   // Daily win categories and attribute categories
   const dailyWinCategories = ["mental", "physical", "spiritual", "intelligence"];
@@ -209,6 +212,7 @@ const TaskDialog = ({
         category: categoryToUse,
         difficulty: formData.difficulty as Difficulty,
         expReward: getExpForDifficulty(formData.difficulty as Difficulty),
+        deadline: deadline
       };
       
       // Delete the old task
@@ -240,6 +244,7 @@ const TaskDialog = ({
         expReward: getExpForDifficulty(formData.difficulty as Difficulty),
         scheduledFor: selectedDate,
         createdAt: new Date(),
+        deadline: deadline
       };
       
       // Add the new task
@@ -257,6 +262,7 @@ const TaskDialog = ({
     setCategoryType('dailyWin');
     setCategory('mental');
     setDifficulty('medium');
+    setDeadline(new Date(Date.now() + 24 * 60 * 60 * 1000));
     onClose();
   };
 
@@ -345,7 +351,7 @@ const TaskDialog = ({
                 </SelectContent>
               </Select>
             </div>
-            
+
             <div className="space-y-1.5">
               <Label htmlFor="category" className="text-sm text-white/80 font-medium">Type</Label>
               <Select 
@@ -400,6 +406,25 @@ const TaskDialog = ({
                 </SelectContent>
               </Select>
             </div>
+          </div>
+          
+          <div className="space-y-1.5">
+            <Label className="text-sm text-white/80 font-medium">Deadline</Label>
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-xs text-indigo-300 flex items-center">
+                <CalendarClock className="h-3 w-3 mr-1" /> Automatic deadline enforcement
+              </div>
+            </div>
+            
+            <DateTimePicker 
+              date={deadline || new Date(Date.now() + 24 * 60 * 60 * 1000)}
+              setDate={setDeadline}
+              className="mt-2"
+              disabled={isTaskCompleted}
+            />
+            <p className="text-xs text-gray-400 mt-1">
+              Missing a deadline will automatically apply Shadow Penalty, reducing EXP reward by 50%.
+            </p>
           </div>
           
           {!isTaskCompleted && (

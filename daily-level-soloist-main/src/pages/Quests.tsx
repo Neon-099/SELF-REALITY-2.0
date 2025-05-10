@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useSoloLevelingStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, Swords, Star, ListTodo, ChevronDown, ChevronUp, Sword, Coins, Filter, Database, X } from 'lucide-react';
+import { CheckCircle, Swords, Star, ListTodo, ChevronDown, ChevronUp, Sword, Coins, Filter, Database, X, CalendarClock } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from '@/hooks/use-toast';
 import { DailyWinCategory, Difficulty } from '@/lib/types';
 import { isSameDay, format } from 'date-fns';
 import { getDB } from '@/lib/db';
+import { DateTimePicker } from '@/components/ui/date-time-picker';
 
 // Define a type for quest types
 type QuestType = 'main' | 'side' | 'daily';
@@ -181,7 +182,8 @@ const AddTaskDialog = ({ questId, onClose }: { questId: string; onClose: () => v
   const [taskTitle, setTaskTitle] = useState('');
   const [taskDescription, setTaskDescription] = useState('');
   const [category, setCategory] = useState<DailyWinCategory>('mental');
-  const [difficulty, setDifficulty] = useState<Difficulty>('easy');
+  const [difficulty, setDifficulty] = useState<Difficulty>('medium');
+  const [deadline, setDeadline] = useState<Date>(new Date(Date.now() + 24 * 60 * 60 * 1000));
 
   const handleAddTask = () => {
     if (!taskTitle.trim()) {
@@ -250,6 +252,23 @@ const AddTaskDialog = ({ questId, onClose }: { questId: string; onClose: () => v
           <option value="hard">Hard</option>
           <option value="boss">Boss</option>
         </select>
+      </div>
+      <div className="space-y-2">
+        <label className="text-sm font-medium">Deadline</label>
+        <div className="flex items-center justify-between mb-2">
+          <div className="text-xs text-indigo-300 flex items-center">
+            <CalendarClock className="h-3 w-3 mr-1" /> Automatic deadline enforcement
+          </div>
+        </div>
+        
+        <DateTimePicker 
+          date={deadline}
+          setDate={setDeadline}
+          className="mt-2"
+        />
+        <p className="text-xs text-gray-400 mt-1">
+          Missing a deadline will automatically apply Shadow Penalty, reducing EXP reward by 50%.
+        </p>
       </div>
       <Button onClick={handleAddTask} className="w-full">
         Add Task

@@ -214,40 +214,6 @@ export function AddTaskDialog() {
           </div>
           
           <div className="space-y-1.5 sm:space-y-2">
-            <Label className="text-white/80 font-medium">Deadline</Label>
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="has-deadline"
-                  checked={hasDeadline}
-                  onCheckedChange={setHasDeadline}
-                />
-                <Label htmlFor="has-deadline" className="cursor-pointer">
-                  Set a deadline
-                </Label>
-              </div>
-              {hasDeadline && (
-                <div className="text-xs text-indigo-300 flex items-center">
-                  <CalendarClock className="h-3 w-3 mr-1" /> Automatic deadline enforcement
-                </div>
-              )}
-            </div>
-            
-            {hasDeadline && (
-              <>
-                <DateTimePicker 
-                  date={deadline || new Date(Date.now() + 24 * 60 * 60 * 1000)} // Default to tomorrow
-                  setDate={setDeadline}
-                  className="mt-2"
-                />
-                <p className="text-xs text-gray-400 mt-1">
-                  Missing a deadline will automatically apply Shadow Penalty, reducing EXP reward by 50%.
-                </p>
-              </>
-            )}
-          </div>
-          
-          <div className="space-y-1.5 sm:space-y-2">
             <Label className="text-white/80 font-medium">Category</Label>
             <div className="grid grid-cols-2 gap-0 rounded-md overflow-hidden border border-indigo-500/20 bg-gray-800/80">
               <button
@@ -278,7 +244,6 @@ export function AddTaskDialog() {
               </button>
             </div>
           </div>
-          
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5 sm:space-y-2">
               <Label htmlFor="difficulty" className="text-white/80 font-medium">Difficulty</Label>
@@ -297,7 +262,6 @@ export function AddTaskDialog() {
                 </SelectContent>
               </Select>
             </div>
-            
             <div className="space-y-1.5 sm:space-y-2">
               <Label htmlFor="category" className="text-white/80 font-medium">Type</Label>
               <Select 
@@ -349,6 +313,22 @@ export function AddTaskDialog() {
                 </SelectContent>
               </Select>
             </div>
+          </div>
+          <div className="space-y-1.5 sm:space-y-2">
+            <Label className="text-white/80 font-medium">Deadline</Label>
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-xs text-indigo-300 flex items-center">
+                <CalendarClock className="h-3 w-3 mr-1" /> Automatic deadline enforcement
+              </div>
+            </div>
+            <DateTimePicker 
+              date={deadline || new Date(Date.now() + 24 * 60 * 60 * 1000)} // Default to tomorrow
+              setDate={setDeadline}
+              className="mt-2"
+            />
+            <p className="text-xs text-gray-400 mt-1">
+              Missing a deadline will automatically apply Shadow Penalty, reducing EXP reward by 50%.
+            </p>
           </div>
           
           <div className="pt-2">
