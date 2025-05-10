@@ -15,6 +15,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { getExpForDifficulty } from '@/lib/utils/calculations';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { areAllDailyWinsCompleted } from '@/lib/utils';
+import { DateTimePicker } from '@/components/ui/date-time-picker';
 
 interface TaskCardProps {
   task: Task;
@@ -33,6 +34,7 @@ export function TaskCard({ task }: TaskCardProps) {
   const [editDifficulty, setEditDifficulty] = useState<Difficulty>(task.difficulty);
   const [categoryType, setCategoryType] = useState<'dailyWin' | 'attribute'>('dailyWin');
   const [editCategory, setEditCategory] = useState<string>(task.category);
+  const [editDeadline, setEditDeadline] = useState<Date | undefined>(task.deadline);
   
   // Daily win categories and attribute categories
   const dailyWinCategories = ["mental", "physical", "spiritual", "intelligence"];
@@ -87,8 +89,7 @@ export function TaskCard({ task }: TaskCardProps) {
       expReward: getExpForDifficulty(editDifficulty),
       createdAt: task.createdAt,
       scheduledFor: task.scheduledFor,
-      // Preserve deadline if it exists
-      ...(task.deadline ? { deadline: task.deadline } : {})
+      deadline: editDeadline
     };
     
     // Add the updated task
@@ -394,6 +395,23 @@ export function TaskCard({ task }: TaskCardProps) {
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+            
+            <div className="space-y-2 mt-4">
+              <Label className="text-white/80 font-medium">Deadline</Label>
+              <div className="flex items-center justify-between mb-2">
+                <div className="text-xs text-indigo-300 flex items-center">
+                  <Clock className="h-3 w-3 mr-1" /> Automatic deadline enforcement
+                </div>
+              </div>
+              <DateTimePicker 
+                date={editDeadline || new Date(Date.now() + 24 * 60 * 60 * 1000)} // Default to tomorrow
+                setDate={setEditDeadline}
+                className="mt-2"
+              />
+              <p className="text-xs text-gray-400 mt-1">
+                Missing a deadline will automatically apply Shadow Penalty, reducing EXP reward by 50%.
+              </p>
             </div>
             
             <div className="flex justify-end gap-2 pt-2">

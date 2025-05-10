@@ -70,6 +70,22 @@ const TaskDialog = ({
   const [category, setCategory] = React.useState<string>(editingTask?.category || 'mental');
   const [deadline, setDeadline] = React.useState<Date | undefined>(editingTask?.deadline || new Date(Date.now() + 24 * 60 * 60 * 1000));
   
+  // Update form values when editingTask changes or dialog opens
+  React.useEffect(() => {
+    if (isOpen) {
+      setTitle(editingTask?.title || '');
+      setDescription(editingTask?.description || '');
+      setDifficulty(editingTask?.difficulty || 'medium');
+      setCategoryType(
+        editingTask ? 
+          (["mental", "physical", "spiritual", "intelligence"].includes(editingTask.category) ? 'dailyWin' : 'attribute') : 
+          'dailyWin'
+      );
+      setCategory(editingTask?.category || 'mental');
+      setDeadline(editingTask?.deadline || new Date(Date.now() + 24 * 60 * 60 * 1000));
+    }
+  }, [isOpen, editingTask]);
+  
   // Daily win categories and attribute categories
   const dailyWinCategories = ["mental", "physical", "spiritual", "intelligence"];
   const attributeCategories = ["physical", "cognitive", "emotional", "spiritual", "social"];
@@ -205,14 +221,19 @@ const TaskDialog = ({
         ? category 
         : category as any;
         
-      const updatedTask = {
-        ...editingTask,
+      const updatedTask: Task = {
+        id: uuidv4(), // Generate a new ID for consistency with home page editing
         title: formData.title,
         description: formData.description,
+        completed: editingTask.completed,
+        completedAt: editingTask.completedAt,
         category: categoryToUse,
         difficulty: formData.difficulty as Difficulty,
         expReward: getExpForDifficulty(formData.difficulty as Difficulty),
-        deadline: deadline
+        createdAt: editingTask.createdAt,
+        scheduledFor: editingTask.scheduledFor,
+        deadline: deadline,
+        missed: editingTask.missed
       };
       
       // Delete the old task
@@ -483,8 +504,26 @@ const TaskCard = ({ task, onClick }: { task: any; onClick: () => void }) => {
       className="text-sm p-2 rounded bg-gray-800/50 border border-gray-700 cursor-pointer hover:border-solo-primary/50 hover:bg-gray-800/80 transition-all"
     >
       <div className="font-medium truncate">{task.title}</div>
-      <div className="text-xs text-gray-400 mt-1">
-        {task.category} • {task.expReward} EXP
+      {task.description && (
+        <div className="text-xs text-gray-400 mt-1 line-clamp-1">{task.description}</div>
+      )}
+      <div className="text-xs text-gray-400 mt-1 flex flex-wrap items-center gap-1">
+        <span>{task.category}</span>
+        <span>•</span>
+        <span className="text-solo-primary">{task.expReward} EXP</span>
+        {task.deadline && (
+          <>
+            <span>•</span>
+            <span className="text-indigo-300">
+              Due: {new Date(task.deadline).toLocaleString([], { 
+                month: 'short', 
+                day: 'numeric', 
+                hour: '2-digit', 
+                minute: '2-digit' 
+              })}
+            </span>
+          </>
+        )}
       </div>
     </div>
   );
@@ -533,7 +572,7 @@ const DayDialog = ({
                 <div 
                   key={task.id}
                   className="p-3 rounded-lg border border-gray-800 bg-gray-900/50 hover:border-solo-primary/50 cursor-pointer transition-all"
-                  onClick={() => onEditTask(task)}
+                  onClick={() => onEditTask({...task})}
                 >
                   <div className="flex justify-between items-start">
                     <div>
@@ -548,6 +587,19 @@ const DayDialog = ({
                   </div>
                   <div className="mt-2 flex items-center gap-2 text-xs text-gray-500">
                     <span className="capitalize">{task.category}</span>
+                    {task.deadline && (
+                      <>
+                        <span>•</span>
+                        <span className="text-indigo-300">
+                          Due: {new Date(task.deadline).toLocaleString([], { 
+                            month: 'short', 
+                            day: 'numeric', 
+                            hour: '2-digit', 
+                            minute: '2-digit' 
+                          })}
+                        </span>
+                      </>
+                    )}
                   </div>
                 </div>
               ))}
@@ -898,9 +950,9 @@ const Planner = () => {
                       className="h-8 text-blue-400 hover:text-blue-300 hover:bg-blue-500/10"
                 onClick={() => {
                         setSelectedTask(null);
-                            setSelectedDate(date);
-                            setIsTaskDialogOpen(true);
-                          }}
+                        setSelectedDate(date);
+                        setIsTaskDialogOpen(true);
+                }}
                         >
                       <Plus className="h-4 w-4 mr-1" />
                       Add Task
@@ -940,7 +992,7 @@ const Planner = () => {
                           key={task.id}
                                   className="bg-gray-800/80 border border-gray-700 rounded-lg px-4 py-3 cursor-pointer hover:border-blue-500/30 transition-all"
                                   onClick={() => {
-                            setSelectedTask(task);
+                            setSelectedTask({...task});
                             setSelectedDate(date);
                             setIsTaskDialogOpen(true);
                           }}
@@ -951,8 +1003,21 @@ const Planner = () => {
                                       Pending
                                     </span>
                                   </div>
+                                  {task.description && (
+                                    <div className="text-xs text-gray-400 mt-1 line-clamp-1">{task.description}</div>
+                                  )}
                                   <div className="text-xs text-gray-400 mt-1 truncate">
                                     {task.category}
+                                    {task.deadline && (
+                                      <span className="ml-2 text-indigo-300">
+                                        Due: {new Date(task.deadline).toLocaleString([], { 
+                                          month: 'short', 
+                                          day: 'numeric', 
+                                          hour: '2-digit', 
+                                          minute: '2-digit' 
+                                        })}
+                                      </span>
+                                    )}
                           </div>
                         </div>
                       ))}
@@ -1006,6 +1071,9 @@ const Planner = () => {
                                         {isMissed ? "Missed" : isLate ? "Late" : "Completed"}
                                       </span>
                                     </div>
+                                    {task.description && (
+                                      <div className="text-xs text-gray-500 mt-1 truncate pl-6 line-through">{task.description}</div>
+                                    )}
                                     <div className="text-xs text-gray-500 mt-1 truncate pl-6">
                                       {task.category}
                                       {task.deadline && (
@@ -1056,7 +1124,7 @@ const Planner = () => {
           setIsTaskDialogOpen(true);
         }}
         onEditTask={(task) => {
-          setSelectedTask(task);
+          setSelectedTask({...task});
           setIsDayDialogOpen(false);
           setIsTaskDialogOpen(true);
         }}
