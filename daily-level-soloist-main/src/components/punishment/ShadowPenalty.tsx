@@ -188,6 +188,12 @@ export default function ShadowPenalty() {
     }
   }, [isCursed, quests, recoveryQuestIds]);
   
+  // Update the useEffect to share hasPendingRecovery with the store
+  useEffect(() => {
+    // Update the hasPendingRecovery state in the store
+    useSoloLevelingStore.setState({ hasPendingRecovery });
+  }, [hasPendingRecovery]);
+  
   if (!showComponent) return null;
   
   // Format time remaining for debuffs
@@ -251,7 +257,7 @@ export default function ShadowPenalty() {
       // Create the side quest
       const isMainQuest = false; // These are side quests
       addQuest(
-        `[RECOVERY] ${challenge.title}`,
+        challenge.title,
         challenge.description,
         isMainQuest,
         expReward,

@@ -290,13 +290,23 @@ const RankDetailsDialog = () => {
 };
 
 const Character = () => {
-  const user = useSoloLevelingStore(state => state.user);
-  const chanceCounter = useSoloLevelingStore(state => state.chanceCounter) || 0;
-  const isCursed = useSoloLevelingStore(state => state.isCursed) || false;
-  const hasShadowFatigue = useSoloLevelingStore(state => state.hasShadowFatigue) || false;
-  const canUseRedemption = useSoloLevelingStore(state => state.canUseRedemption) || false;
-  const attemptRedemption = useSoloLevelingStore(state => state.attemptRedemption);
+  const [user, addExp, chanceCounter, isCursed, hasShadowFatigue, attemptRedemption, canUseRedemption] = 
+    useSoloLevelingStore(state => [
+      state.user, 
+      state.addExp, 
+      state.chanceCounter, 
+      state.isCursed, 
+      state.hasShadowFatigue, 
+      state.attemptRedemption, 
+      state.canUseRedemption
+    ]);
   
+  // Check for recovery quests in progress
+  const quests = useSoloLevelingStore(state => state.quests);
+  const hasPendingRecovery = React.useMemo(() => {
+    return quests.some(quest => quest.isRecoveryQuest && !quest.completed);
+  }, [quests]);
+
   // State for redemption dialog
   const [showRedemptionDialog, setShowRedemptionDialog] = useState(false);
   
@@ -500,9 +510,22 @@ const Character = () => {
                           <Button 
                             variant="destructive" 
                             size="sm"
-                            className="text-xs h-7 bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/20"
+                            disabled={hasPendingRecovery}
+                            title={hasPendingRecovery ? "Complete your recovery quests first" : "Attempt redemption"}
+                            className={`text-xs h-7 ${
+                              hasPendingRecovery 
+                                ? "bg-gray-800 hover:bg-gray-800 text-gray-500 cursor-not-allowed opacity-70 border-gray-700"
+                                : "bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/20"
+                            }`}
                           >
-                            Attempt Redemption
+                            {hasPendingRecovery ? (
+                              <span className="flex items-center gap-1">
+                                <AlertCircle size={12} />
+                                Recovery In Progress
+                              </span>
+                            ) : (
+                              "Attempt Redemption"
+                            )}
                           </Button>
                         </DialogTrigger>
                         <DialogContent className="bg-gray-900 text-white max-w-md">
@@ -513,6 +536,17 @@ const Character = () => {
                             <p>You can attempt to redeem yourself to lift the curse, but it's risky.</p>
                             <p className="text-red-400">If you fail the redemption challenge, you'll lose a level!</p>
                             <p>Success will lift the curse and give you one more chance this week.</p>
+                            {hasPendingRecovery && (
+                              <div className="mt-2 p-3 bg-amber-950/30 border border-amber-500/30 rounded-md">
+                                <p className="text-amber-400 flex items-center gap-2">
+                                  <AlertCircle size={14} />
+                                  <span>You already have active recovery quests</span>
+                                </p>
+                                <p className="text-xs text-amber-300/80 mt-1">
+                                  Complete your existing recovery quests to lift the curse. Go to the Quests page to see your recovery quests.
+                                </p>
+                              </div>
+                            )}
                           </div>
                           <div className="flex gap-2 justify-end pt-4">
                             <Button
@@ -523,7 +557,9 @@ const Character = () => {
                             </Button>
                             <Button
                               variant="destructive"
+                              disabled={hasPendingRecovery}
                               onClick={() => {
+                                if (hasPendingRecovery) return;
                                 // 50% chance of success
                                 const success = Math.random() > 0.5;
                                 attemptRedemption(success);

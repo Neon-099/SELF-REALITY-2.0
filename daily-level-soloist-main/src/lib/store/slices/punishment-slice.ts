@@ -12,6 +12,7 @@ export interface PunishmentSlice {
   lockedSideQuestsUntil: Date | null;
   missedMainQuestStreak: number;
   lastRedemptionDate: Date | null;
+  hasPendingRecovery: boolean;
   
   // Actions
   applyMissedDeadlinePenalty: (itemType: 'task' | 'mission' | 'quest', itemId: string) => void;
@@ -35,6 +36,7 @@ export const createPunishmentSlice: StateCreator<PunishmentSlice & any> = (set, 
   lockedSideQuestsUntil: null,
   missedMainQuestStreak: 0,
   lastRedemptionDate: null,
+  hasPendingRecovery: false,
   
   // Actions
   applyMissedDeadlinePenalty: (itemType, itemId) => {
@@ -313,17 +315,23 @@ export const createPunishmentSlice: StateCreator<PunishmentSlice & any> = (set, 
   },
   
   canUseRedemption: () => {
-    const { isCursed, lastRedemptionDate } = get();
+    const { isCursed, lastRedemptionDate, hasPendingRecovery } = get();
     
+    // Can't use redemption if not cursed
     if (!isCursed) return false;
     
-    // Check if already redeemed this week
+    // Can't use redemption if there are already recovery quests in progress
+    if (hasPendingRecovery) return false;
+    
+    // Check if they've already used redemption this week
     if (lastRedemptionDate) {
       const now = new Date();
-      const lastRedemptionWeek = Math.floor(lastRedemptionDate.getTime() / (7 * 24 * 60 * 60 * 1000));
-      const currentWeek = Math.floor(now.getTime() / (7 * 24 * 60 * 60 * 1000));
+      const lastRedemption = new Date(lastRedemptionDate);
       
-      if (lastRedemptionWeek === currentWeek) return false;
+      // Allow once per week
+      const daysSinceLastRedemption = Math.floor((now.getTime() - lastRedemption.getTime()) / (1000 * 60 * 60 * 24));
+      
+      if (daysSinceLastRedemption < 7) return false;
     }
     
     return true;

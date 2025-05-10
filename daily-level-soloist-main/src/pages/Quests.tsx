@@ -541,76 +541,90 @@ const Quests = () => {
               {activeQuests
                 .filter(quest => !quest.isMainQuest)
                 .map((quest) => (
-                  <div 
-                    key={quest.id} 
-                    className={`${
-                      quest.isRecoveryQuest 
-                        ? "bg-gradient-to-br from-amber-950/40 to-red-950/40 border-2 border-amber-500/50 hover:border-amber-400 shadow-[0_0_15px_rgba(251,191,36,0.15)]" 
-                        : "bg-solo-dark border border-gray-800 hover:border-solo-primary/50"
-                    } rounded-lg p-4 transition-all`}
-                  >
-                    <div className="flex justify-between items-start mb-2">
-                      <div className="flex items-center gap-2">
-                        {quest.isRecoveryQuest && (
-                          <div className="relative">
-                            <Shield size={18} className="text-amber-500 animate-pulse" />
-                            <div className="absolute inset-0 bg-amber-500/20 blur-sm rounded-full -z-10"></div>
+                  quest.isRecoveryQuest ? (
+                    <div 
+                      key={quest.id} 
+                      className="bg-slate-900 border-2 border-amber-600/80 rounded-lg overflow-hidden transition-all"
+                    >
+                      <div className="p-4">
+                        <div className="flex justify-between items-start mb-3">
+                          <div className="flex items-center gap-2">
+                            <Shield size={20} className="text-amber-500" />
+                            <h3 className="font-medium text-lg text-amber-400">
+                              {quest.title}
+                            </h3>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Star size={16} className="text-yellow-400" />
+                            <span className="text-amber-400 font-bold">+{quest.expReward} EXP</span>
+                            <div className="text-xs text-amber-500 ml-1">Recovery Quest</div>
+                          </div>
+                        </div>
+                        
+                        {quest.description && (
+                          <p className="text-gray-300/90 mb-3 text-sm">
+                            {quest.description}
+                          </p>
+                        )}
+                        
+                        {quest.deadline && (
+                          <div className="flex items-center gap-2 my-3 p-2 bg-amber-950/70 rounded-md border border-amber-800/50">
+                            <CalendarClock size={16} className="text-amber-500" />
+                            <div className="flex flex-col">
+                              <span className="text-xs text-amber-300 font-medium">Complete by end of day</span>
+                              <span className="text-xs text-amber-400/90">
+                                {format(new Date(quest.deadline), "MMMM d, yyyy h:mm a")}
+                              </span>
+                            </div>
                           </div>
                         )}
-                        <h3 className={`font-medium text-lg ${quest.isRecoveryQuest ? "text-amber-300" : ""}`}>
-                          {quest.title}
-                        </h3>
                       </div>
-                      <div className="flex flex-col items-end">
-                        <span className={`${quest.isRecoveryQuest ? "text-amber-300" : "text-solo-primary"} font-bold flex items-center gap-1`}>
+                      
+                      <button 
+                        onClick={() => handleCompleteQuest(quest.id, quest.title, quest.expReward)}
+                        className="w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 py-2 text-center text-white flex items-center justify-center gap-2 transition-colors"
+                      >
+                        <CheckCircle size={18} />
+                        <span>Complete Recovery Quest</span>
+                      </button>
+                    </div>
+                  ) : (
+                    <div 
+                      key={quest.id} 
+                      className="bg-solo-dark border border-gray-800 hover:border-solo-primary/50 rounded-lg p-4 transition-all"
+                    >
+                      <div className="flex justify-between items-start mb-2">
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-medium text-lg">{quest.title}</h3>
+                        </div>
+                        <span className="text-solo-primary font-bold flex items-center gap-1">
                           <Star size={14} className="text-yellow-400 stroke-2" />
                           +{quest.expReward} EXP
                         </span>
-                        {quest.isRecoveryQuest && (
-                          <span className="text-xs text-amber-400/80 -mt-0.5">Recovery Quest</span>
-                        )}
                       </div>
-                    </div>
-                    
-                    {quest.description && (
-                      <p className={`${quest.isRecoveryQuest ? "text-amber-100/80 text-sm" : "text-gray-400"} mb-4`}>
-                        {quest.description}
-                      </p>
-                    )}
-                    
-                    {quest.deadline && (
-                      quest.isRecoveryQuest ? (
-                        <div className="flex items-center gap-2 mt-1 mb-3 bg-amber-950/50 p-2 rounded-md border border-amber-500/30">
-                          <CalendarClock size={14} className="text-amber-500" />
-                          <div className="flex flex-col">
-                            <span className="text-xs text-amber-300 font-medium">Complete by end of day</span>
-                            <span className="text-xs text-amber-400/80">
-                              {format(new Date(quest.deadline), "MMM d, yyyy h:mm a")}
-                            </span>
-                          </div>
-                        </div>
-                      ) : (
+                      
+                      {quest.description && (
+                        <p className="text-gray-400 mb-4">{quest.description}</p>
+                      )}
+                      
+                      {quest.deadline && (
                         <div className="flex items-center gap-1 text-xs text-amber-400/80 mb-3">
                           <CalendarClock size={12} />
                           <span>Deadline: {format(new Date(quest.deadline), "MMM d, yyyy h:mm a")}</span>
                         </div>
-                      )
-                    )}
-                    
-                    <Button 
-                      variant={quest.isRecoveryQuest ? "default" : "outline"}
-                      onClick={() => handleCompleteQuest(quest.id, quest.title, quest.expReward)}
-                      size="sm"
-                      className={`w-full flex justify-center items-center gap-2 ${
-                        quest.isRecoveryQuest 
-                          ? "bg-gradient-to-r from-amber-600 to-red-600 border-none hover:from-amber-500 hover:to-red-500" 
-                          : ""
-                      }`}
-                    >
-                      <CheckCircle size={14} />
-                      {quest.isRecoveryQuest ? "Complete Recovery Quest" : "Complete Quest"}
-                    </Button>
-                  </div>
+                      )}
+                      
+                      <Button 
+                        variant="outline" 
+                        onClick={() => handleCompleteQuest(quest.id, quest.title, quest.expReward)}
+                        size="sm"
+                        className="w-full flex justify-center items-center gap-2"
+                      >
+                        <CheckCircle size={14} />
+                        Complete Quest
+                      </Button>
+                    </div>
+                  )
                 ))}
             </div>
             {activeQuests.filter(quest => !quest.isMainQuest).length === 0 && (
@@ -758,81 +772,95 @@ const Quests = () => {
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {activeQuests
-                  .filter(quest => !quest.isMainQuest && !quest.isDaily)
+                  .filter(quest => !quest.isMainQuest)
                   .map((quest) => (
-                    <div 
-                      key={quest.id} 
-                      className={`${
-                        quest.isRecoveryQuest 
-                          ? "bg-gradient-to-br from-amber-950/40 to-red-950/40 border-2 border-amber-500/50 hover:border-amber-400 shadow-[0_0_15px_rgba(251,191,36,0.15)]" 
-                          : "bg-solo-dark border border-gray-800 hover:border-solo-primary/50"
-                      } rounded-lg p-4 transition-all`}
-                    >
-                      <div className="flex justify-between items-start mb-2">
-                        <div className="flex items-center gap-2">
-                          {quest.isRecoveryQuest && (
-                            <div className="relative">
-                              <Shield size={18} className="text-amber-500 animate-pulse" />
-                              <div className="absolute inset-0 bg-amber-500/20 blur-sm rounded-full -z-10"></div>
+                    quest.isRecoveryQuest ? (
+                      <div 
+                        key={quest.id} 
+                        className="bg-slate-900 border-2 border-amber-600/80 rounded-lg overflow-hidden transition-all"
+                      >
+                        <div className="p-4">
+                          <div className="flex justify-between items-start mb-3">
+                            <div className="flex items-center gap-2">
+                              <Shield size={20} className="text-amber-500" />
+                              <h3 className="font-medium text-lg text-amber-400">
+                                {quest.title}
+                              </h3>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Star size={16} className="text-yellow-400" />
+                              <span className="text-amber-400 font-bold">+{quest.expReward} EXP</span>
+                              <div className="text-xs text-amber-500 ml-1">Recovery Quest</div>
+                            </div>
+                          </div>
+                          
+                          {quest.description && (
+                            <p className="text-gray-300/90 mb-3 text-sm">
+                              {quest.description}
+                            </p>
+                          )}
+                          
+                          {quest.deadline && (
+                            <div className="flex items-center gap-2 my-3 p-2 bg-amber-950/70 rounded-md border border-amber-800/50">
+                              <CalendarClock size={16} className="text-amber-500" />
+                              <div className="flex flex-col">
+                                <span className="text-xs text-amber-300 font-medium">Complete by end of day</span>
+                                <span className="text-xs text-amber-400/90">
+                                  {format(new Date(quest.deadline), "MMMM d, yyyy h:mm a")}
+                                </span>
+                              </div>
                             </div>
                           )}
-                          <h3 className={`font-medium text-lg ${quest.isRecoveryQuest ? "text-amber-300" : ""}`}>
-                            {quest.title}
-                          </h3>
                         </div>
-                        <div className="flex flex-col items-end">
-                          <span className={`${quest.isRecoveryQuest ? "text-amber-300" : "text-solo-primary"} font-bold flex items-center gap-1`}>
+                        
+                        <button 
+                          onClick={() => handleCompleteQuest(quest.id, quest.title, quest.expReward)}
+                          className="w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 py-2 text-center text-white flex items-center justify-center gap-2 transition-colors"
+                        >
+                          <CheckCircle size={18} />
+                          <span>Complete Recovery Quest</span>
+                        </button>
+                      </div>
+                    ) : (
+                      <div 
+                        key={quest.id} 
+                        className="bg-solo-dark border border-gray-800 hover:border-solo-primary/50 rounded-lg p-4 transition-all"
+                      >
+                        <div className="flex justify-between items-start mb-2">
+                          <div className="flex items-center gap-2">
+                            <h3 className="font-medium text-lg">{quest.title}</h3>
+                          </div>
+                          <span className="text-solo-primary font-bold flex items-center gap-1">
                             <Star size={14} className="text-yellow-400 stroke-2" />
                             +{quest.expReward} EXP
                           </span>
-                          {quest.isRecoveryQuest && (
-                            <span className="text-xs text-amber-400/80 -mt-0.5">Recovery Quest</span>
-                          )}
                         </div>
-                      </div>
-                      
-                      {quest.description && (
-                        <p className={`${quest.isRecoveryQuest ? "text-amber-100/80 text-sm" : "text-gray-400"} mb-4`}>
-                          {quest.description}
-                        </p>
-                      )}
-                      
-                      {quest.deadline && (
-                        quest.isRecoveryQuest ? (
-                          <div className="flex items-center gap-2 mt-1 mb-3 bg-amber-950/50 p-2 rounded-md border border-amber-500/30">
-                            <CalendarClock size={14} className="text-amber-500" />
-                            <div className="flex flex-col">
-                              <span className="text-xs text-amber-300 font-medium">Complete by end of day</span>
-                              <span className="text-xs text-amber-400/80">
-                                {format(new Date(quest.deadline), "MMM d, yyyy h:mm a")}
-                              </span>
-                            </div>
-                          </div>
-                        ) : (
+                        
+                        {quest.description && (
+                          <p className="text-gray-400 mb-4">{quest.description}</p>
+                        )}
+                        
+                        {quest.deadline && (
                           <div className="flex items-center gap-1 text-xs text-amber-400/80 mb-3">
                             <CalendarClock size={12} />
                             <span>Deadline: {format(new Date(quest.deadline), "MMM d, yyyy h:mm a")}</span>
                           </div>
-                        )
-                      )}
-                      
-                      <Button 
-                        variant={quest.isRecoveryQuest ? "default" : "outline"}
-                        onClick={() => handleCompleteQuest(quest.id, quest.title, quest.expReward)}
-                        size="sm"
-                        className={`w-full flex justify-center items-center gap-2 ${
-                          quest.isRecoveryQuest 
-                            ? "bg-gradient-to-r from-amber-600 to-red-600 border-none hover:from-amber-500 hover:to-red-500" 
-                            : ""
-                        }`}
-                      >
-                        <CheckCircle size={14} />
-                        {quest.isRecoveryQuest ? "Complete Recovery Quest" : "Complete Quest"}
-                      </Button>
-                    </div>
+                        )}
+                        
+                        <Button 
+                          variant="outline" 
+                          onClick={() => handleCompleteQuest(quest.id, quest.title, quest.expReward)}
+                          size="sm"
+                          className="w-full flex justify-center items-center gap-2"
+                        >
+                          <CheckCircle size={14} />
+                          Complete Quest
+                        </Button>
+                      </div>
+                    )
                   ))}
               </div>
-              {activeQuests.filter(quest => !quest.isMainQuest && !quest.isDaily).length === 0 && (
+              {activeQuests.filter(quest => !quest.isMainQuest).length === 0 && (
                 <div className="bg-solo-dark border border-gray-800 rounded-lg p-4 text-center">
                   <p className="text-gray-400">No active side quests available.</p>
                   <p className="text-gray-400 text-sm mt-2">Click "Add Quest" to create a side quest.</p>
