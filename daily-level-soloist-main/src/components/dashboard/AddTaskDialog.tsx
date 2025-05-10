@@ -16,11 +16,13 @@ import { getExpForDifficulty } from '@/lib/utils/calculations';
 import { Switch } from '@/components/ui/switch';
 import { DateTimePicker } from '@/components/ui/date-time-picker';
 
-export function AddTaskDialog() {
+// Export as a named export and as default export to support both import styles
+export const AddTaskDialog = () => {
   // Added this log to confirm component is refreshing
   console.log('AddTaskDialog rendered with glassmorphism styles - ' + new Date().toISOString());
   
   const addTask = useSoloLevelingStore(state => state.addTask);
+  const createTask = useSoloLevelingStore(state => state.createTask);
   const { toast } = useToast();
   const user = useSoloLevelingStore(state => state.user);
   const tasks = useSoloLevelingStore(state => state.tasks);
@@ -132,27 +134,18 @@ export function AddTaskDialog() {
       }
     }
     
-    // Create a new task with today's date as scheduledFor
-    const newTask: Task = {
-      id: uuidv4(),
+    // Create the task using createTask
+    createTask(
       title,
       description,
-      completed: false,
-      category: category as DailyWinCategory,
       difficulty,
-      expReward: getExpForDifficulty(difficulty),
-      scheduledFor: new Date(), // Schedule for today
-      createdAt: new Date(),
-      // Add deadline if set
-      ...(hasDeadline && deadline ? { deadline } : {})
-    };
-    
-    // Add the task
-    addTask(newTask);
+      category as DailyWinCategory,
+      deadline
+    );
     
     toast({
       title: "Task added",
-      description: hasDeadline && deadline 
+      description: deadline 
         ? `Your task has been added with a deadline of ${deadline.toLocaleString()}`
         : "Your task has been added successfully",
       duration: 2000
@@ -341,3 +334,6 @@ export function AddTaskDialog() {
     </Dialog>
   );
 }
+
+// Add default export to support both import styles
+export default AddTaskDialog;

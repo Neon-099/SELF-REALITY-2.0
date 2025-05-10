@@ -251,9 +251,11 @@ const TaskDialog = ({
       addTask(newTask);
       
       toast({
-        title: "Task scheduled",
-        description: `Your task has been scheduled for ${format(selectedDate, 'PP')}`,
-        duration: 1000
+        title: "Task created",
+        description: deadline 
+          ? `Your task has been created with a deadline of ${deadline.toLocaleString()}`
+          : "Your task has been created successfully",
+        duration: 2000
       });
     }
     

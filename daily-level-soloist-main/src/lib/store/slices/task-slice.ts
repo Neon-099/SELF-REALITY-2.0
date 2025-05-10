@@ -7,7 +7,7 @@ import { toast } from '@/hooks/use-toast';
 
 export interface TaskSlice {
   tasks: Task[];
-  createTask: (title: string, description: string, difficulty: Difficulty, category: DailyWinCategory) => void;
+  createTask: (title: string, description: string, difficulty: Difficulty, category: DailyWinCategory, deadline?: Date) => void;
   addTask: (task: Task) => void;
   completeTask: (taskId: string) => void;
   deleteTask: (id: string) => void;
@@ -44,7 +44,7 @@ export const createTaskSlice: StateCreator<
   TaskSlice
 > = (set, get) => ({
   tasks: [],
-  createTask: (title, description, difficulty, category) => {
+  createTask: (title, description, difficulty, category, deadline) => {
     const task: Task = {
       id: uuidv4(),
       title,
@@ -54,6 +54,8 @@ export const createTaskSlice: StateCreator<
       expReward: getExpForDifficulty(difficulty),
       category,
       createdAt: new Date(),
+      scheduledFor: new Date(),
+      deadline
     };
     get().addTask(task);
   },

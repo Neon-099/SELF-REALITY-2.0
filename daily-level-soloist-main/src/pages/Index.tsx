@@ -3,7 +3,7 @@ import { useSoloLevelingStore } from '@/lib/store';
 import { TaskCard } from '@/components/ui/task-card';
 import { CompletedTaskCard } from '@/components/ui/completed-task-card';
 import { DailyWinCard } from '@/components/ui/daily-win-card';
-import { AddTaskDialog } from '@/components/dashboard/AddTaskDialog';
+import AddTaskDialog from '@/components/dashboard/AddTaskDialog';
 import { ShadowPenalty } from '@/components/punishment';
 import { Brain, Dumbbell, Heart, BookOpen, Award, CalendarDays, CheckSquare, ChevronDown, ChevronUp, EyeOff, Eye } from 'lucide-react';
 import { areAllDailyWinsCompleted, isSameDay } from '@/lib/utils';
