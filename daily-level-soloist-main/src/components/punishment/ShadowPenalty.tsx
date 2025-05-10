@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useSoloLevelingStore } from '@/lib/store';
-import { Skull, Shield, Clock, AlertCircle, CheckCircle, X, Zap } from 'lucide-react';
+import { Skull, Shield, Clock, AlertCircle, CheckCircle, X, Zap, Play } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -8,6 +8,34 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
+
+// Challenge requirements for redemption
+const REDEMPTION_CHALLENGES = [
+  {
+    title: "Take a cold shower",
+    description: "Complete a cold shower for at least 5 minutes",
+    difficulty: "medium",
+    category: "physical"
+  },
+  {
+    title: "Complete 10,000 steps",
+    description: "Walk at least 10,000 steps today",
+    difficulty: "hard",
+    category: "physical"
+  },
+  {
+    title: "Digital detox for 4 hours",
+    description: "Stay away from all digital devices for 4 hours",
+    difficulty: "medium",
+    category: "mental"
+  },
+  {
+    title: "Complete 3 delayed tasks",
+    description: "Finish 3 tasks that you've been putting off",
+    difficulty: "hard",
+    category: "intelligence"
+  }
+];
 
 export default function ShadowPenalty() {
   const [redemptionDialogOpen, setRedemptionDialogOpen] = useState(false);
@@ -21,7 +49,8 @@ export default function ShadowPenalty() {
     canUseRedemption,
     areSideQuestsLocked,
     attemptRedemption,
-    getExpModifier
+    getExpModifier,
+    createTask
   } = useSoloLevelingStore();
 
   // Check if we need to show the component
@@ -57,6 +86,26 @@ export default function ShadowPenalty() {
   
   const handleRedemptionFailure = () => {
     attemptRedemption(false);
+    setRedemptionDialogOpen(false);
+  };
+  
+  // Create challenge tasks with today's deadline
+  const startRedemptionChallenge = () => {
+    // Create end of day deadline
+    const today = new Date();
+    today.setHours(23, 59, 59, 999);
+    
+    // Create tasks for each challenge
+    REDEMPTION_CHALLENGES.forEach(challenge => {
+      createTask(
+        challenge.title, 
+        challenge.description, 
+        challenge.difficulty as any, 
+        challenge.category as any, 
+        today
+      );
+    });
+    
     setRedemptionDialogOpen(false);
   };
   
@@ -172,22 +221,12 @@ export default function ShadowPenalty() {
                   <div className="my-4 p-3 border border-amber-500/30 bg-amber-950/20 rounded-md">
                     <h4 className="font-semibold text-amber-400 mb-2">Challenge Requirements:</h4>
                     <ul className="space-y-2 text-sm text-amber-200/90">
-                      <li className="flex items-center gap-2">
-                        <CheckCircle className="h-4 w-4 text-amber-500 flex-shrink-0" />
-                        <span>Take a cold shower</span>
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <CheckCircle className="h-4 w-4 text-amber-500 flex-shrink-0" />
-                        <span>Complete 10,000 steps</span>
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <CheckCircle className="h-4 w-4 text-amber-500 flex-shrink-0" />
-                        <span>Full digital detox for 4 hours</span>
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <CheckCircle className="h-4 w-4 text-amber-500 flex-shrink-0" />
-                        <span>Complete 3 delayed tasks today</span>
-                      </li>
+                      {REDEMPTION_CHALLENGES.map((challenge, index) => (
+                        <li key={index} className="flex items-center gap-2">
+                          <CheckCircle className="h-4 w-4 text-amber-500 flex-shrink-0" />
+                          <span>{challenge.title}</span>
+                        </li>
+                      ))}
                     </ul>
                   </div>
                   <div className="mt-4 text-red-300 flex items-start gap-2">
@@ -201,16 +240,10 @@ export default function ShadowPenalty() {
                   <X className="mr-2 h-4 w-4" />
                   Cancel
                 </Button>
-                <div className="flex gap-2">
-                  <Button variant="destructive" onClick={handleRedemptionFailure}>
-                    <X className="mr-2 h-4 w-4" />
-                    Failed Challenge
-                  </Button>
-                  <Button variant="default" onClick={handleRedemptionSuccess}>
-                    <Zap className="mr-2 h-4 w-4" />
-                    Completed
-                  </Button>
-                </div>
+                <Button variant="default" onClick={startRedemptionChallenge}>
+                  <Play className="mr-2 h-4 w-4" />
+                  Start Challenge
+                </Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
