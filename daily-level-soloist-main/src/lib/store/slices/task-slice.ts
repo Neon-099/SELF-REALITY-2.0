@@ -129,17 +129,6 @@ export const createTaskSlice: StateCreator<
         description: `You earned ${finalExpReward} EXP`,
       });
     }
-    
-    // Check if Shadow Fatigue should be cleared after this completion
-    const { hasShadowFatigue } = get();
-    if (hasShadowFatigue) {
-      set({ hasShadowFatigue: false, shadowFatigueUntil: null });
-      
-      toast({
-        title: "Shadow Fatigue Relieved",
-        description: "You've worked through your fatigue. Future tasks will earn full EXP again.",
-      });
-    }
   },
   deleteTask: (id) => {
     set((state: TaskSlice) => ({
