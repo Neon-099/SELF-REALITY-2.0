@@ -261,7 +261,7 @@ export const createQuestSlice: StateCreator<QuestSlice & any> = (set, get) => ({
     toast({
       title: toastTitle,
       description: toastDescription,
-      variant: missedDeadline ? "warning" : "default",
+      variant: missedDeadline ? "default" : "default",
     });
 
     if (quest.isRecoveryQuest && activeRecoveryQuestIds && activeRecoveryQuestIds.length > 0) {
@@ -272,17 +272,24 @@ export const createQuestSlice: StateCreator<QuestSlice & any> = (set, get) => ({
         });
 
         if (allActiveBatchCompleted) {
+          // Use the shared helper function for end of week calculation
+          const endOfWeek = get().getEndOfWeek();
+          
           set((state) => ({
             ...state,
-            isCursed: false,
+            isCursed: false, // Remove the curse
             cursedUntil: null,
             hasPendingRecovery: false,
             activeRecoveryQuestIds: null,
+            hasShadowFatigue: true, // Activate shadow fatigue
+            shadowFatigueUntil: endOfWeek, // Shadow fatigue lasts until end of week
+            chanceCounter: 4,
+            lastRedemptionDate: new Date(),
           }));
           
           toast({
             title: "Redemption Complete!",
-            description: "You've completed all recovery quests! The curse has been lifted.",
+            description: "You've completed all recovery quests! The curse has been lifted, but Shadow Fatigue remains for the rest of the week (75% EXP).",
             variant: "default"
           });
         }

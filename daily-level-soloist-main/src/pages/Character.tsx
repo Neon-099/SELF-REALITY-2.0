@@ -11,6 +11,7 @@ import { initialUser } from '@/lib/store/initial-state';
 import { toast } from '@/hooks/use-toast';
 import { predefinedMissions } from '@/data/predefined-missions';
 import { endOfDay } from 'date-fns';
+import { ShadowPenalty } from '@/components/punishment';
 
 const rankDetails = [
   {
@@ -291,8 +292,16 @@ const RankDetailsDialog = () => {
 };
 
 const Character = () => {
-  const [user, addExp, chanceCounter, isCursed, hasShadowFatigue, addQuest, addQuestTask, canUseRedemption] = 
-    useSoloLevelingStore(state => [
+  const [
+    user, 
+    addExp, 
+    chanceCounter, 
+    isCursed, 
+    hasShadowFatigue, 
+    addQuest,
+    addQuestTask,
+    canUseRedemption
+  ] = useSoloLevelingStore(state => [
       state.user, 
       state.addExp, 
       state.chanceCounter, 
@@ -300,17 +309,8 @@ const Character = () => {
       state.hasShadowFatigue, 
       state.addQuest,
       state.addQuestTask,
-      state.canUseRedemption
+      state.canUseRedemption 
     ]);
-  
-  // Check for recovery quests in progress
-  const quests = useSoloLevelingStore(state => state.quests);
-  const hasPendingRecovery = React.useMemo(() => {
-    return quests.some(quest => quest.isRecoveryQuest && !quest.completed);
-  }, [quests]);
-
-  // State for redemption dialog
-  const [showRedemptionDialog, setShowRedemptionDialog] = useState(false);
   
   const [lastUpdate, setLastUpdate] = useState(Date.now());
   const [animatedExp, setAnimatedExp] = useState(user?.exp || 0);
@@ -319,177 +319,22 @@ const Character = () => {
   );
   const prevExpRef = useRef(user?.exp || 0);
 
-  // Redemption challenges - copied from ShadowPenalty component
-  const REDEMPTION_CHALLENGES = [
-    {
-      title: "Cold Shower Challenge",
-      description: "Demonstrate your resolve by taking a cold shower for at least 5 minutes",
-      difficulty: "medium",
-      category: "physical",
-      tasks: [
-        {
-          title: "Take a cold shower",
-          description: "Complete a cold shower for at least 5 minutes",
-          category: "physical",
-          difficulty: "medium"
-        }
-      ]
-    },
-    {
-      title: "10,000 Steps Challenge",
-      description: "Push your physical limits by completing 10,000 steps in a single day",
-      difficulty: "hard",
-      category: "physical",
-      tasks: [
-        {
-          title: "Complete 10,000 steps",
-          description: "Walk at least 10,000 steps today",
-          category: "physical",
-          difficulty: "hard"
-        }
-      ]
-    },
-    {
-      title: "Digital Detox Challenge",
-      description: "Free your mind from digital distractions for 4 hours",
-      difficulty: "medium",
-      category: "mental",
-      tasks: [
-        {
-          title: "Digital detox for 4 hours",
-          description: "Stay away from all digital devices for 4 hours",
-          category: "mental",
-          difficulty: "medium"
-        }
-      ]
-    },
-    {
-      title: "Delayed Tasks Conquest",
-      description: "Face your procrastination head-on by completing 3 delayed tasks",
-      difficulty: "hard",
-      category: "intelligence",
-      tasks: [
-        {
-          title: "Complete 3 delayed tasks",
-          description: "Finish 3 tasks that you've been putting off",
-          category: "intelligence",
-          difficulty: "hard"
-        }
-      ]
-    }
-  ];
-
-  // Function to start redemption challenge
-  const startRedemptionChallenge = () => {
-    // If already has pending recovery, prevent creating more
-    if (hasPendingRecovery) {
-      toast({
-        title: "Recovery In Progress",
-        description: "You already have active recovery quests. Complete them first.",
-        variant: "destructive"
-      });
-      setShowRedemptionDialog(false);
-      return;
-    }
-    
-    // Create end of day deadline
-    const today = endOfDay(new Date());
-    
-    // Track the IDs of recovery quests
-    const newRecoveryQuestIds: string[] = [];
-    
-    // Create side quests for each challenge
-    REDEMPTION_CHALLENGES.forEach(challenge => {
-      // Calculate reward based on difficulty
-      const baseReward = 100;
-      const difficultyMultiplier = challenge.difficulty === 'easy' ? 1 : 
-                               challenge.difficulty === 'medium' ? 2 : 
-                               challenge.difficulty === 'hard' ? 3 : 4;
-      const expReward = baseReward * difficultyMultiplier;
-      
-      // Create the side quest
-      const isMainQuest = false; // These are side quests
-      addQuest(
-        challenge.title,
-        challenge.description,
-        isMainQuest,
-        expReward,
-        today,
-        challenge.difficulty as any
-      );
-      
-      // Get the newly created quest ID (the last one in the list)
-      setTimeout(() => {
-        const quests = useSoloLevelingStore.getState().quests;
-        const questId = quests[quests.length - 1].id;
-        
-        // Mark as recovery quest
-        useSoloLevelingStore.getState().updateQuest(questId, { 
-          isRecoveryQuest: true 
-        });
-        
-        // Track this recovery quest ID
-        newRecoveryQuestIds.push(questId);
-        
-        // Add the tasks to the quest
-        challenge.tasks.forEach(task => {
-          addQuestTask(
-            questId,
-            task.title,
-            task.description,
-            task.category as any,
-            task.difficulty as any
-          );
-        });
-        
-        // Mark the quest as started
-        useSoloLevelingStore.getState().startQuest(questId);
-      }, 100);
-    });
-    
-    setShowRedemptionDialog(false);
-    
-    // Show toast notification
-    toast({
-      title: "Recovery Quests Created",
-      description: "Complete all recovery quests by the end of today to lift your curse!",
-      variant: "default"
-    });
-
-    // Update hasPendingRecovery in the store
-    useSoloLevelingStore.setState({ hasPendingRecovery: true });
-  };
-
-  // Force re-render when user state changes and animate the EXP bar
   useEffect(() => {
     if (user && typeof user.exp === 'number') {
-      // If exp changed, animate it
-      if (prevExpRef.current !== user.exp) {
-        console.log(`EXP changed from ${prevExpRef.current} to ${user.exp}`);
-        
-        // Set the initial state to the previous value
-        setAnimatedExp(prevExpRef.current);
-        
-        // After a small delay, animate to the new value
-        setTimeout(() => {
-          setAnimatedExp(user.exp);
-          // Update exp percentage for the progress bar
-          setExpPercentage(Math.min(Math.floor((user.exp / user.expToNextLevel) * 100), 100));
-        }, 50);
-        
+      if (user.exp !== prevExpRef.current) {
+        setAnimatedExp(user.exp);
+        setExpPercentage(Math.min(Math.floor((user.exp / user.expToNextLevel) * 100), 100));
         prevExpRef.current = user.exp;
+        setLastUpdate(Date.now());
       }
     }
-    
-    // Update timestamp if lastUpdate changed
-    if (user?.lastUpdate && user.lastUpdate !== lastUpdate) {
-      setLastUpdate(user.lastUpdate);
-    }
-  }, [user?.exp, user?.level, user?.lastUpdate, user?.expToNextLevel, lastUpdate]);
+  }, [user]);
 
   if (!user) {
     return <div className="p-8 text-center">Loading character data...</div>;
   }
+
+  const currentRankInfo = rankDetails.find(r => r.rank === user.rank);
 
   return (
     <div className="container mx-auto px-4 py-8 space-y-8">
@@ -638,86 +483,6 @@ const Character = () => {
                   <div className="mt-1 text-xs text-amber-400 flex items-center gap-1">
                     <AlertCircle size={12} />
                     <span>Shadow Fatigue active: 75% EXP from tasks</span>
-                  </div>
-                )}
-                
-                {/* Redemption Section */}
-                {isCursed && canUseRedemption && (
-                  <div className="mt-2 border-t border-gray-800 pt-2">
-                    <div className="flex items-center justify-between">
-                      <div className="text-xs text-red-400">
-                        <p>Curse active: 50% EXP penalty on all activities</p>
-                      </div>
-                      <Dialog open={showRedemptionDialog} onOpenChange={setShowRedemptionDialog}>
-                        <DialogTrigger asChild>
-                          <Button 
-                            variant="destructive" 
-                            size="sm"
-                            disabled={hasPendingRecovery}
-                            title={hasPendingRecovery ? "Complete your recovery quests first" : "Attempt redemption"}
-                            className={`text-xs h-7 ${
-                              hasPendingRecovery 
-                                ? "bg-gray-800 hover:bg-gray-800 text-gray-500 cursor-not-allowed opacity-70 border-gray-700"
-                                : "bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/20"
-                            }`}
-                          >
-                            {hasPendingRecovery ? (
-                              <span className="flex items-center gap-1">
-                                <AlertCircle size={12} />
-                                Recovery In Progress
-                              </span>
-                            ) : (
-                              "Attempt Redemption"
-                            )}
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent className="bg-gray-900 text-white max-w-md">
-                          <DialogHeader>
-                            <DialogTitle className="text-red-400">Attempt Redemption?</DialogTitle>
-                          </DialogHeader>
-                          <div className="space-y-3 py-2">
-                            <p>Complete these special recovery quests to lift your curse and restore your experience gain rate.</p>
-                            <div className="my-4 p-3 border border-amber-500/30 bg-amber-950/20 rounded-md">
-                              <h4 className="font-semibold text-amber-400 mb-2">Challenge Requirements:</h4>
-                              <ul className="space-y-2 text-sm text-amber-200/90">
-                                {REDEMPTION_CHALLENGES.map((challenge, index) => (
-                                  <li key={index} className="flex items-center gap-2">
-                                    <CheckCircle className="h-4 w-4 text-amber-500 flex-shrink-0" />
-                                    <span>{challenge.title}</span>
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                            {hasPendingRecovery && (
-                              <div className="mt-2 p-3 bg-amber-950/30 border border-amber-500/30 rounded-md">
-                                <p className="text-amber-400 flex items-center gap-2">
-                                  <AlertCircle size={14} />
-                                  <span>You already have active recovery quests</span>
-                                </p>
-                                <p className="text-xs text-amber-300/80 mt-1">
-                                  Complete your existing recovery quests to lift the curse. Go to the Quests page to see your recovery quests.
-                                </p>
-                              </div>
-                            )}
-                          </div>
-                          <div className="flex gap-2 justify-end pt-4">
-                            <Button
-                              variant="outline"
-                              onClick={() => setShowRedemptionDialog(false)}
-                            >
-                              Cancel
-                            </Button>
-                            <Button
-                              variant="destructive"
-                              disabled={hasPendingRecovery}
-                              onClick={startRedemptionChallenge}
-                            >
-                              Start Challenge
-                            </Button>
-                          </div>
-                        </DialogContent>
-                      </Dialog>
-                    </div>
                   </div>
                 )}
               </div>
@@ -879,8 +644,12 @@ const Character = () => {
           </Card>
         </div>
       </div>
+
+      {/* Shadow Penalty Component - Centralized penalty display and actions */}
+      <ShadowPenalty />
     </div>
   );
 };
 
 export default Character;
+

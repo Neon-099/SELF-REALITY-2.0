@@ -41,6 +41,17 @@ export const createPunishmentSlice: StateCreator<PunishmentSlice & any> = (set, 
   hasPendingRecovery: false,
   activeRecoveryQuestIds: null,
   
+  // Helper function to calculate end of current week (Sunday)
+  // Adding this at the top for consistency across all functions
+  getEndOfWeek: () => {
+    const today = new Date();
+    const daysUntilSunday = 7 - today.getDay();
+    const endOfWeek = new Date();
+    endOfWeek.setDate(today.getDate() + daysUntilSunday);
+    endOfWeek.setHours(23, 59, 59, 999);
+    return endOfWeek;
+  },
+  
   // Actions
   applyMissedDeadlinePenalty: (itemType, itemId) => {
     const state = get();
@@ -87,9 +98,8 @@ export const createPunishmentSlice: StateCreator<PunishmentSlice & any> = (set, 
     
     if (!item) return;
     
-    // Apply Shadow Fatigue Debuff
-    const fatigueEnd = new Date();
-    fatigueEnd.setDate(fatigueEnd.getDate() + 1); // 1 day debuff
+    // Get end of week from helper function
+    const endOfWeek = get().getEndOfWeek();
     
     set((state: PunishmentSlice) => {
       // Increment chance counter
@@ -99,38 +109,47 @@ export const createPunishmentSlice: StateCreator<PunishmentSlice & any> = (set, 
       let newCursedUntil = state.cursedUntil;
       let newIsCursed = state.isCursed;
       
+      // Variables for shadow fatigue state
+      let newHasShadowFatigue = state.hasShadowFatigue;
+      let newShadowFatigueUntil = state.shadowFatigueUntil;
+      
       if (newChanceCounter >= 5 && !state.isCursed) {
-        // Calculate end of week (Sunday)
-        const today = new Date();
-        const daysUntilSunday = 7 - today.getDay();
-        const endOfWeek = new Date();
-        endOfWeek.setDate(today.getDate() + daysUntilSunday);
-        endOfWeek.setHours(23, 59, 59, 999);
-        
+        // User is now cursed - set curse until end of week
         newCursedUntil = endOfWeek;
         newIsCursed = true;
+        
+        // When cursed, shadow fatigue is temporarily deactivated
+        newHasShadowFatigue = false;
+        newShadowFatigueUntil = null;
         
         toast({
           title: "CURSED!",
           description: "You've used all 5 chances this week. You are now cursed until the week ends!",
           variant: "destructive"
         });
+      } 
+      else if (newChanceCounter < 5) {
+        // If not cursed, always activate shadow fatigue until the end of week
+        newHasShadowFatigue = true;
+        newShadowFatigueUntil = endOfWeek;
       }
       
       return {
         chanceCounter: newChanceCounter,
-        hasShadowFatigue: true,
-        shadowFatigueUntil: fatigueEnd,
+        hasShadowFatigue: newHasShadowFatigue,
+        shadowFatigueUntil: newShadowFatigueUntil,
         isCursed: newIsCursed,
         cursedUntil: newCursedUntil
       };
     });
     
-    toast({
-      title: "Deadline Missed!",
-      description: `Shadow Fatigue applied! Next completion will earn only 75% EXP. You have used ${get().chanceCounter}/5 chances this week.`,
-      variant: "destructive"
-    });
+    if (get().chanceCounter < 5) {
+      toast({
+        title: "Deadline Missed!",
+        description: `Shadow Fatigue applied for the rest of the week! Tasks earn only 75% EXP. You have used ${get().chanceCounter}/5 chances this week.`,
+        variant: "destructive"
+      });
+    }
     
     return expModifier; // Return the EXP modifier for the immediate completion
   },
@@ -141,16 +160,24 @@ export const createPunishmentSlice: StateCreator<PunishmentSlice & any> = (set, 
     
     // Check if curse has expired
     if (isCursed && cursedUntil && now > cursedUntil) {
+      // Get end of week from helper
+      const endOfWeek = get().getEndOfWeek();
+      
+      // When curse expires naturally, reactivate shadow fatigue for the rest of the week
+      // This matches the behavior when recovering via quests
       set({ 
         isCursed: false,
         cursedUntil: null,
         hasPendingRecovery: false,
-        activeRecoveryQuestIds: null
+        activeRecoveryQuestIds: null,
+        // Reactivate shadow fatigue for consistency
+        hasShadowFatigue: true,
+        shadowFatigueUntil: endOfWeek
       });
       
       toast({
         title: "Curse Lifted!",
-        description: "The weekly curse has been lifted. You are back to normal EXP rates.",
+        description: "The weekly curse has been lifted. Shadow Fatigue remains for the rest of the week (75% EXP).",
         variant: "default"
       });
     }
@@ -160,6 +187,12 @@ export const createPunishmentSlice: StateCreator<PunishmentSlice & any> = (set, 
       set({ 
         hasShadowFatigue: false,
         shadowFatigueUntil: null
+      });
+      
+      toast({
+        title: "Shadow Fatigue Cleared!",
+        description: "Your Shadow Fatigue has expired. You now earn full EXP again!",
+        variant: "default"
       });
     }
     
@@ -235,12 +268,14 @@ export const createPunishmentSlice: StateCreator<PunishmentSlice & any> = (set, 
         chanceCounter: 0,
         isCursed: false,
         cursedUntil: null,
+        hasShadowFatigue: false,
+        shadowFatigueUntil: null,
         lastRedemptionDate: null
       });
       
       toast({
         title: "Weekly Reset!",
-        description: "Your chance counter has been reset for the new week.",
+        description: "Your chance counter has been reset for the new week. All penalties have been cleared.",
         variant: "default"
       });
     }
@@ -272,19 +307,22 @@ export const createPunishmentSlice: StateCreator<PunishmentSlice & any> = (set, 
     set({ lastRedemptionDate: now });
     
     if (success) {
+      // Get end of week using helper function
+      const endOfWeek = get().getEndOfWeek();
+      
       set({ 
-        isCursed: false,
+        isCursed: false, // Remove curse
         cursedUntil: null,
         chanceCounter: 4, // Set back to 4/5 chances
-        hasShadowFatigue: false,
-        shadowFatigueUntil: null,
+        hasShadowFatigue: true, // Reactivate shadow fatigue 
+        shadowFatigueUntil: endOfWeek, // Lasts until end of week
         hasPendingRecovery: false,
         activeRecoveryQuestIds: null
       });
       
       toast({
         title: "Redemption Successful!",
-        description: "You've successfully redeemed yourself. Curse lifted!",
+        description: "You've successfully redeemed yourself. Curse lifted, but Shadow Fatigue remains for the rest of the week (75% EXP).",
         variant: "default"
       });
     } else {
@@ -320,7 +358,7 @@ export const createPunishmentSlice: StateCreator<PunishmentSlice & any> = (set, 
   getExpModifier: () => {
     const { isCursed, hasShadowFatigue } = get();
     
-    if (isCursed) return 0.5; // 50% EXP while cursed
+    if (isCursed) return 0.5; // 50% EXP while cursed (takes precedence over shadow fatigue)
     if (hasShadowFatigue) return 0.75; // 75% EXP with shadow fatigue
     
     return 1.0; // 100% normal EXP

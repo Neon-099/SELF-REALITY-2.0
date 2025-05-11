@@ -192,63 +192,64 @@ export default function ShadowPenalty() {
     
     const today = endOfDay(new Date());
     const newRecoveryQuestIdsTrack: string[] = [];
-    
+    let currentQuestsState = useSoloLevelingStore.getState().quests;
+
     REDEMPTION_CHALLENGES.forEach(challenge => {
-      // Calculate reward based on difficulty
-      const baseReward = 100;
-      const difficultyMultiplier = challenge.difficulty === 'easy' ? 1 : 
-                                 challenge.difficulty === 'medium' ? 2 : 
-                                 challenge.difficulty === 'hard' ? 3 : 4;
-      const expReward = baseReward * difficultyMultiplier;
+      const initialQuestCount = currentQuestsState.length;
       
-      // Create the side quest
-      const isMainQuest = false; // These are side quests
       addQuest(
         challenge.title,
         challenge.description,
-        isMainQuest,
-        expReward,
+        false, // isMainQuest
+        challenge.difficulty === 'easy' ? 100 : challenge.difficulty === 'medium' ? 200 : 300, // expReward based on challenge
         today,
         challenge.difficulty as any
       );
       
-      // Get the newly created quest ID (the last one in the list)
-      setTimeout(() => {
-        const currentQuests = useSoloLevelingStore.getState().quests;
-        const questId = currentQuests[currentQuests.length - 1].id;
-        
-        // Mark as recovery quest
-        useSoloLevelingStore.getState().updateQuest(questId, { 
-          isRecoveryQuest: true 
-        });
-        
-        // Track this recovery quest ID
-        newRecoveryQuestIdsTrack.push(questId);
-        
-        // Add the tasks to the quest
-        challenge.tasks.forEach(task => {
-          addQuestTask(
-            questId,
-            task.title,
-            task.description,
-            task.category as any,
-            task.difficulty as any
-          );
-        });
-        
-        // Mark the quest as started
-        useSoloLevelingStore.getState().startQuest(questId);
-        
-        // Update recovery quest IDs after all have been created
-        if (newRecoveryQuestIdsTrack.length === REDEMPTION_CHALLENGES.length) {
-          setActiveRecoveryQuestIds(newRecoveryQuestIdsTrack);
+      // Immediately get the updated quests list from the store
+      currentQuestsState = useSoloLevelingStore.getState().quests;
+      
+      // Find the newly added quest
+      // This assumes addQuest adds to the end and no other quests are added simultaneously
+      if (currentQuestsState.length > initialQuestCount) {
+        const newQuest = currentQuestsState[currentQuestsState.length - 1];
+        if (newQuest && !newRecoveryQuestIdsTrack.includes(newQuest.id)) {
+            useSoloLevelingStore.getState().updateQuest(newQuest.id, { 
+              isRecoveryQuest: true 
+            });
+            newRecoveryQuestIdsTrack.push(newQuest.id);
+
+            // Add tasks for this specific new quest
+            challenge.tasks.forEach(task => {
+              addQuestTask(
+                newQuest.id, // Use the newQuest.id here
+                task.title,
+                task.description,
+                task.category as any,
+                task.difficulty as any
+              );
+            });
+            useSoloLevelingStore.getState().startQuest(newQuest.id);
+        } else {
+          //This case should ideally not happen if addQuest works as expected
+          console.error("Failed to identify newly added quest or duplicate ID detected for challenge:", challenge.title);
         }
-      }, 100);
+      } else {
+        console.error("Quest count did not increase after adding quest for challenge:", challenge.title);
+      }
     });
     
+    // After all quests are added and processed synchronously within the loop
+    if (newRecoveryQuestIdsTrack.length === REDEMPTION_CHALLENGES.length) {
+      setActiveRecoveryQuestIds(newRecoveryQuestIdsTrack);
+    } else {
+      console.error("Mismatch in expected recovery quests and tracked IDs.", newRecoveryQuestIdsTrack);
+      // Potentially handle this error, e.g., by not setting active IDs or showing a user error
+      setActiveRecoveryQuestIds(null); // Clear out potentially incorrect IDs
+    }
+
     setRedemptionDialogOpen(false);
     
-    // Show toast notification
     toast({
       title: "Recovery Quests Created",
       description: "Complete all recovery quests by the end of today to lift your curse!",
