@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSoloLevelingStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, Swords, Star, ListTodo, ChevronDown, ChevronUp, Sword, Coins, Filter, Database, X, CalendarClock, Shield, Clock } from 'lucide-react';
+import { CheckCircle, Swords, Star, ListTodo, ChevronDown, ChevronUp, Sword, Coins, Filter, Database, X, CalendarClock, Shield, Clock, Eye, EyeOff } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from '@/hooks/use-toast';
 import { DailyWinCategory, Difficulty } from '@/lib/types';
@@ -1203,19 +1203,11 @@ const Quests = () => {
             variant="ghost"
             size="sm"
             onClick={() => setShowCompletedQuests(!showCompletedQuests)}
-            className="flex items-center gap-2"
+            className={`p-1 flex items-center gap-2 ${showCompletedQuests ? 'text-blue-400' : 'text-gray-400 hover:text-gray-300'}`}
+            title={showCompletedQuests ? "Hide completed" : "Show completed"}
           >
-            {showCompletedQuests ? (
-              <>
-                <ChevronUp className="h-4 w-4" />
-                Hide Completed
-              </>
-            ) : (
-              <>
-                <ChevronDown className="h-4 w-4" />
-                Show Completed
-              </>
-            )}
+            {showCompletedQuests ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
+            <span className="text-sm">{showCompletedQuests ? "Hide completed" : "Show completed"}</span>
           </Button>
         </div>
         {showCompletedQuests && (

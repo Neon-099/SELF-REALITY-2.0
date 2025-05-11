@@ -1,4 +1,3 @@
-
 import { StateCreator } from 'zustand';
 import { ShopItem } from '../../types';
 import { v4 as uuidv4 } from 'uuid';
@@ -10,32 +9,7 @@ export interface ShopSlice {
 }
 
 export const createShopSlice: StateCreator<ShopSlice & any> = (set) => ({
-  shopItems: [
-    {
-      id: uuidv4(),
-      name: "Meditation Guide",
-      description: "Unlock basic meditation techniques to improve focus and willpower",
-      cost: 200,
-      type: "reward",
-      purchased: false
-    },
-    {
-      id: uuidv4(),
-      name: "Fitness Program",
-      description: "A customized workout plan to boost your strength stat",
-      cost: 350,
-      type: "boost",
-      purchased: false
-    },
-    {
-      id: uuidv4(),
-      name: "Scholar's Tome",
-      description: "Ancient knowledge that grants +1 to intelligence",
-      cost: 500,
-      type: "boost",
-      purchased: false
-    }
-  ],
+  shopItems: [],
   
   purchaseItem: (id) => {
     set((state: any) => {

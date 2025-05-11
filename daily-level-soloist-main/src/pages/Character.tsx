@@ -346,9 +346,19 @@ const Character = () => {
         console.error('Error fetching quests directly:', error);
       }
       
+      // Get shop items data
+      let shopItemsData = [];
+      try {
+        const shopStore = db.transaction('shop').objectStore('shop');
+        shopItemsData = await shopStore.getAll();
+      } catch (error) {
+        console.error('Error fetching shop items directly:', error);
+      }
+      
       setDbContents({
         zustandStore: storeData ? JSON.parse(storeData) : null,
-        directQuests: questsData
+        directQuests: questsData,
+        shopItems: shopItemsData
       });
       
       toast({
@@ -445,6 +455,34 @@ const Character = () => {
       toast({
         title: "Delete Failed",
         description: "Failed to delete mission. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleDeleteShopItem = async (itemId: string) => {
+    try {
+      const db = await getDB();
+      const storeData = await db.get('store', 'soloist-store');
+      if (storeData) {
+        const parsedStore = JSON.parse(storeData);
+        if (parsedStore.state && Array.isArray(parsedStore.state.shopItems)) {
+          parsedStore.state.shopItems = parsedStore.state.shopItems.filter(
+            (item: any) => item.id !== itemId
+          );
+          await db.put('store', JSON.stringify(parsedStore), 'soloist-store');
+          await loadDbData();
+          toast({
+            title: "Shop Item Deleted",
+            description: "The shop item has been successfully removed.",
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error deleting shop item:', error);
+      toast({
+        title: "Delete Failed",
+        description: "Failed to delete shop item. Please try again.",
         variant: "destructive"
       });
     }
@@ -821,33 +859,26 @@ const Character = () => {
                         <summary className="cursor-pointer text-blue-400 hover:text-blue-300">
                           View Quests in Store (Total: {dbContents.zustandStore.state?.quests?.length || 0})
                         </summary>
-                        <div className="mt-2 space-y-4">
-                          {dbContents.zustandStore.state?.quests?.map((quest, index) => (
-                            <div key={index} className="p-2 border border-gray-700 rounded bg-gray-900/50">
-                              <div className="flex justify-between items-start mb-2">
-                                <h4 className="text-sm text-white font-medium">{quest.title}</h4>
-                                <Button 
-                                  variant="destructive" 
-                                  size="sm" 
-                                  className="h-6 text-xs"
-                                  onClick={() => handleDeleteQuest(quest.id)}
-                                >
-                                  Delete
-                                </Button>
+                        <div className="mt-2 space-y-2 text-xs p-2 bg-gray-900 rounded">
+                          {dbContents.zustandStore.state?.quests?.length > 0 ? (
+                            dbContents.zustandStore.state.quests.map((quest: any, index: number) => (
+                              <div key={index} className="p-2 border border-gray-700 rounded bg-gray-800/50">
+                                <div className="flex justify-between items-start mb-1">
+                                  <h4 className="text-sm text-white font-medium truncate max-w-[80%]">{quest.title}</h4>
+                                  <Button
+                                    variant="destructive"
+                                    size="sm"
+                                    className="h-6 px-2 text-xs"
+                                    onClick={() => handleDeleteQuest(quest.id)}
+                                  >
+                                    Delete
+                                  </Button>
+                                </div>
+                                <p className="text-xs text-gray-400">ID: {quest.id}</p>
                               </div>
-                              <p className="text-xs text-gray-400 mb-1">{quest.description}</p>
-                              <div className="flex gap-2 text-xs">
-                                <span className={`px-1 rounded ${quest.isMainQuest ? 'bg-yellow-500/20 text-yellow-400' : 'bg-blue-500/20 text-blue-400'}`}>
-                                  {quest.isMainQuest ? 'Main Quest' : 'Side Quest'}
-                                </span>
-                                {quest.completed && (
-                                  <span className="px-1 rounded bg-green-500/20 text-green-400">Completed</span>
-                                )}
-                              </div>
-                            </div>
-                          ))}
-                          {dbContents.zustandStore.state?.quests?.length === 0 && (
-                            <p className="text-sm text-gray-400">No quests available</p>
+                            ))
+                          ) : (
+                            <p className="text-sm text-gray-400">No quests available in store.</p>
                           )}
                         </div>
                       </details>
@@ -856,33 +887,26 @@ const Character = () => {
                         <summary className="cursor-pointer text-blue-400 hover:text-blue-300">
                           View Missions in Store (Total: {dbContents.zustandStore.state?.missions?.length || 0})
                         </summary>
-                        <div className="mt-2 space-y-4">
-                          {dbContents.zustandStore.state?.missions?.map((mission, index) => (
-                            <div key={index} className="p-2 border border-gray-700 rounded bg-gray-900/50">
-                              <div className="flex justify-between items-start mb-2">
-                                <h4 className="text-sm text-white font-medium">{mission.title}</h4>
-                                <Button 
-                                  variant="destructive" 
-                                  size="sm" 
-                                  className="h-6 text-xs"
-                                  onClick={() => handleDeleteMission(mission.id)}
-                                >
-                                  Delete
-                                </Button>
+                        <div className="mt-2 space-y-2 text-xs p-2 bg-gray-900 rounded">
+                          {dbContents.zustandStore.state?.missions?.length > 0 ? (
+                            dbContents.zustandStore.state.missions.map((mission: any, index: number) => (
+                              <div key={index} className="p-2 border border-gray-700 rounded bg-gray-800/50">
+                                <div className="flex justify-between items-start mb-1">
+                                  <h4 className="text-sm text-white font-medium truncate max-w-[80%]">{mission.title}</h4>
+                                  <Button
+                                    variant="destructive"
+                                    size="sm"
+                                    className="h-6 px-2 text-xs"
+                                    onClick={() => handleDeleteMission(mission.id)}
+                                  >
+                                    Delete
+                                  </Button>
+                                </div>
+                                <p className="text-xs text-gray-400">ID: {mission.id}</p>
                               </div>
-                              <p className="text-xs text-gray-400 mb-1">{mission.description}</p>
-                              <div className="flex gap-2 text-xs">
-                                <span className="px-1 rounded bg-purple-500/20 text-purple-400">
-                                  {mission.rank} Rank
-                                </span>
-                                <span className="px-1 rounded bg-blue-500/20 text-blue-400">
-                                  Day {mission.day}
-                                </span>
-                              </div>
-                            </div>
-                          ))}
-                          {dbContents.zustandStore.state?.missions?.length === 0 && (
-                            <p className="text-sm text-gray-400">No missions available</p>
+                            ))
+                          ) : (
+                            <p className="text-sm text-gray-400">No missions available in store.</p>
                           )}
                         </div>
                       </details>
@@ -894,6 +918,34 @@ const Character = () => {
                         <pre className="text-xs mt-2 p-2 bg-gray-900 rounded overflow-x-auto">
                           {JSON.stringify(dbContents.zustandStore.state?.completedMissionHistory || [], null, 2)}
                         </pre>
+                      </details>
+
+                      <details className="mt-2">
+                        <summary className="cursor-pointer text-blue-400 hover:text-blue-300">
+                          View Shop Items in Store (Total: {dbContents.zustandStore.state?.shopItems?.length || 0})
+                        </summary>
+                        <div className="mt-2 space-y-2 text-xs p-2 bg-gray-900 rounded">
+                          {dbContents.zustandStore.state?.shopItems?.length > 0 ? (
+                            dbContents.zustandStore.state.shopItems.map((item: any, index: number) => (
+                              <div key={index} className="p-2 border border-gray-700 rounded bg-gray-800/50">
+                                <div className="flex justify-between items-start mb-1">
+                                  <h4 className="text-sm text-white font-medium truncate max-w-[80%]">{item.name}</h4>
+                                  <Button
+                                    variant="destructive"
+                                    size="sm"
+                                    className="h-6 px-2 text-xs"
+                                    onClick={() => handleDeleteShopItem(item.id)}
+                                  >
+                                    Delete
+                                  </Button>
+                                </div>
+                                <p className="text-xs text-gray-400">ID: {item.id} | Cost: {item.cost}</p>
+                              </div>
+                            ))
+                          ) : (
+                            <p className="text-sm text-gray-400">No shop items available in store.</p>
+                          )}
+                        </div>
                       </details>
                     </>
                   ) : (
@@ -921,6 +973,29 @@ const Character = () => {
                     <p className="text-amber-400">
                       No quests found in direct ObjectStore. This app primarily uses the 'store' 
                       ObjectStore which contains the serialized Zustand state.
+                    </p>
+                  )}
+                </div>
+              </div>
+              
+              <div>
+                <h3 className="text-md font-semibold mb-2">Direct ShopItems ObjectStore</h3>
+                <div className="bg-gray-800 p-3 rounded max-h-60 overflow-auto">
+                  {dbContents.shopItems && dbContents.shopItems.length > 0 ? (
+                    <>
+                      <p className="text-green-400 mb-2">✓ Found {dbContents.shopItems.length} items in direct ObjectStore</p>
+                      <details>
+                        <summary className="cursor-pointer text-blue-400 hover:text-blue-300">
+                          View Direct Shop Items Data
+                        </summary>
+                        <pre className="text-xs mt-2 p-2 bg-gray-900 rounded overflow-x-auto">
+                          {JSON.stringify(dbContents.shopItems, null, 2)}
+                        </pre>
+                      </details>
+                    </>
+                  ) : (
+                    <p className="text-amber-400">
+                      No shop items found in direct ObjectStore. Shop items are primarily managed via Zustand.
                     </p>
                   )}
                 </div>
