@@ -141,7 +141,7 @@ const AddQuestDialog = ({ onClose }: { onClose: () => void }) => {
           <option value="medium">Medium (30 XP)</option>
           <option value="hard">Hard (60 XP)</option>
           <option value="boss">Boss (100 XP)</option>
-        </select>
+        </select>nt
       </div>
       
       {questType === 'daily' && (
@@ -431,63 +431,118 @@ const Quests = () => {
   const renderQuests = () => {
     switch (activeFilter) {
       case 'main':
-        return (
-          <div>
-            <h2 className="text-xl font-bold text-solo-text mb-4 flex items-center gap-2">
-              <Swords className="text-yellow-500" size={20} />
-              Main Quests
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {activeQuests
-                .filter(quest => quest.isMainQuest)
-                .map((quest) => (
-                  <div 
-                    key={quest.id} 
-                    className="bg-solo-dark border border-yellow-500/50 hover:border-yellow-500 rounded-lg p-4 transition-all"
+  return (
+        <div>
+          <h2 className="text-xl font-bold text-solo-text mb-4 flex items-center gap-2">
+            <Swords className="text-yellow-500" size={20} />
+            Main Quests
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {activeQuests
+              .filter(quest => quest.isMainQuest)
+              .map((quest) => (
+                <div 
+                  key={quest.id} 
+                    className="bg-solo-dark border-2 border-yellow-500/30 hover:border-yellow-500 rounded-lg p-4 transition-all relative overflow-hidden group"
                   >
-                    <div className="flex justify-between items-start mb-2">
-                      <div className="flex items-center gap-2">
-                        <div className="text-yellow-500">
-                          <Swords size={16} />
+                    <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <div className="relative">
+                      {/* Quest Header */}
+                      <div className="flex justify-between items-start mb-3">
+                        <div className="flex items-center gap-2">
+                          <div className="text-yellow-500 bg-yellow-500/10 p-2 rounded-lg">
+                            <Swords size={18} />
+                          </div>
+                          <div>
+                            <h3 className="font-medium text-lg text-yellow-50">{quest.title}</h3>
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className="text-xs px-2 py-0.5 rounded-full bg-yellow-500/10 text-yellow-400 border border-yellow-500/20">
+                                Main Quest
+                              </span>
+                              {quest.started && (
+                                <span className="text-xs px-2 py-0.5 rounded-full bg-green-500/10 text-green-400 border border-green-500/20">
+                                  In Progress
+                                </span>
+                              )}
+                            </div>
+                          </div>
                         </div>
-                        <h3 className="font-medium text-lg">{quest.title}</h3>
+                        <div className="flex flex-col items-end gap-2">
+                          <span className="text-yellow-400 font-bold flex items-center gap-1 bg-yellow-500/10 px-2 py-1 rounded-md">
+                            <Star size={14} className="text-yellow-400 stroke-2" />
+                            +{quest.expReward} EXP
+                          </span>
+                          {quest.started && quest.tasks && (
+                            <span className="text-xs text-gray-400">
+                              {quest.tasks.filter((t: any) => t.completed).length}/{quest.tasks.length} Tasks
+                            </span>
+                          )}
+                        </div>
                       </div>
-                      <span className="text-solo-primary font-bold flex items-center gap-1">
-                        <Star size={14} className="text-yellow-400 stroke-2" />
-                        +{quest.expReward} EXP
-                      </span>
-                    </div>
-                    
-                    {quest.description && (
-                      <p className="text-gray-400 mb-4">{quest.description}</p>
-                    )}
+                      
+                      {/* Quest Description */}
+                      {quest.description && (
+                        <div className="mb-4">
+                          <p className="text-gray-300">{quest.description}</p>
+                          {quest.started && quest.tasks && quest.tasks.length > 0 && (
+                            <div className="mt-2 h-1 w-full bg-gray-800 rounded-full overflow-hidden">
+                              <div 
+                                className="h-full bg-yellow-500/50 rounded-full transition-all duration-300"
+                                style={{ 
+                                  width: `${(quest.tasks.filter((t: any) => t.completed).length / quest.tasks.length) * 100}%` 
+                                }}
+                              />
+                            </div>
+                          )}
+                        </div>
+                      )}
 
-                    {!quest.started ? (
-                      <Button 
-                        variant="outline" 
-                        onClick={() => startQuest(quest.id)}
-                        size="sm"
-                        className="w-full flex justify-center items-center gap-2"
-                      >
-                        <ListTodo size={14} />
-                        Start Quest
-                      </Button>
-                    ) : (
-                      <>
-                        <QuestTasks quest={quest} />
-                        {canCompleteQuest(quest.id) && (
-                          <Button 
-                            variant="outline" 
-                            onClick={() => handleCompleteQuest(quest.id, quest.title, quest.expReward)}
-                            size="sm"
-                            className="w-full flex justify-center items-center gap-2 mt-4"
-                          >
-                            <CheckCircle size={14} />
-                            Complete Quest
-                          </Button>
-                        )}
-                      </>
-                    )}
+                      {/* Quest Actions */}
+                      {!quest.started ? (
+                        <Button 
+                          variant="outline" 
+                          onClick={() => startQuest(quest.id)}
+                          size="sm"
+                          className="w-full flex justify-center items-center gap-2 border-yellow-500/30 hover:border-yellow-500 hover:bg-yellow-500/10 text-yellow-400 hover:text-yellow-300 transition-colors"
+                        >
+                          <ListTodo size={14} />
+                          Start Quest
+                        </Button>
+                      ) : (
+                        <>
+                          <QuestTasks quest={quest} />
+                          {canCompleteQuest(quest.id) && (
+                            <Button 
+                              variant="outline" 
+                              onClick={() => handleCompleteQuest(quest.id, quest.title, quest.expReward)}
+                              size="sm"
+                              className="w-full flex justify-center items-center gap-2 mt-4 border-yellow-500/30 hover:border-yellow-500 hover:bg-yellow-500/10 text-yellow-400 hover:text-yellow-300 transition-colors"
+                            >
+                              <CheckCircle size={14} />
+                              Complete Quest
+                            </Button>
+                          )}
+                        </>
+                      )}
+
+                      {/* Quest Footer */}
+                      {quest.started && (
+                        <div className="mt-3 pt-3 border-t border-yellow-500/10">
+                          <div className="flex items-center justify-between text-xs text-gray-400">
+                            <div className="flex items-center gap-1">
+                              <Clock size={12} />
+                              <span>Started {format(new Date(quest.createdAt), 'MMM d, h:mm a')}</span>
+                            </div>
+                            {quest.deadline && (
+                              <div className="flex items-center gap-1">
+                                <CalendarClock size={12} />
+                                <span>Due {format(new Date(quest.deadline), 'MMM d')}</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 ))}
             </div>
@@ -561,9 +616,9 @@ const Quests = () => {
                     <div 
                       key={quest.id} 
                       className="bg-solo-dark border border-gray-800 hover:border-solo-primary/50 rounded-lg p-4 transition-all"
-                    >
-                      <div className="flex justify-between items-start mb-2">
-                        <div className="flex items-center gap-2">
+                >
+                  <div className="flex justify-between items-start mb-2">
+                    <div className="flex items-center gap-2">
                           <h3 className="font-medium text-lg">{quest.title}</h3>
                         </div>
                         <span className="text-solo-primary font-bold flex items-center gap-1">
@@ -627,19 +682,19 @@ const Quests = () => {
                         <div className="flex items-center gap-2">
                           <div className="text-green-500">
                             <ListTodo size={16} />
-                          </div>
-                          <h3 className="font-medium text-lg">{quest.title}</h3>
-                        </div>
-                        <span className="text-solo-primary font-bold flex items-center gap-1">
-                          <Star size={14} className="text-yellow-400 stroke-2" />
-                          +{quest.expReward} EXP
-                        </span>
                       </div>
-                      
-                      {quest.description && (
-                        <p className="text-gray-400 mb-4">{quest.description}</p>
-                      )}
-                      
+                      <h3 className="font-medium text-lg">{quest.title}</h3>
+                    </div>
+                    <span className="text-solo-primary font-bold flex items-center gap-1">
+                      <Star size={14} className="text-yellow-400 stroke-2" />
+                      +{quest.expReward} EXP
+                    </span>
+                  </div>
+                  
+                  {quest.description && (
+                    <p className="text-gray-400 mb-4">{quest.description}</p>
+                  )}
+
                       <Button 
                         variant="outline" 
                         onClick={() => handleCompleteQuest(quest.id, quest.title, quest.expReward)}
@@ -677,72 +732,127 @@ const Quests = () => {
                   .map((quest) => (
                     <div 
                       key={quest.id} 
-                      className="bg-solo-dark border border-yellow-500/50 hover:border-yellow-500 rounded-lg p-4 transition-all"
+                      className="bg-solo-dark border-2 border-yellow-500/30 hover:border-yellow-500 rounded-lg p-4 transition-all relative overflow-hidden group"
                     >
-                      <div className="flex justify-between items-start mb-2">
-                        <div className="flex items-center gap-2">
-                          <div className="text-yellow-500">
-                            <Swords size={16} />
+                      <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                      <div className="relative">
+                        {/* Quest Header */}
+                        <div className="flex justify-between items-start mb-3">
+                          <div className="flex items-center gap-2">
+                            <div className="text-yellow-500 bg-yellow-500/10 p-2 rounded-lg">
+                              <Swords size={18} />
+                            </div>
+                            <div>
+                              <h3 className="font-medium text-lg text-yellow-50">{quest.title}</h3>
+                              <div className="flex items-center gap-2 mt-1">
+                                <span className="text-xs px-2 py-0.5 rounded-full bg-yellow-500/10 text-yellow-400 border border-yellow-500/20">
+                                  Main Quest
+                                </span>
+                                {quest.started && (
+                                  <span className="text-xs px-2 py-0.5 rounded-full bg-green-500/10 text-green-400 border border-green-500/20">
+                                    In Progress
+                                  </span>
+                                )}
+                              </div>
+                            </div>
                           </div>
-                          <h3 className="font-medium text-lg">{quest.title}</h3>
+                          <div className="flex flex-col items-end gap-2">
+                            <span className="text-yellow-400 font-bold flex items-center gap-1 bg-yellow-500/10 px-2 py-1 rounded-md">
+                              <Star size={14} className="text-yellow-400 stroke-2" />
+                              +{quest.expReward} EXP
+                            </span>
+                            {quest.started && quest.tasks && (
+                              <span className="text-xs text-gray-400">
+                                {quest.tasks.filter((t: any) => t.completed).length}/{quest.tasks.length} Tasks
+                              </span>
+                            )}
+                          </div>
                         </div>
-                        <span className="text-solo-primary font-bold flex items-center gap-1">
-                          <Star size={14} className="text-yellow-400 stroke-2" />
-                          +{quest.expReward} EXP
-                        </span>
-                      </div>
-                      
-                      {quest.description && (
-                        <p className="text-gray-400 mb-4">{quest.description}</p>
-                      )}
+                        
+                        {/* Quest Description */}
+                        {quest.description && (
+                          <div className="mb-4">
+                            <p className="text-gray-300">{quest.description}</p>
+                            {quest.started && quest.tasks && quest.tasks.length > 0 && (
+                              <div className="mt-2 h-1 w-full bg-gray-800 rounded-full overflow-hidden">
+                                <div 
+                                  className="h-full bg-yellow-500/50 rounded-full transition-all duration-300"
+                                  style={{ 
+                                    width: `${(quest.tasks.filter((t: any) => t.completed).length / quest.tasks.length) * 100}%` 
+                                  }}
+                                />
+                              </div>
+                            )}
+                          </div>
+                        )}
 
-                      {!quest.started ? (
+                        {/* Quest Actions */}
+                  {!quest.started ? (
+                    <Button 
+                      variant="outline" 
+                      onClick={() => startQuest(quest.id)}
+                      size="sm"
+                            className="w-full flex justify-center items-center gap-2 border-yellow-500/30 hover:border-yellow-500 hover:bg-yellow-500/10 text-yellow-400 hover:text-yellow-300 transition-colors"
+                    >
+                      <ListTodo size={14} />
+                      Start Quest
+                    </Button>
+                  ) : (
+                    <>
+                      <QuestTasks quest={quest} />
+                      {canCompleteQuest(quest.id) && (
                         <Button 
                           variant="outline" 
-                          onClick={() => startQuest(quest.id)}
+                          onClick={() => handleCompleteQuest(quest.id, quest.title, quest.expReward)}
                           size="sm"
-                          className="w-full flex justify-center items-center gap-2"
+                                className="w-full flex justify-center items-center gap-2 mt-4 border-yellow-500/30 hover:border-yellow-500 hover:bg-yellow-500/10 text-yellow-400 hover:text-yellow-300 transition-colors"
                         >
-                          <ListTodo size={14} />
-                          Start Quest
+                          <CheckCircle size={14} />
+                          Complete Quest
                         </Button>
-                      ) : (
-                        <>
-                          <QuestTasks quest={quest} />
-                          {canCompleteQuest(quest.id) && (
-                            <Button 
-                              variant="outline" 
-                              onClick={() => handleCompleteQuest(quest.id, quest.title, quest.expReward)}
-                              size="sm"
-                              className="w-full flex justify-center items-center gap-2 mt-4"
-                            >
-                              <CheckCircle size={14} />
-                              Complete Quest
-                            </Button>
-                          )}
-                        </>
                       )}
-                    </div>
-                  ))}
-              </div>
-              {activeQuests.filter(quest => quest.isMainQuest).length === 0 && (
-                <div className="bg-solo-dark border border-yellow-500/20 rounded-lg p-4 text-center">
-                  <p className="text-gray-400">No active main quests available.</p>
-                  <p className="text-gray-400 text-sm mt-2">Click "Add Quest" to create a main quest.</p>
-                </div>
-              )}
-            </div>
+                    </>
+                  )}
 
-            {/* Side Quests Section */}
-            <div>
-              <h2 className="text-xl font-bold text-solo-text mb-4 flex items-center gap-2">
-                <Sword className="text-solo-primary" size={20} />
-                Side Quests
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {activeQuests
-                  .filter(quest => !quest.isMainQuest)
-                  .map((quest) => (
+                        {/* Quest Footer */}
+                        {quest.started && (
+                          <div className="mt-3 pt-3 border-t border-yellow-500/10">
+                            <div className="flex items-center justify-between text-xs text-gray-400">
+                              <div className="flex items-center gap-1">
+                                <Clock size={12} />
+                                <span>Started {format(new Date(quest.createdAt), 'MMM d, h:mm a')}</span>
+                              </div>
+                              {quest.deadline && (
+                                <div className="flex items-center gap-1">
+                                  <CalendarClock size={12} />
+                                  <span>Due {format(new Date(quest.deadline), 'MMM d')}</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                </div>
+              ))}
+          </div>
+          {activeQuests.filter(quest => quest.isMainQuest).length === 0 && (
+            <div className="bg-solo-dark border border-yellow-500/20 rounded-lg p-4 text-center">
+              <p className="text-gray-400">No active main quests available.</p>
+                  <p className="text-gray-400 text-sm mt-2">Click "Add Quest" to create a main quest.</p>
+            </div>
+          )}
+        </div>
+
+        {/* Side Quests Section */}
+        <div>
+          <h2 className="text-xl font-bold text-solo-text mb-4 flex items-center gap-2">
+            <Sword className="text-solo-primary" size={20} />
+            Side Quests
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {activeQuests
+              .filter(quest => !quest.isMainQuest)
+              .map((quest) => (
                     quest.isRecoveryQuest ? (
                       <div 
                         key={quest.id} 
@@ -791,93 +901,93 @@ const Quests = () => {
                         </button>
                       </div>
                     ) : (
-                      <div 
-                        key={quest.id} 
-                        className="bg-solo-dark border border-gray-800 hover:border-solo-primary/50 rounded-lg p-4 transition-all"
-                      >
-                        <div className="flex justify-between items-start mb-2">
-                          <div className="flex items-center gap-2">
-                            <h3 className="font-medium text-lg">{quest.title}</h3>
-                          </div>
-                          <span className="text-solo-primary font-bold flex items-center gap-1">
-                            <Star size={14} className="text-yellow-400 stroke-2" />
-                            +{quest.expReward} EXP
-                          </span>
-                        </div>
-                        
-                        {quest.description && (
-                          <p className="text-gray-400 mb-4">{quest.description}</p>
-                        )}
+                <div 
+                  key={quest.id} 
+                  className="bg-solo-dark border border-gray-800 hover:border-solo-primary/50 rounded-lg p-4 transition-all"
+                >
+                  <div className="flex justify-between items-start mb-2">
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-medium text-lg">{quest.title}</h3>
+                    </div>
+                    <span className="text-solo-primary font-bold flex items-center gap-1">
+                      <Star size={14} className="text-yellow-400 stroke-2" />
+                      +{quest.expReward} EXP
+                    </span>
+                  </div>
+                  
+                  {quest.description && (
+                    <p className="text-gray-400 mb-4">{quest.description}</p>
+                  )}
                         
                         {quest.deadline && (
                           <div className="flex items-center gap-1 text-xs text-amber-400/80 mb-3">
                             <CalendarClock size={12} />
                             <span>Deadline: {format(new Date(quest.deadline), "MMM d, yyyy h:mm a")}</span>
                           </div>
-                        )}
-                        
-                        <Button 
-                          variant="outline" 
-                          onClick={() => handleCompleteQuest(quest.id, quest.title, quest.expReward)}
-                          size="sm"
-                          className="w-full flex justify-center items-center gap-2"
-                        >
-                          <CheckCircle size={14} />
-                          Complete Quest
-                        </Button>
-                      </div>
-                    )
-                  ))}
-              </div>
-              {activeQuests.filter(quest => !quest.isMainQuest).length === 0 && (
-                <div className="bg-solo-dark border border-gray-800 rounded-lg p-4 text-center">
-                  <p className="text-gray-400">No active side quests available.</p>
-                  <p className="text-gray-400 text-sm mt-2">Click "Add Quest" to create a side quest.</p>
+                  )}
+                  
+                  <Button 
+                    variant="outline" 
+                    onClick={() => handleCompleteQuest(quest.id, quest.title, quest.expReward)}
+                    size="sm"
+                    className="w-full flex justify-center items-center gap-2"
+                  >
+                    <CheckCircle size={14} />
+                    Complete Quest
+                  </Button>
                 </div>
-              )}
+                    )
+              ))}
+          </div>
+          {activeQuests.filter(quest => !quest.isMainQuest).length === 0 && (
+            <div className="bg-solo-dark border border-gray-800 rounded-lg p-4 text-center">
+              <p className="text-gray-400">No active side quests available.</p>
+                  <p className="text-gray-400 text-sm mt-2">Click "Add Quest" to create a side quest.</p>
             </div>
+          )}
+      </div>
+      
+      {/* Daily Quests Section */}
+      <div className="space-y-4">
+        <h2 className="text-xl font-bold text-solo-text mb-4 flex items-center gap-2">
+          <ListTodo className="text-green-500" size={20} />
+          Daily Quests
+        </h2>
           
-            {/* Daily Quests Section */}
-            <div className="space-y-4">
-              <h2 className="text-xl font-bold text-solo-text mb-4 flex items-center gap-2">
-                <ListTodo className="text-green-500" size={20} />
-                Daily Quests
-              </h2>
-              
               {dailyQuests.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {dailyQuests.map((quest) => (
                     <div 
                       key={quest.id} 
                       className="bg-solo-dark border border-gray-800 hover:border-green-500/50 rounded-lg p-4 transition-all"
                     >
-                      <div className="flex justify-between items-start mb-2">
-                        <div className="flex items-center gap-2">
+              <div className="flex justify-between items-start mb-2">
+                <div className="flex items-center gap-2">
                           <div className="text-green-500">
                             <ListTodo size={16} />
                           </div>
                           <h3 className="font-medium text-lg">{quest.title}</h3>
-                        </div>
+                </div>
                         <span className="text-solo-primary font-bold flex items-center gap-1">
-                          <Star size={14} className="text-yellow-400 stroke-2" />
+                  <Star size={14} className="text-yellow-400 stroke-2" />
                           +{quest.expReward} EXP
-                        </span>
-                      </div>
-                      
+                </span>
+              </div>
+              
                       {quest.description && (
                         <p className="text-gray-400 mb-4">{quest.description}</p>
                       )}
-                      
-                      <Button 
-                        variant="outline" 
+              
+              <Button 
+                variant="outline" 
                         onClick={() => handleCompleteQuest(quest.id, quest.title, quest.expReward)}
-                        size="sm"
-                        className="w-full flex justify-center items-center gap-2"
-                      >
-                        <CheckCircle size={14} />
-                        Complete Quest
-                      </Button>
-                    </div>
+                size="sm"
+                className="w-full flex justify-center items-center gap-2"
+              >
+                <CheckCircle size={14} />
+                Complete Quest
+              </Button>
+            </div>
                   ))}
                 </div>
               ) : (
@@ -889,7 +999,7 @@ const Quests = () => {
                     <p className="text-gray-400">No active daily quests available.</p>
                     <p className="text-gray-400 text-sm mt-2">Click "Add Quest" to create a daily quest.</p>
                   </div>
-                </div>
+              </div>
               )}
             </div>
           </div>
@@ -961,7 +1071,7 @@ const Quests = () => {
 
       {/* Active Quests */}
       {renderQuests()}
-      
+
       {/* Completed Quests */}
       <div>
         <div className="mb-4 flex justify-between items-center">
@@ -1042,7 +1152,7 @@ const Quests = () => {
                   
                   <div className="text-green-500/70 text-sm flex items-center">
                     <CheckCircle size={14} className="mr-1" />
-                    Completed {quest.completedAt && format(new Date(quest.completedAt), 'h:mm a')}
+                    Completed {quest.createdAt && format(new Date(quest.createdAt), 'h:mm a')}
                   </div>
                 </div>
               ))}

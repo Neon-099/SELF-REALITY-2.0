@@ -121,7 +121,7 @@ export function getDB() {
             // In a real migration we would get all missions and add them to the store
             // Since we're using Zustand's persist middleware, we'll handle this in the mission slice
             migrationDb.deleteObjectStore('missions');
-          }
+        }
           if (migrationDb.objectStoreNames.contains('completedMissions')) {
             // Same for completed missions
             migrationDb.deleteObjectStore('completedMissions');
@@ -153,7 +153,7 @@ export function getDB() {
 export async function getAllMissions() {
   // This now retrieves missions from the Zustand store through the 'store' object store
   try {
-    const db = await getDB();
+  const db = await getDB();
     const storeData = await db.get('store', 'soloist-store');
     if (storeData) {
       const parsedStore = JSON.parse(storeData);
@@ -169,7 +169,7 @@ export async function getAllMissions() {
 export async function getCompletedMissions() {
   // This now retrieves completed missions from the Zustand store through the 'store' object store
   try {
-    const db = await getDB();
+  const db = await getDB();
     const storeData = await db.get('store', 'soloist-store');
     if (storeData) {
       const parsedStore = JSON.parse(storeData);
@@ -189,7 +189,7 @@ export async function addMission(mission: Mission) {
   
   // Try to update the store directly
   try {
-    const db = await getDB();
+  const db = await getDB();
     const storeData = await db.get('store', 'soloist-store');
     if (storeData) {
       const parsedStore = JSON.parse(storeData);
@@ -210,7 +210,7 @@ export async function addCompletedMission(mission: CompletedMission) {
   
   // Try to update the store directly
   try {
-    const db = await getDB();
+  const db = await getDB();
     const storeData = await db.get('store', 'soloist-store');
     if (storeData) {
       const parsedStore = JSON.parse(storeData);
@@ -231,7 +231,7 @@ export async function deleteMission(id: string) {
   
   // Try to update the store directly
   try {
-    const db = await getDB();
+  const db = await getDB();
     const storeData = await db.get('store', 'soloist-store');
     if (storeData) {
       const parsedStore = JSON.parse(storeData);
@@ -252,7 +252,7 @@ export async function updateMission(mission: Mission) {
   
   // Try to update the store directly
   try {
-    const db = await getDB();
+  const db = await getDB();
     const storeData = await db.get('store', 'soloist-store');
     if (storeData) {
       const parsedStore = JSON.parse(storeData);
@@ -272,14 +272,14 @@ export async function getMissionsByDay(date: Date) {
   // Retrieve from the Zustand store instead
   try {
     const completedMissions = await getCompletedMissions();
-    return completedMissions.filter((mission) => {
-      const missionDate = new Date(mission.completedAt);
-      return (
-        missionDate.getDate() === date.getDate() &&
-        missionDate.getMonth() === date.getMonth() &&
-        missionDate.getFullYear() === date.getFullYear()
-      );
-    });
+  return completedMissions.filter((mission) => {
+    const missionDate = new Date(mission.completedAt);
+    return (
+      missionDate.getDate() === date.getDate() &&
+      missionDate.getMonth() === date.getMonth() &&
+      missionDate.getFullYear() === date.getFullYear()
+    );
+  });
   } catch (error) {
     console.error("Error getting missions by day:", error);
     return [];
