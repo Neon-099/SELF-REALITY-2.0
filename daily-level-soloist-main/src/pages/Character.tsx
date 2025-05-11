@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSoloLevelingStore } from '@/lib/store';
 import { StatCard } from '@/components/ui/stat-card';
-import { DumbbellIcon, BrainIcon, HeartIcon, SmileIcon, Clock3Icon, SparklesIcon, Coins, Star, Crown, Trophy, Info, AlertCircle, CheckCircle } from 'lucide-react';
+import { DumbbellIcon, BrainIcon, HeartIcon, SmileIcon, Clock3Icon, SparklesIcon, Coins, Star, Crown, Trophy, Info, AlertCircle, CheckCircle, Database, X } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -11,7 +11,7 @@ import { initialUser } from '@/lib/store/initial-state';
 import { toast } from '@/hooks/use-toast';
 import { predefinedMissions } from '@/data/predefined-missions';
 import { endOfDay } from 'date-fns';
-import { ShadowPenalty } from '@/components/punishment';
+import { getDB } from '@/lib/db';
 
 const rankDetails = [
   {
@@ -300,7 +300,10 @@ const Character = () => {
     hasShadowFatigue, 
     addQuest,
     addQuestTask,
-    canUseRedemption
+    canUseRedemption,
+    quests,
+    deleteQuest,
+    missions
   ] = useSoloLevelingStore(state => [
       state.user, 
       state.addExp, 
@@ -309,7 +312,10 @@ const Character = () => {
       state.hasShadowFatigue, 
       state.addQuest,
       state.addQuestTask,
-      state.canUseRedemption 
+      state.canUseRedemption,
+      state.quests,
+      state.deleteQuest,
+      state.missions
     ]);
   
   const [lastUpdate, setLastUpdate] = useState(Date.now());
@@ -318,6 +324,55 @@ const Character = () => {
     user ? Math.min(Math.floor((user.exp / user.expToNextLevel) * 100), 100) : 0
   );
   const prevExpRef = useRef(user?.exp || 0);
+  const [showDbDebug, setShowDbDebug] = useState(false);
+  const [dbContents, setDbContents] = useState<any>(null);
+  const [isLoadingDb, setIsLoadingDb] = useState(false);
+
+  // Function to load and display IndexedDB data
+  const loadDbData = async () => {
+    try {
+      setIsLoadingDb(true);
+      const db = await getDB();
+      
+      // Get the raw data from the database
+      const storeData = await db.get('store', 'soloist-store');
+      
+      // Get direct quest data if available
+      let questsData = [];
+      try {
+        const questStore = db.transaction('quests').objectStore('quests');
+        questsData = await questStore.getAll();
+      } catch (error) {
+        console.error('Error fetching quests directly:', error);
+      }
+      
+      setDbContents({
+        zustandStore: storeData ? JSON.parse(storeData) : null,
+        directQuests: questsData
+      });
+      
+      toast({
+        title: "Database Loaded",
+        description: "IndexedDB data has been retrieved successfully.",
+      });
+    } catch (error) {
+      console.error('Error loading IndexedDB data:', error);
+      toast({
+        title: "Database Error",
+        description: `Failed to load IndexedDB: ${error.message}`,
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoadingDb(false);
+    }
+  };
+
+  // Load database data when debug panel is opened
+  useEffect(() => {
+    if (showDbDebug) {
+      loadDbData();
+    }
+  }, [showDbDebug]);
 
   useEffect(() => {
     if (user && typeof user.exp === 'number') {
@@ -329,6 +384,71 @@ const Character = () => {
       }
     }
   }, [user]);
+
+  // Function to handle quest deletion
+  const handleDeleteQuest = (questId: string) => {
+    try {
+      deleteQuest(questId);
+      toast({
+        title: "Quest Deleted",
+        description: "The quest has been successfully removed.",
+      });
+      
+      // Refresh data to show updated state
+      loadDbData();
+    } catch (error) {
+      console.error('Error deleting quest:', error);
+      toast({
+        title: "Delete Failed",
+        description: "Failed to delete quest. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Function to handle mission deletion directly through IndexedDB
+  // Since deleteMission isn't available in the store yet
+  // TODO: This is a temporary solution - it would be better to implement a proper deleteMission 
+  // function in the mission-slice.ts file to maintain consistent architecture
+  const handleDeleteMission = async (missionId: string) => {
+    try {
+      // Get the DB connection
+      const db = await getDB();
+      
+      // Get current store data
+      const storeData = await db.get('store', 'soloist-store');
+      
+      if (storeData) {
+        // Parse store data
+        const parsedStore = JSON.parse(storeData);
+        
+        if (parsedStore.state && Array.isArray(parsedStore.state.missions)) {
+          // Filter out the mission to delete
+          parsedStore.state.missions = parsedStore.state.missions.filter(
+            (m: any) => m.id !== missionId
+          );
+          
+          // Save the updated data back to IndexedDB
+          await db.put('store', JSON.stringify(parsedStore), 'soloist-store');
+          
+          // Now update our UI state by refreshing
+          await loadDbData();
+          
+          toast({
+            title: "Mission Deleted",
+            description: "The mission has been successfully removed.",
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error deleting mission:', error);
+      toast({
+        title: "Delete Failed",
+        description: "Failed to delete mission. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
 
   if (!user) {
     return <div className="p-8 text-center">Loading character data...</div>;
@@ -645,8 +765,232 @@ const Character = () => {
         </div>
       </div>
 
-      {/* Shadow Penalty Component - Centralized penalty display and actions */}
-      <ShadowPenalty />
+      {/* Database Debug Button */}
+      <div className="mt-8 flex justify-end">
+        <Button 
+          variant="outline" 
+          size="sm"
+          className="flex items-center gap-1"
+          onClick={() => setShowDbDebug(!showDbDebug)}
+        >
+          <Database className="h-4 w-4" />
+          {showDbDebug ? 'Hide DB' : 'Show DB'}
+        </Button>
+      </div>
+
+      {/* IndexedDB Debug Panel */}
+      {showDbDebug && (
+        <div className="bg-gray-900 border border-gray-700 rounded-lg p-4 relative mt-4">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-lg font-bold flex items-center gap-2">
+              <Database className="h-5 w-5 text-blue-400" />
+              IndexedDB Contents
+            </h2>
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={loadDbData} 
+                disabled={isLoadingDb}
+              >
+                Refresh Data
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowDbDebug(false)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+          
+          {isLoadingDb ? (
+            <div className="text-center py-4">
+              <p>Loading database contents...</p>
+            </div>
+          ) : dbContents ? (
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-md font-semibold mb-2">Zustand Store (from IndexedDB)</h3>
+                <div className="bg-gray-800 p-3 rounded max-h-60 overflow-auto">
+                  {dbContents.zustandStore ? (
+                    <>
+                      <p className="text-green-400 mb-2">✓ IndexedDB is working correctly</p>
+                      <details>
+                        <summary className="cursor-pointer text-blue-400 hover:text-blue-300">
+                          View Quests in Store (Total: {dbContents.zustandStore.state?.quests?.length || 0})
+                        </summary>
+                        <div className="mt-2 space-y-4">
+                          {dbContents.zustandStore.state?.quests?.map((quest, index) => (
+                            <div key={index} className="p-2 border border-gray-700 rounded bg-gray-900/50">
+                              <div className="flex justify-between items-start mb-2">
+                                <h4 className="text-sm text-white font-medium">{quest.title}</h4>
+                                <Button 
+                                  variant="destructive" 
+                                  size="sm" 
+                                  className="h-6 text-xs"
+                                  onClick={() => handleDeleteQuest(quest.id)}
+                                >
+                                  Delete
+                                </Button>
+                              </div>
+                              <p className="text-xs text-gray-400 mb-1">{quest.description}</p>
+                              <div className="flex gap-2 text-xs">
+                                <span className={`px-1 rounded ${quest.isMainQuest ? 'bg-yellow-500/20 text-yellow-400' : 'bg-blue-500/20 text-blue-400'}`}>
+                                  {quest.isMainQuest ? 'Main Quest' : 'Side Quest'}
+                                </span>
+                                {quest.completed && (
+                                  <span className="px-1 rounded bg-green-500/20 text-green-400">Completed</span>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                          {dbContents.zustandStore.state?.quests?.length === 0 && (
+                            <p className="text-sm text-gray-400">No quests available</p>
+                          )}
+                        </div>
+                      </details>
+                      
+                      <details className="mt-2">
+                        <summary className="cursor-pointer text-blue-400 hover:text-blue-300">
+                          View Missions in Store (Total: {dbContents.zustandStore.state?.missions?.length || 0})
+                        </summary>
+                        <div className="mt-2 space-y-4">
+                          {dbContents.zustandStore.state?.missions?.map((mission, index) => (
+                            <div key={index} className="p-2 border border-gray-700 rounded bg-gray-900/50">
+                              <div className="flex justify-between items-start mb-2">
+                                <h4 className="text-sm text-white font-medium">{mission.title}</h4>
+                                <Button 
+                                  variant="destructive" 
+                                  size="sm" 
+                                  className="h-6 text-xs"
+                                  onClick={() => handleDeleteMission(mission.id)}
+                                >
+                                  Delete
+                                </Button>
+                              </div>
+                              <p className="text-xs text-gray-400 mb-1">{mission.description}</p>
+                              <div className="flex gap-2 text-xs">
+                                <span className="px-1 rounded bg-purple-500/20 text-purple-400">
+                                  {mission.rank} Rank
+                                </span>
+                                <span className="px-1 rounded bg-blue-500/20 text-blue-400">
+                                  Day {mission.day}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                          {dbContents.zustandStore.state?.missions?.length === 0 && (
+                            <p className="text-sm text-gray-400">No missions available</p>
+                          )}
+                        </div>
+                      </details>
+                      
+                      <details className="mt-2">
+                        <summary className="cursor-pointer text-blue-400 hover:text-blue-300">
+                          View Completed Missions in Store (Total: {dbContents.zustandStore.state?.completedMissionHistory?.length || 0})
+                        </summary>
+                        <pre className="text-xs mt-2 p-2 bg-gray-900 rounded overflow-x-auto">
+                          {JSON.stringify(dbContents.zustandStore.state?.completedMissionHistory || [], null, 2)}
+                        </pre>
+                      </details>
+                    </>
+                  ) : (
+                    <p className="text-red-400">No Zustand store data found in IndexedDB</p>
+                  )}
+                </div>
+              </div>
+              
+              <div>
+                <h3 className="text-md font-semibold mb-2">Direct Quests ObjectStore</h3>
+                <div className="bg-gray-800 p-3 rounded max-h-60 overflow-auto">
+                  {dbContents.directQuests && dbContents.directQuests.length > 0 ? (
+                    <>
+                      <p className="text-green-400 mb-2">✓ Found {dbContents.directQuests.length} quests in direct ObjectStore</p>
+                      <details>
+                        <summary className="cursor-pointer text-blue-400 hover:text-blue-300">
+                          View Direct Quest Data
+                        </summary>
+                        <pre className="text-xs mt-2 p-2 bg-gray-900 rounded overflow-x-auto">
+                          {JSON.stringify(dbContents.directQuests, null, 2)}
+                        </pre>
+                      </details>
+                    </>
+                  ) : (
+                    <p className="text-amber-400">
+                      No quests found in direct ObjectStore. This app primarily uses the 'store' 
+                      ObjectStore which contains the serialized Zustand state.
+                    </p>
+                  )}
+                </div>
+              </div>
+              
+              <div>
+                <h3 className="text-md font-semibold mb-2">Current State (in memory)</h3>
+                <div className="bg-gray-800 p-3 rounded max-h-60 overflow-auto">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="font-bold text-blue-400">Quests</p>
+                      <p className="text-sm mt-1">
+                        Total: <span className="font-bold">{quests.length}</span>
+                      </p>
+                      <details className="mt-2">
+                        <summary className="cursor-pointer text-blue-400 hover:text-blue-300 text-sm">
+                          View Quest Types
+                        </summary>
+                        <div className="mt-2 space-y-1 text-sm">
+                          <p>
+                            Main Quests: <span className="font-bold text-yellow-400">
+                              {quests.filter(q => q.isMainQuest).length}
+                            </span>
+                          </p>
+                          <p>
+                            Side Quests: <span className="font-bold text-solo-primary">
+                              {quests.filter(q => !q.isMainQuest && !q.isDaily).length}
+                            </span>
+                          </p>
+                          <p>
+                            Daily Quests: <span className="font-bold text-green-400">
+                              {quests.filter(q => q.isDaily).length}
+                            </span>
+                          </p>
+                          <p>
+                            Completed Quests: <span className="font-bold text-green-400">
+                              {quests.filter(q => q.completed).length}
+                            </span>
+                          </p>
+                        </div>
+                      </details>
+                    </div>
+                    
+                    <div>
+                      <p className="font-bold text-blue-400">Missions</p>
+                      <p className="text-sm mt-1">
+                        Total Missions: <span className="font-bold">
+                          {dbContents.zustandStore?.state?.missions?.length || 0}
+                        </span>
+                      </p>
+                      <p className="text-sm mt-1">
+                        Completed Missions: <span className="font-bold text-green-400">
+                          {dbContents.zustandStore?.state?.completedMissionHistory?.length || 0}
+                        </span>
+                      </p>
+                      <p className="text-xs text-green-400 mt-2">
+                        ✓ Missions are now stored in the main Zustand store!
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <p className="text-center py-4 text-gray-400">
+              Click "Refresh Data" to load IndexedDB contents
+            </p>
+          )}
+        </div>
+      )}
     </div>
   );
 };

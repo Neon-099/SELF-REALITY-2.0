@@ -349,9 +349,8 @@ const Quests = () => {
   const [showCompletedQuests, setShowCompletedQuests] = useState(true);
   const [isAddQuestDialogOpen, setIsAddQuestDialogOpen] = useState(false);
   const [activeFilter, setActiveFilter] = useState<'all' | 'main' | 'side' | 'daily'>('all');
-  const [showDbDebug, setShowDbDebug] = useState(false);
-  const [dbContents, setDbContents] = useState<any>(null);
   const [isLoadingDb, setIsLoadingDb] = useState(false);
+  const [dbContents, setDbContents] = useState<any>(null);
 
   // Function to load and display IndexedDB data
   const loadDbData = async () => {
@@ -391,13 +390,6 @@ const Quests = () => {
       setIsLoadingDb(false);
     }
   };
-
-  // Load database data when debug panel is opened
-  useEffect(() => {
-    if (showDbDebug) {
-      loadDbData();
-    }
-  }, [showDbDebug]);
 
   const handleCompleteQuest = (id: string, title: string, expReward: number) => {
     completeQuest(id);
@@ -910,15 +902,6 @@ const Quests = () => {
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold text-solo-text">Quests</h1>
         <div className="flex items-center gap-2">
-          <Button 
-            variant="outline" 
-            size="sm"
-            className="flex items-center gap-1"
-            onClick={() => setShowDbDebug(!showDbDebug)}
-          >
-            <Database className="h-4 w-4" />
-            {showDbDebug ? 'Hide DB' : 'Show DB'}
-          </Button>
           <Dialog open={isAddQuestDialogOpen} onOpenChange={setIsAddQuestDialogOpen}>
             <DialogTrigger asChild>
               <Button className="gap-2">
@@ -935,168 +918,6 @@ const Quests = () => {
           </Dialog>
         </div>
       </div>
-
-      {/* IndexedDB Debug Panel */}
-      {showDbDebug && (
-        <div className="bg-gray-900 border border-gray-700 rounded-lg p-4 relative">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-bold flex items-center gap-2">
-              <Database className="h-5 w-5 text-blue-400" />
-              IndexedDB Contents
-            </h2>
-            <div className="flex gap-2">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={loadDbData} 
-                disabled={isLoadingDb}
-              >
-                Refresh Data
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowDbDebug(false)}
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-          
-          {isLoadingDb ? (
-            <div className="text-center py-4">
-              <p>Loading database contents...</p>
-            </div>
-          ) : dbContents ? (
-            <div className="space-y-4">
-              <div>
-                <h3 className="text-md font-semibold mb-2">Zustand Store (from IndexedDB)</h3>
-                <div className="bg-gray-800 p-3 rounded max-h-60 overflow-auto">
-                  {dbContents.zustandStore ? (
-                    <>
-                      <p className="text-green-400 mb-2">✓ IndexedDB is working correctly</p>
-                      <details>
-                        <summary className="cursor-pointer text-blue-400 hover:text-blue-300">
-                          View Quests in Store (Total: {dbContents.zustandStore.state?.quests?.length || 0})
-                        </summary>
-                        <pre className="text-xs mt-2 p-2 bg-gray-900 rounded overflow-x-auto">
-                          {JSON.stringify(dbContents.zustandStore.state?.quests || [], null, 2)}
-                        </pre>
-                      </details>
-                      
-                      <details className="mt-2">
-                        <summary className="cursor-pointer text-blue-400 hover:text-blue-300">
-                          View Missions in Store (Total: {dbContents.zustandStore.state?.missions?.length || 0})
-                        </summary>
-                        <pre className="text-xs mt-2 p-2 bg-gray-900 rounded overflow-x-auto">
-                          {JSON.stringify(dbContents.zustandStore.state?.missions || [], null, 2)}
-                        </pre>
-                      </details>
-                      
-                      <details className="mt-2">
-                        <summary className="cursor-pointer text-blue-400 hover:text-blue-300">
-                          View Completed Missions in Store (Total: {dbContents.zustandStore.state?.completedMissionHistory?.length || 0})
-                        </summary>
-                        <pre className="text-xs mt-2 p-2 bg-gray-900 rounded overflow-x-auto">
-                          {JSON.stringify(dbContents.zustandStore.state?.completedMissionHistory || [], null, 2)}
-                        </pre>
-                      </details>
-                    </>
-                  ) : (
-                    <p className="text-red-400">No Zustand store data found in IndexedDB</p>
-                  )}
-                </div>
-              </div>
-              
-              <div>
-                <h3 className="text-md font-semibold mb-2">Direct Quests ObjectStore</h3>
-                <div className="bg-gray-800 p-3 rounded max-h-60 overflow-auto">
-                  {dbContents.directQuests && dbContents.directQuests.length > 0 ? (
-                    <>
-                      <p className="text-green-400 mb-2">✓ Found {dbContents.directQuests.length} quests in direct ObjectStore</p>
-                      <details>
-                        <summary className="cursor-pointer text-blue-400 hover:text-blue-300">
-                          View Direct Quest Data
-                        </summary>
-                        <pre className="text-xs mt-2 p-2 bg-gray-900 rounded overflow-x-auto">
-                          {JSON.stringify(dbContents.directQuests, null, 2)}
-                        </pre>
-                      </details>
-                    </>
-                  ) : (
-                    <p className="text-amber-400">
-                      No quests found in direct ObjectStore. This app primarily uses the 'store' 
-                      ObjectStore which contains the serialized Zustand state.
-                    </p>
-                  )}
-                </div>
-              </div>
-              
-              <div>
-                <h3 className="text-md font-semibold mb-2">Current State (in memory)</h3>
-                <div className="bg-gray-800 p-3 rounded max-h-60 overflow-auto">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="font-bold text-blue-400">Quests</p>
-                      <p className="text-sm mt-1">
-                        Total: <span className="font-bold">{quests.length}</span>
-                      </p>
-                      <details className="mt-2">
-                        <summary className="cursor-pointer text-blue-400 hover:text-blue-300 text-sm">
-                          View Quest Types
-                        </summary>
-                        <div className="mt-2 space-y-1 text-sm">
-                          <p>
-                            Main Quests: <span className="font-bold text-yellow-400">
-                              {quests.filter(q => q.isMainQuest).length}
-                            </span>
-                          </p>
-                          <p>
-                            Side Quests: <span className="font-bold text-solo-primary">
-                              {quests.filter(q => !q.isMainQuest && !q.isDaily).length}
-                            </span>
-                          </p>
-                          <p>
-                            Daily Quests: <span className="font-bold text-green-400">
-                              {quests.filter(q => q.isDaily).length}
-                            </span>
-                          </p>
-                          <p>
-                            Completed Quests: <span className="font-bold text-green-400">
-                              {quests.filter(q => q.completed).length}
-                            </span>
-                          </p>
-                        </div>
-                      </details>
-                    </div>
-                    
-                    <div>
-                      <p className="font-bold text-blue-400">Missions</p>
-                      <p className="text-sm mt-1">
-                        Total Missions: <span className="font-bold">
-                          {dbContents.zustandStore?.state?.missions?.length || 0}
-                        </span>
-                      </p>
-                      <p className="text-sm mt-1">
-                        Completed Missions: <span className="font-bold text-green-400">
-                          {dbContents.zustandStore?.state?.completedMissionHistory?.length || 0}
-                        </span>
-                      </p>
-                      <p className="text-xs text-green-400 mt-2">
-                        ✓ Missions are now stored in the main Zustand store!
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <p className="text-center py-4 text-gray-400">
-              Click "Refresh Data" to load IndexedDB contents
-            </p>
-          )}
-        </div>
-      )}
 
       {/* Quest type filter buttons */}
       <div className="flex flex-wrap gap-2">
