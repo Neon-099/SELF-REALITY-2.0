@@ -68,11 +68,11 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
     // Complete the mission in the store and persist in IndexedDB
     try {
       await completeMission(mission.id);
-      toast({
+    toast({
         title: "Mission Completed!",
         description: `You've completed: ${mission.title}`,
-        variant: "default",
-      });
+      variant: "default",
+    });
     } catch (error) {
       console.error("Error completing mission:", error);
       toast({

@@ -88,9 +88,6 @@ const REDEMPTION_CHALLENGES: RecoveryChallenge[] = [
 
 export default function ShadowPenalty() {
   const [redemptionDialogOpen, setRedemptionDialogOpen] = useState(false);
-  const [recoveryQuestIds, setRecoveryQuestIds] = useState<string[]>([]);
-  const [hasPendingRecovery, setHasPendingRecovery] = useState(false);
-  const [recoveryDeadline, setRecoveryDeadline] = useState<Date | null>(null);
   const { 
     chanceCounter, 
     isCursed, 
@@ -104,97 +101,52 @@ export default function ShadowPenalty() {
     getExpModifier,
     addQuest,
     addQuestTask,
-    quests
-  } = useSoloLevelingStore();
+    quests,
+    activeRecoveryQuestIds,
+    hasPendingRecovery: storeHasPendingRecovery,
+    setActiveRecoveryQuestIds
+  } = useSoloLevelingStore(state => ({
+    chanceCounter: state.chanceCounter,
+    isCursed: state.isCursed,
+    hasShadowFatigue: state.hasShadowFatigue,
+    shadowFatigueUntil: state.shadowFatigueUntil,
+    cursedUntil: state.cursedUntil,
+    lockedSideQuestsUntil: state.lockedSideQuestsUntil,
+    canUseRedemption: state.canUseRedemption,
+    areSideQuestsLocked: state.areSideQuestsLocked,
+    attemptRedemption: state.attemptRedemption,
+    getExpModifier: state.getExpModifier,
+    addQuest: state.addQuest,
+    addQuestTask: state.addQuestTask,
+    quests: state.quests,
+    activeRecoveryQuestIds: state.activeRecoveryQuestIds,
+    hasPendingRecovery: state.hasPendingRecovery,
+    setActiveRecoveryQuestIds: state.setActiveRecoveryQuestIds
+  }));
 
   // Check if we need to show the component
   const showComponent = chanceCounter > 0 || isCursed || hasShadowFatigue || areSideQuestsLocked();
   const expModifier = getExpModifier();
   
-  // Check for existing recovery quests on component mount
+  // Effect to check for expired active recovery quests (if any)
   useEffect(() => {
-    const recoveryQuests = quests.filter(quest => quest.isRecoveryQuest && !quest.completed);
-    if (recoveryQuests.length > 0) {
-      // We have active recovery quests
-      setHasPendingRecovery(true);
-      
-      // Store their IDs
-      const ids = recoveryQuests.map(quest => quest.id);
-      setRecoveryQuestIds(ids);
-      
-      // Get the deadline from the first quest
-      if (recoveryQuests[0].deadline) {
-        setRecoveryDeadline(new Date(recoveryQuests[0].deadline));
-      }
-      
-      // Check if any deadline has passed
+    if (storeHasPendingRecovery && activeRecoveryQuestIds && activeRecoveryQuestIds.length > 0) {
       const now = new Date();
-      const expiredQuests = recoveryQuests.filter(quest => 
-        quest.deadline && isAfter(now, new Date(quest.deadline))
-      );
-      
-      if (expiredQuests.length > 0) {
-        // Mark expired recovery quests as failed
+      // Find the deadline from the first quest in the active batch (assuming they share a deadline)
+      const firstActiveRecoveryQuest = quests.find(q => q.id === activeRecoveryQuestIds[0]);
+      if (firstActiveRecoveryQuest && firstActiveRecoveryQuest.deadline && isAfter(now, new Date(firstActiveRecoveryQuest.deadline))) {
         toast({
           title: "Recovery Challenge Failed",
-          description: "You didn't complete the recovery quests in time. The curse remains.",
+          description: "You didn\'t complete the recovery quests in time. The curse remains.",
           variant: "destructive"
         });
-        
-        // Clear recovery tracking
-        setRecoveryQuestIds([]);
-        setHasPendingRecovery(false);
-        setRecoveryDeadline(null);
+        // Clear active recovery quests as they expired. The curse itself might persist until its own timer or next redemption.
+        setActiveRecoveryQuestIds(null);
       }
-    } else {
-      // No active recovery quests
-      setHasPendingRecovery(false);
-      setRecoveryQuestIds([]);
-      setRecoveryDeadline(null);
     }
-  }, [quests]);
+  }, [quests, activeRecoveryQuestIds, storeHasPendingRecovery, setActiveRecoveryQuestIds]);
   
-  // Check if all recovery quests are completed to remove the curse
-  useEffect(() => {
-    if (!isCursed || recoveryQuestIds.length === 0) return;
-    
-    const allRecoveryQuests = quests.filter(quest => 
-      recoveryQuestIds.includes(quest.id)
-    );
-    
-    // If no recovery quests found, return
-    if (allRecoveryQuests.length === 0) return;
-    
-    // Check if all recovery quests are completed
-    const allCompleted = allRecoveryQuests.every(quest => quest.completed);
-    
-    if (allCompleted) {
-      // All recovery quests completed, remove the curse
-      useSoloLevelingStore.setState({ 
-        isCursed: false,
-        cursedUntil: null 
-      });
-      
-      toast({
-        title: "Redemption Complete!",
-        description: "You've completed all recovery quests! The curse has been lifted.",
-        variant: "default"
-      });
-      
-      // Clear recovery quest tracking
-      setRecoveryQuestIds([]);
-      setHasPendingRecovery(false);
-      setRecoveryDeadline(null);
-    }
-  }, [isCursed, quests, recoveryQuestIds]);
-  
-  // Update the useEffect to share hasPendingRecovery with the store
-  useEffect(() => {
-    // Update the hasPendingRecovery state in the store
-    useSoloLevelingStore.setState({ hasPendingRecovery });
-  }, [hasPendingRecovery]);
-  
-  if (!showComponent) return null;
+  if (!showComponent && !storeHasPendingRecovery) return null;
   
   // Format time remaining for debuffs
   const getTimeRemaining = (endDate: Date | null) => {
@@ -228,8 +180,7 @@ export default function ShadowPenalty() {
   
   // Create redemption side quests with today's deadline
   const startRedemptionChallenge = () => {
-    // If already has pending recovery, prevent creating more
-    if (hasPendingRecovery) {
+    if (storeHasPendingRecovery) {
       toast({
         title: "Recovery In Progress",
         description: "You already have active recovery quests. Complete them first.",
@@ -239,13 +190,9 @@ export default function ShadowPenalty() {
       return;
     }
     
-    // Create end of day deadline
     const today = endOfDay(new Date());
+    const newRecoveryQuestIdsTrack: string[] = [];
     
-    // Track the IDs of recovery quests
-    const newRecoveryQuestIds: string[] = [];
-    
-    // Create side quests for each challenge
     REDEMPTION_CHALLENGES.forEach(challenge => {
       // Calculate reward based on difficulty
       const baseReward = 100;
@@ -267,8 +214,8 @@ export default function ShadowPenalty() {
       
       // Get the newly created quest ID (the last one in the list)
       setTimeout(() => {
-        const quests = useSoloLevelingStore.getState().quests;
-        const questId = quests[quests.length - 1].id;
+        const currentQuests = useSoloLevelingStore.getState().quests;
+        const questId = currentQuests[currentQuests.length - 1].id;
         
         // Mark as recovery quest
         useSoloLevelingStore.getState().updateQuest(questId, { 
@@ -276,7 +223,7 @@ export default function ShadowPenalty() {
         });
         
         // Track this recovery quest ID
-        newRecoveryQuestIds.push(questId);
+        newRecoveryQuestIdsTrack.push(questId);
         
         // Add the tasks to the quest
         challenge.tasks.forEach(task => {
@@ -293,10 +240,8 @@ export default function ShadowPenalty() {
         useSoloLevelingStore.getState().startQuest(questId);
         
         // Update recovery quest IDs after all have been created
-        if (newRecoveryQuestIds.length === REDEMPTION_CHALLENGES.length) {
-          setRecoveryQuestIds(newRecoveryQuestIds);
-          setHasPendingRecovery(true);
-          setRecoveryDeadline(today);
+        if (newRecoveryQuestIdsTrack.length === REDEMPTION_CHALLENGES.length) {
+          setActiveRecoveryQuestIds(newRecoveryQuestIdsTrack);
         }
       }, 100);
     });
@@ -404,17 +349,23 @@ export default function ShadowPenalty() {
           )}
           
           {/* Recovery Quest Status */}
-          {hasPendingRecovery && (
+          {storeHasPendingRecovery && (
             <div className="flex items-center justify-between bg-amber-950/20 p-2 rounded">
               <div className="flex items-center gap-2">
                 <Shield className="h-4 w-4 text-amber-500" />
                 <span className="text-sm text-amber-300">Recovery In Progress</span>
               </div>
               <div className="text-xs text-amber-300/70">
-                {recoveryDeadline 
-                  ? `Expires ${format(recoveryDeadline, "h:mm a")}`
-                  : "Complete all quests today"
-                }
+                {/* Display deadline of the first active recovery quest, if available */}
+                {(() => {
+                  if (activeRecoveryQuestIds && activeRecoveryQuestIds.length > 0) {
+                    const firstQuest = quests.find(q => q.id === activeRecoveryQuestIds[0]);
+                    if (firstQuest && firstQuest.deadline) {
+                      return `Expires ${format(new Date(firstQuest.deadline), "h:mm a")}`;
+                    }
+                  }
+                  return "Complete all quests today";
+                })()}
               </div>
             </div>
           )}
@@ -429,9 +380,9 @@ export default function ShadowPenalty() {
               <Button 
                 variant="destructive" 
                 className="w-full"
-                disabled={hasPendingRecovery}
+                disabled={storeHasPendingRecovery}
               >
-                {hasPendingRecovery ? (
+                {storeHasPendingRecovery ? (
                   <>
                     <Lock className="mr-2 h-4 w-4" />
                     Recovery In Progress

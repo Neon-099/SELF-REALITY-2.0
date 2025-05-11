@@ -13,12 +13,14 @@ export interface PunishmentSlice {
   missedMainQuestStreak: number;
   lastRedemptionDate: Date | null;
   hasPendingRecovery: boolean;
+  activeRecoveryQuestIds: string[] | null;
   
   // Actions
   applyMissedDeadlinePenalty: (itemType: 'task' | 'mission' | 'quest', itemId: string) => void;
   checkCurseStatus: () => void;
   resetWeeklyChances: () => void;
   attemptRedemption: (success: boolean) => void;
+  setActiveRecoveryQuestIds: (questIds: string[] | null) => void;
   
   // Getters
   getExpModifier: () => number;
@@ -37,6 +39,7 @@ export const createPunishmentSlice: StateCreator<PunishmentSlice & any> = (set, 
   missedMainQuestStreak: 0,
   lastRedemptionDate: null,
   hasPendingRecovery: false,
+  activeRecoveryQuestIds: null,
   
   // Actions
   applyMissedDeadlinePenalty: (itemType, itemId) => {
@@ -140,7 +143,9 @@ export const createPunishmentSlice: StateCreator<PunishmentSlice & any> = (set, 
     if (isCursed && cursedUntil && now > cursedUntil) {
       set({ 
         isCursed: false,
-        cursedUntil: null
+        cursedUntil: null,
+        hasPendingRecovery: false,
+        activeRecoveryQuestIds: null
       });
       
       toast({
@@ -229,7 +234,8 @@ export const createPunishmentSlice: StateCreator<PunishmentSlice & any> = (set, 
       set({ 
         chanceCounter: 0,
         isCursed: false,
-        cursedUntil: null
+        cursedUntil: null,
+        lastRedemptionDate: null
       });
       
       toast({
@@ -241,22 +247,17 @@ export const createPunishmentSlice: StateCreator<PunishmentSlice & any> = (set, 
   },
   
   attemptRedemption: (success) => {
-    const { isCursed, lastRedemptionDate } = get();
+    const { isCursed } = get();
     const now = new Date();
     
-    // Check if already redeemed this week
-    if (lastRedemptionDate) {
-      const lastRedemptionWeek = Math.floor(lastRedemptionDate.getTime() / (7 * 24 * 60 * 60 * 1000));
-      const currentWeek = Math.floor(now.getTime() / (7 * 24 * 60 * 60 * 1000));
-      
-      if (lastRedemptionWeek === currentWeek) {
-        toast({
-          title: "Redemption Failed",
-          description: "You've already attempted redemption this week.",
-          variant: "destructive"
-        });
-        return;
-      }
+    // Check if already redeemed this week (since the last Sunday reset)
+    if (get().lastRedemptionDate !== null) {
+      toast({
+        title: "Redemption Unavailable",
+        description: "You've already attempted redemption this week (since Sunday reset).",
+        variant: "destructive"
+      });
+      return;
     }
     
     if (!isCursed) {
@@ -274,7 +275,11 @@ export const createPunishmentSlice: StateCreator<PunishmentSlice & any> = (set, 
       set({ 
         isCursed: false,
         cursedUntil: null,
-        chanceCounter: 4 // Set back to 4/5 chances
+        chanceCounter: 4, // Set back to 4/5 chances
+        hasShadowFatigue: false,
+        shadowFatigueUntil: null,
+        hasPendingRecovery: false,
+        activeRecoveryQuestIds: null
       });
       
       toast({
@@ -304,6 +309,13 @@ export const createPunishmentSlice: StateCreator<PunishmentSlice & any> = (set, 
     }
   },
   
+  setActiveRecoveryQuestIds: (questIds) => {
+    set({ 
+      activeRecoveryQuestIds: questIds,
+      hasPendingRecovery: !!(questIds && questIds.length > 0)
+    });
+  },
+  
   // Getters
   getExpModifier: () => {
     const { isCursed, hasShadowFatigue } = get();
@@ -323,16 +335,8 @@ export const createPunishmentSlice: StateCreator<PunishmentSlice & any> = (set, 
     // Can't use redemption if there are already recovery quests in progress
     if (hasPendingRecovery) return false;
     
-    // Check if they've already used redemption this week
-    if (lastRedemptionDate) {
-      const now = new Date();
-      const lastRedemption = new Date(lastRedemptionDate);
-      
-      // Allow once per week
-      const daysSinceLastRedemption = Math.floor((now.getTime() - lastRedemption.getTime()) / (1000 * 60 * 60 * 24));
-      
-      if (daysSinceLastRedemption < 7) return false;
-    }
+    // If lastRedemptionDate is not null, an attempt was already made in the current Sunday-Saturday cycle.
+    if (lastRedemptionDate !== null) return false; 
     
     return true;
   },

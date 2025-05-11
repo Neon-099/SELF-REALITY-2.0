@@ -189,8 +189,8 @@ export const createUserSlice: StateCreator<UserSlice> = (set, get) => ({
       const expModifier = getExpModifier();
       
       // Give attribute EXP reward for completing daily win
-      setTimeout(() => {
-        const statToIncrease = dailyWinToStat(category);
+        setTimeout(() => {
+          const statToIncrease = dailyWinToStat(category);
         // Apply the EXP modifier to the stat EXP reward
         const statExpReward = Math.floor(10 * expModifier);
         get().addStatExp(statToIncrease, statExpReward);
@@ -203,7 +203,7 @@ export const createUserSlice: StateCreator<UserSlice> = (set, get) => ({
             variant: "default"
           });
         }
-      }, 500);
+        }, 500);
 
       return {
         user: {

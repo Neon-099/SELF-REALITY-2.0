@@ -214,63 +214,80 @@ export const createQuestSlice: StateCreator<QuestSlice & any> = (set, get) => ({
     return true;
   },
   completeQuest: (id) => {
-    const { quests, user, addExp, addGold, getExpModifier } = get();
+    const { quests, user, addExp, addGold, getExpModifier, activeRecoveryQuestIds, setActiveRecoveryQuestIds } = get();
     const quest = quests.find(q => q.id === id);
     
     if (!quest || quest.completed) return;
     
-    // Get experience modifier from punishment system
     const expModifier = getExpModifier();
-    
-    // Calculate final exp with modifier
     const finalExpReward = Math.floor(quest.expReward * expModifier);
-    
     const now = new Date();
-    
-    // Check if quest has a deadline and whether it's missed
     let missedDeadline = false;
-    if (quest.deadline && now > quest.deadline) {
+
+    if (quest.deadline && now > new Date(quest.deadline)) {
       missedDeadline = true;
-      
-      // Apply the missed deadline penalty
       const { applyMissedDeadlinePenalty } = get();
       applyMissedDeadlinePenalty('quest', id);
     }
     
-    // Update quest status
-    set((state: QuestSlice) => ({
-      quests: state.quests.map(q => 
-        q.id === id ? {
-          ...q,
-          completed: true,
-          completedAt: now,
-          missed: missedDeadline
-        } : q
-      )
+    const updatedQuests = quests.map(q => 
+      q.id === id ? {
+        ...q,
+        completed: true,
+        completedAt: now,
+        missed: missedDeadline
+      } : q
+    );
+
+    set((state) => ({
+      ...state,
+      quests: updatedQuests,
     }));
-    
-    // Add experience and gold
+      
     addExp(finalExpReward);
     addGold(Math.floor(finalExpReward / 10));
     
-    // Set notification message based on status
-    let title = "Quest Completed!";
-    let description = `${quest.title} - You earned ${finalExpReward} EXP and ${Math.floor(finalExpReward / 10)} gold`;
+    let toastTitle = "Quest Completed!";
+    let toastDescription = `${quest.title} - You earned ${finalExpReward} EXP and ${Math.floor(finalExpReward / 10)} gold`;
     
     if (expModifier < 1) {
-      description += ` (${Math.round(expModifier * 100)}% rate due to penalty)`;
+      toastDescription += ` (${Math.round(expModifier * 100)}% rate due to penalty)`;
     }
-    
     if (missedDeadline) {
-      title = "Quest Completed Late";
-      description += " (Deadline missed)";
+      toastTitle = "Quest Completed Late";
+      toastDescription += " (Deadline missed)";
     }
-    
+          
     toast({
-      title,
-      description,
+      title: toastTitle,
+      description: toastDescription,
       variant: missedDeadline ? "warning" : "default",
     });
+
+    if (quest.isRecoveryQuest && activeRecoveryQuestIds && activeRecoveryQuestIds.length > 0) {
+      if (activeRecoveryQuestIds.includes(quest.id)) {
+        const allActiveBatchCompleted = activeRecoveryQuestIds.every(activeId => {
+          const recoveryQuest = updatedQuests.find(q => q.id === activeId);
+          return recoveryQuest && recoveryQuest.completed;
+        });
+
+        if (allActiveBatchCompleted) {
+          set((state) => ({
+            ...state,
+            isCursed: false,
+            cursedUntil: null,
+            hasPendingRecovery: false,
+            activeRecoveryQuestIds: null,
+          }));
+          
+          toast({
+            title: "Redemption Complete!",
+            description: "You've completed all recovery quests! The curse has been lifted.",
+            variant: "default"
+          });
+        }
+      }
+    }
   },
   updateQuest: (id, updates) => {
     set((state: QuestSlice) => ({

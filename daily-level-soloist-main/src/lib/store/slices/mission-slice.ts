@@ -95,7 +95,7 @@ export const createMissionSlice: StateCreator<MissionSlice & any> = (set, get) =
           applyMissedDeadlinePenalty('mission', id);
         }
       }
-      
+
       // Update in-memory state with immediate change
       set((state: any) => {
         // Instead of removing, update the mission to mark it as completed
@@ -118,7 +118,7 @@ export const createMissionSlice: StateCreator<MissionSlice & any> = (set, get) =
           completedMissionHistory: updatedCompletedMissionHistory
         };
       });
-      
+
       // Add experience points with the modifier applied
       state.addExp(finalExpReward);
       

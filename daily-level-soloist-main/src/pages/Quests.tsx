@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSoloLevelingStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, Swords, Star, ListTodo, ChevronDown, ChevronUp, Sword, Coins, Filter, Database, X, CalendarClock, Shield } from 'lucide-react';
+import { CheckCircle, Swords, Star, ListTodo, ChevronDown, ChevronUp, Sword, Coins, Filter, Database, X, CalendarClock, Shield, Clock } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from '@/hooks/use-toast';
 import { DailyWinCategory, Difficulty } from '@/lib/types';
@@ -401,31 +401,8 @@ const Quests = () => {
 
   const handleCompleteQuest = (id: string, title: string, expReward: number) => {
     completeQuest(id);
-    const goldEarned = Math.floor(expReward / 5) * 2; // Convert EXP to gold (5 EXP = 2 gold)
-    addGold(goldEarned);
-    addExp(expReward);
-    
-    // Show EXP earned toast
-    toast({
-      title: "Experience Gained!",
-      description: (
-        <div className="flex items-center gap-2">
-          <Star className="h-4 w-4 text-yellow-400 stroke-2" />
-          <span>+{expReward} EXP</span>
-        </div>
-      ),
-    });
-    
-    // Show Gold earned toast
-    toast({
-      title: "Gold Earned!",
-      description: (
-        <div className="flex items-center gap-2">
-          <Coins className="h-4 w-4 text-yellow-400" />
-          <span>+{goldEarned} Gold</span>
-        </div>
-      ),
-    });
+    // The completeQuest function in the store already adds exp and gold rewards
+    // No need to add them again here
   };
 
   // Filter active quests
@@ -557,7 +534,7 @@ const Quests = () => {
                           <div className="flex items-center gap-1">
                             <Star size={16} className="text-yellow-400" />
                             <span className="text-amber-400 font-bold">+{quest.expReward} EXP</span>
-                            <div className="text-xs text-amber-500 ml-1">Recovery Quest</div>
+                            <div className="bg-amber-950/50 text-xs text-amber-500 ml-1 px-1.5 py-0.5 rounded-sm">Recovery Quest</div>
                           </div>
                         </div>
                         
@@ -568,12 +545,12 @@ const Quests = () => {
                         )}
                         
                         {quest.deadline && (
-                          <div className="flex items-center gap-2 my-3 p-2 bg-amber-950/70 rounded-md border border-amber-800/50">
-                            <CalendarClock size={16} className="text-amber-500" />
+                          <div className="flex items-center gap-2 my-3 p-2 bg-amber-950/30 rounded-md border border-amber-800/30">
+                            <Clock size={16} className="text-amber-500" />
                             <div className="flex flex-col">
                               <span className="text-xs text-amber-300 font-medium">Complete by end of day</span>
-                              <span className="text-xs text-amber-400/90">
-                                {format(new Date(quest.deadline), "MMMM d, yyyy h:mm a")}
+                              <span className="text-xs text-amber-400/80">
+                                {format(new Date(quest.deadline), "MMMM d, yyyy")}
                               </span>
                             </div>
                           </div>
@@ -582,7 +559,7 @@ const Quests = () => {
                       
                       <button 
                         onClick={() => handleCompleteQuest(quest.id, quest.title, quest.expReward)}
-                        className="w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 py-2 text-center text-white flex items-center justify-center gap-2 transition-colors"
+                        className="w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 py-3 text-center text-white flex items-center justify-center gap-2 transition-colors"
                       >
                         <CheckCircle size={18} />
                         <span>Complete Recovery Quest</span>
@@ -790,7 +767,7 @@ const Quests = () => {
                             <div className="flex items-center gap-1">
                               <Star size={16} className="text-yellow-400" />
                               <span className="text-amber-400 font-bold">+{quest.expReward} EXP</span>
-                              <div className="text-xs text-amber-500 ml-1">Recovery Quest</div>
+                              <div className="bg-amber-950/50 text-xs text-amber-500 ml-1 px-1.5 py-0.5 rounded-sm">Recovery Quest</div>
                             </div>
                           </div>
                           
@@ -801,12 +778,12 @@ const Quests = () => {
                           )}
                           
                           {quest.deadline && (
-                            <div className="flex items-center gap-2 my-3 p-2 bg-amber-950/70 rounded-md border border-amber-800/50">
-                              <CalendarClock size={16} className="text-amber-500" />
+                            <div className="flex items-center gap-2 my-3 p-2 bg-amber-950/30 rounded-md border border-amber-800/30">
+                              <Clock size={16} className="text-amber-500" />
                               <div className="flex flex-col">
                                 <span className="text-xs text-amber-300 font-medium">Complete by end of day</span>
-                                <span className="text-xs text-amber-400/90">
-                                  {format(new Date(quest.deadline), "MMMM d, yyyy h:mm a")}
+                                <span className="text-xs text-amber-400/80">
+                                  {format(new Date(quest.deadline), "MMMM d, yyyy")}
                                 </span>
                               </div>
                             </div>
@@ -815,7 +792,7 @@ const Quests = () => {
                         
                         <button 
                           onClick={() => handleCompleteQuest(quest.id, quest.title, quest.expReward)}
-                          className="w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 py-2 text-center text-white flex items-center justify-center gap-2 transition-colors"
+                          className="w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 py-3 text-center text-white flex items-center justify-center gap-2 transition-colors"
                         >
                           <CheckCircle size={18} />
                           <span>Complete Recovery Quest</span>
