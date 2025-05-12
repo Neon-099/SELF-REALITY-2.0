@@ -11,19 +11,41 @@ import { getDB } from '../db';
 
 export type StoreState = TaskSlice & QuestSlice & MissionSlice & UserSlice & ShopSlice & PunishmentSlice;
 
-// Custom async storage for IndexedDB (store and retrieve strings only)
+// Custom async storage for IndexedDB (store and retrieve strings only) with improved error handling
 const indexedDBStorage = {
-  getItem: async (name: string) => {
-    const db = await getDB();
-    return await db.get('store', name);
+  getItem: async (name: string): Promise<string | null> => {
+    try {
+      const db = await getDB();
+      return await db.get('store', name);
+    } catch (error) {
+      console.error(`Failed to get item "${name}" from IndexedDB:`, error);
+      // Return null on error so the app can continue with default state
+      return null;
+    }
   },
-  setItem: async (name: string, value: string) => {
-    const db = await getDB();
-    await db.put('store', value, name);
+  setItem: async (name: string, value: string): Promise<void> => {
+    try {
+      const db = await getDB();
+      await db.put('store', value, name);
+    } catch (error) {
+      console.error(`Failed to save item "${name}" to IndexedDB:`, error);
+      
+      // Optional: try to save to localStorage as fallback
+      try {
+        localStorage.setItem(`fallback_${name}`, value);
+        console.log(`Saved to localStorage as fallback for "${name}"`);
+      } catch (localStorageError) {
+        console.error('Fallback to localStorage also failed:', localStorageError);
+      }
+    }
   },
-  removeItem: async (name: string) => {
-    const db = await getDB();
-    await db.delete('store', name);
+  removeItem: async (name: string): Promise<void> => {
+    try {
+      const db = await getDB();
+      await db.delete('store', name);
+    } catch (error) {
+      console.error(`Failed to remove item "${name}" from IndexedDB:`, error);
+    }
   },
 };
 
@@ -42,6 +64,10 @@ export const useSoloLevelingStore = create<StoreState>()(
     {
       name: 'soloist-store',
       storage: createJSONStorage(() => indexedDBStorage),
+      // Add an onError handler to handle persistence failures
+      onError: (error) => {
+        console.error('An error occurred during state persistence:', error);
+      }
     }
   )
 );

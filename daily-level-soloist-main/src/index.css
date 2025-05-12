@@ -206,3 +206,22 @@
     backdrop-filter: none !important;
   }
 }
+
+/* Add animation for loading bar */
+@keyframes progress-bar {
+  0% {
+    width: 0%;
+    transform: translateX(-100%);
+  }
+  50% {
+    width: 50%;
+  }
+  100% {
+    width: 100%;
+    transform: translateX(0);
+  }
+}
+
+.animate-progress-bar {
+  animation: progress-bar 1.5s ease-in-out infinite;
+}
