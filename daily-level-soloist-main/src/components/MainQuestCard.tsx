@@ -2,13 +2,164 @@ import React from 'react';
 import { Star, CheckCircle, CalendarClock, Swords, ListTodo, Clock } from 'lucide-react';
 import { Button } from './ui/button';
 import { format } from 'date-fns';
+import { useSoloLevelingStore } from '@/lib/store';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { useState } from 'react';
+import { DateTimePicker } from '@/components/ui/date-time-picker';
+import { DailyWinCategory, Difficulty } from '@/lib/types';
+import { toast } from '@/hooks/use-toast';
 
 interface MainQuestCardProps {
   quest: any;
-  onComplete: (id: string) => void;
+  onComplete: (id: string, title: string, expReward: number) => void;
   onStart: (id: string) => void;
   canComplete: (id: string) => boolean;
 }
+
+// Import QuestTasks component as a local component for clean integration
+const QuestTasks = ({ quest }: { quest: any }) => {
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const completeQuestTask = useSoloLevelingStore(state => state.completeQuestTask);
+  
+  return (
+    <div className="mt-4 space-y-2">
+      <div className="flex justify-between items-center">
+        <h4 className="text-sm font-semibold text-gray-400">Quest Tasks</h4>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogTrigger asChild>
+            <Button variant="outline" size="sm">
+              Add Task
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Add New Task</DialogTitle>
+            </DialogHeader>
+            <AddTaskDialog questId={quest.id} onClose={() => setIsDialogOpen(false)} />
+          </DialogContent>
+        </Dialog>
+      </div>
+      
+      {quest.tasks.length === 0 ? (
+        <p className="text-sm text-gray-500 italic">No tasks added yet. Break down your quest into smaller tasks.</p>
+      ) : (
+        <div className="space-y-2">
+          {quest.tasks.map((task: any) => (
+            <div 
+              key={task.id}
+              className="flex items-center justify-between p-2 bg-gray-800/50 rounded-md"
+            >
+              <div className="flex items-center gap-2">
+                <div className={`w-2 h-2 rounded-full ${task.completed ? 'bg-green-500' : 'bg-gray-500'}`} />
+                <span className={`text-sm ${task.completed ? 'line-through text-gray-400' : 'text-gray-200'}`}>
+                  {task.title}
+                </span>
+              </div>
+              {!task.completed && (
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => completeQuestTask(quest.id, task.id)}
+                >
+                  <CheckCircle className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// We need to include AddTaskDialog component as well
+const AddTaskDialog = ({ questId, onClose }: { questId: string; onClose: () => void }) => {
+  const addQuestTask = useSoloLevelingStore(state => state.addQuestTask);
+  const [taskTitle, setTaskTitle] = useState('');
+  const [taskDescription, setTaskDescription] = useState('');
+  const [difficulty, setDifficulty] = useState<Difficulty>('medium');
+  const [deadline, setDeadline] = useState<Date>(new Date(Date.now() + 24 * 60 * 60 * 1000));
+
+  const handleAddTask = () => {
+    if (!taskTitle.trim()) {
+      toast({
+        title: "Task title required",
+        description: "Please provide a title for your task.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Default category to 'mental' since it's not selectable but required by the function
+    const defaultCategory: DailyWinCategory = 'mental';
+    addQuestTask(questId, taskTitle, taskDescription, defaultCategory, difficulty, deadline);
+    setTaskTitle('');
+    setTaskDescription('');
+    onClose();
+    
+    toast({
+      title: "Task added",
+      description: "Your new task has been added to the quest!",
+    });
+  };
+
+  return (
+    <div className="space-y-4 py-4">
+      <div className="space-y-2">
+        <label className="text-sm font-medium">Task Title</label>
+        <input
+          type="text"
+          value={taskTitle}
+          onChange={(e) => setTaskTitle(e.target.value)}
+          className="w-full px-3 py-2 rounded-md border border-gray-800 bg-solo-dark"
+          placeholder="Task title"
+        />
+      </div>
+      <div className="space-y-2">
+        <label className="text-sm font-medium">Description</label>
+        <textarea
+          value={taskDescription}
+          onChange={(e) => setTaskDescription(e.target.value)}
+          className="w-full px-3 py-2 rounded-md border border-gray-800 bg-solo-dark min-h-[100px]"
+          placeholder="Task description"
+        />
+      </div>
+      <div className="space-y-2">
+        <label className="text-sm font-medium">Difficulty</label>
+        <select
+          value={difficulty}
+          onChange={(e) => setDifficulty(e.target.value as Difficulty)}
+          className="w-full px-3 py-2 rounded-md border border-gray-800 bg-solo-dark"
+        >
+          <option value="easy">Easy</option>
+          <option value="medium">Medium</option>
+          <option value="hard">Hard</option>
+          <option value="boss">Boss</option>
+        </select>
+      </div>
+      <div className="space-y-2">
+        <label className="text-sm font-medium">Deadline</label>
+        <div className="flex items-center justify-between mb-2">
+          <div className="text-xs text-indigo-300 flex items-center">
+            <CalendarClock className="h-3 w-3 mr-1" /> Automatic deadline enforcement
+          </div>
+        </div>
+        
+        <DateTimePicker 
+          date={deadline}
+          setDate={setDeadline}
+          className="mt-2"
+        />
+        <p className="text-xs text-gray-400 mt-1">
+          Missing a deadline will automatically apply Shadow Penalty, reducing EXP reward by 50%.
+        </p>
+      </div>
+      <Button onClick={handleAddTask} className="w-full">
+        Add Task
+      </Button>
+    </div>
+  );
+};
 
 const MainQuestCard: React.FC<MainQuestCardProps> = ({ quest, onComplete, onStart, canComplete }) => {
   return (
@@ -88,12 +239,15 @@ const MainQuestCard: React.FC<MainQuestCardProps> = ({ quest, onComplete, onStar
         </Button>
       ) : (
         <>
+          {/* Display Quest Tasks when the quest is started */}
+          <QuestTasks quest={quest} />
+          
           {canComplete(quest.id) && (
             <Button
               variant="outline"
-              onClick={() => onComplete(quest.id)}
+              onClick={() => onComplete(quest.id, quest.title, quest.expReward)}
               size="sm"
-              className="w-full flex justify-center items-center gap-2 border-yellow-500/40 hover:border-yellow-500 hover:bg-yellow-500/10 text-yellow-400 hover:text-yellow-300 transition-colors"
+              className="w-full flex justify-center items-center gap-2 mt-4 border-yellow-500/40 hover:border-yellow-500 hover:bg-yellow-500/10 text-yellow-400 hover:text-yellow-300 transition-colors"
             >
               <CheckCircle size={16} />
               Complete Quest
