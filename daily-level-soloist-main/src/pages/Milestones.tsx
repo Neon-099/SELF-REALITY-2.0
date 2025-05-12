@@ -22,6 +22,14 @@ const Milestones = () => {
     state => state.missions.filter(mission => mission.completed).length
   );
 
+  // New: total completed quests
+  const completedTotalQuests = completedMainQuests + completedSideQuests;
+
+  // New: completed daily quests
+  const completedDailyQuests = useSoloLevelingStore(
+    state => state.quests.filter(quest => quest.completed && quest.isDaily).length
+  );
+
   return (
     <div className="space-y-6">
       <h1 className="text-3xl font-bold text-solo-text">Milestones</h1>
@@ -64,21 +72,28 @@ const Milestones = () => {
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="bg-gray-800/30 rounded-lg p-4 flex flex-col items-center justify-center">
+            <div className="text-3xl font-bold text-solo-primary mb-2">{completedTotalQuests}</div>
+            <div className="text-gray-400 text-lg font-semibold mb-1">Quests</div>
+            <div className="flex gap-6 text-base mt-1">
+              <div className="flex flex-col items-center">
+                <span className="text-gray-400">Side</span>
+                <span className="text-solo-primary font-bold">{completedSideQuests}</span>
+              </div>
+              <div className="flex flex-col items-center">
+                <span className="text-gray-400">Main</span>
+                <span className="text-solo-primary font-bold">{completedMainQuests}</span>
+              </div>
+              <div className="flex flex-col items-center">
+                <span className="text-gray-400">Daily</span>
+                <span className="text-solo-primary font-bold">{completedDailyQuests}</span>
+              </div>
+            </div>
+          </div>
           <div className="bg-gray-800/30 rounded-lg p-4">
             <div className="text-3xl font-bold text-solo-primary mb-2">{completedTasks}</div>
             <div className="text-gray-400">Tasks Completed</div>
           </div>
-          
-          <div className="bg-gray-800/30 rounded-lg p-4">
-            <div className="text-3xl font-bold text-solo-primary mb-2">{completedMainQuests}</div>
-            <div className="text-gray-400">Main Quests</div>
-          </div>
-          
-          <div className="bg-gray-800/30 rounded-lg p-4">
-            <div className="text-3xl font-bold text-solo-primary mb-2">{completedSideQuests}</div>
-            <div className="text-gray-400">Side Quests</div>
-          </div>
-          
           <div className="bg-gray-800/30 rounded-lg p-4">
             <div className="text-3xl font-bold text-solo-primary mb-2">{completedMissions}</div>
             <div className="text-gray-400">Missions Completed</div>

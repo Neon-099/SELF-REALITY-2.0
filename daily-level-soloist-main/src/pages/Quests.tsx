@@ -8,6 +8,9 @@ import { DailyWinCategory, Difficulty } from '@/lib/types';
 import { isSameDay, format } from 'date-fns';
 import { getDB } from '@/lib/db';
 import { DateTimePicker } from '@/components/ui/date-time-picker';
+import SideQuestCard from '../components/SideQuestCard';
+import DailyQuestCard from '../components/DailyQuestCard';
+import MainQuestCard from '../components/MainQuestCard';
 
 // Define a type for quest types
 type QuestType = 'main' | 'side' | 'daily';
@@ -485,6 +488,20 @@ const Quests = () => {
     isSameDay(new Date(quest.completedAt), new Date())
   );
 
+  const handleCompleteDailyQuest = (id: string) => {
+    const quest = quests.find(q => q.id === id);
+    if (quest) {
+      handleCompleteQuest(id, quest.title, quest.expReward);
+    }
+  };
+
+  const handleCompleteSideQuest = (id: string) => {
+    const quest = quests.find(q => q.id === id);
+    if (quest) {
+      handleCompleteQuest(id, quest.title, quest.expReward);
+    }
+  };
+
   const renderQuests = () => {
     switch (activeFilter) {
       case 'main':
@@ -498,109 +515,13 @@ const Quests = () => {
               {activeQuests
                 .filter(quest => quest.isMainQuest)
                 .map((quest) => (
-                  <div 
+                  <MainQuestCard 
                     key={quest.id} 
-                    className="bg-solo-dark border-2 border-yellow-500/30 hover:border-yellow-500 rounded-lg p-4 transition-all relative overflow-hidden group"
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                    <div className="relative">
-                      {/* Quest Header */}
-                      <div className="flex justify-between items-start mb-3">
-                        <div className="flex items-center gap-2">
-                          <div className="text-yellow-500 bg-yellow-500/10 p-2 rounded-lg">
-                            <Swords size={18} />
-                          </div>
-                          <div>
-                            <h3 className="font-medium text-lg text-yellow-50">{quest.title}</h3>
-                            <div className="flex items-center gap-2 mt-1">
-                              <span className="text-xs px-2 py-0.5 rounded-full bg-yellow-500/10 text-yellow-400 border border-yellow-500/20">
-                                Main Quest
-                              </span>
-                              {quest.started && (
-                                <span className="text-xs px-2 py-0.5 rounded-full bg-green-500/10 text-green-400 border border-green-500/20">
-                                  In Progress
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                        <div className="flex flex-col items-end gap-2">
-                          <span className="text-yellow-400 font-bold flex items-center gap-1 bg-yellow-500/10 px-2 py-1 rounded-md">
-                            <Star size={14} className="text-yellow-400 stroke-2" />
-                            +{quest.expReward} EXP
-                          </span>
-                          {quest.started && quest.tasks && (
-                            <span className="text-xs text-gray-400">
-                              {quest.tasks.filter((t: any) => t.completed).length}/{quest.tasks.length} Tasks
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                      
-                      {/* Quest Description */}
-                      {quest.description && (
-                        <div className="mb-4">
-                          <p className="text-gray-300">{quest.description}</p>
-                          {quest.started && quest.tasks && quest.tasks.length > 0 && (
-                            <div className="mt-2 h-1 w-full bg-gray-800 rounded-full overflow-hidden">
-                              <div 
-                                className="h-full bg-yellow-500/50 rounded-full transition-all duration-300"
-                                style={{ 
-                                  width: `${(quest.tasks.filter((t: any) => t.completed).length / quest.tasks.length) * 100}%` 
-                                }}
-                              />
-                            </div>
-                          )}
-                        </div>
-                      )}
-
-                      {/* Quest Actions */}
-                      {!quest.started ? (
-                        <Button 
-                          variant="outline" 
-                          onClick={() => startQuest(quest.id)}
-                          size="sm"
-                          className="w-full flex justify-center items-center gap-2 border-yellow-500/30 hover:border-yellow-500 hover:bg-yellow-500/10 text-yellow-400 hover:text-yellow-300 transition-colors"
-                        >
-                          <ListTodo size={14} />
-                          Start Quest
-                        </Button>
-                      ) : (
-                        <>
-                          <QuestTasks quest={quest} />
-                          {canCompleteQuest(quest.id) && (
-                            <Button 
-                              variant="outline" 
-                              onClick={() => handleCompleteQuest(quest.id, quest.title, quest.expReward)}
-                              size="sm"
-                              className="w-full flex justify-center items-center gap-2 mt-4 border-yellow-500/30 hover:border-yellow-500 hover:bg-yellow-500/10 text-yellow-400 hover:text-yellow-300 transition-colors"
-                            >
-                              <CheckCircle size={14} />
-                              Complete Quest
-                            </Button>
-                          )}
-                        </>
-                      )}
-
-                      {/* Quest Footer */}
-                      {quest.started && (
-                        <div className="mt-3 pt-3 border-t border-yellow-500/10">
-                          <div className="flex items-center justify-between text-xs text-gray-400">
-                            <div className="flex items-center gap-1">
-                              <Clock size={12} />
-                              <span>Started {format(new Date(quest.createdAt), 'MMM d, h:mm a')}</span>
-                            </div>
-                            {quest.deadline && (
-                              <div className="flex items-center gap-1">
-                                <CalendarClock size={12} />
-                                <span>Due {format(new Date(quest.deadline), 'MMM d')}</span>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
+                    quest={quest} 
+                    onComplete={handleCompleteQuest} 
+                    onStart={startQuest}
+                    canComplete={canCompleteQuest}
+                  />
                 ))}
             </div>
             {activeQuests.filter(quest => quest.isMainQuest).length === 0 && (
@@ -662,7 +583,7 @@ const Quests = () => {
                       </div>
                       
                       <button 
-                        onClick={() => handleCompleteQuest(quest.id, quest.title, quest.expReward)}
+                        onClick={() => handleCompleteSideQuest(quest.id)}
                         className="w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 py-3 text-center text-white flex items-center justify-center gap-2 transition-colors"
                       >
                         <CheckCircle size={18} />
@@ -670,44 +591,7 @@ const Quests = () => {
                       </button>
                     </div>
                   ) : (
-                    <div 
-                      key={quest.id} 
-                      className="bg-solo-dark border border-gray-800 hover:border-solo-primary/50 rounded-lg p-4 transition-all"
-                    >
-                      <div className="flex justify-between items-start mb-2">
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-medium text-lg">{quest.title}</h3>
-                        </div>
-                        <span className="text-solo-primary font-bold flex items-center gap-1">
-                          <Star size={14} className="text-yellow-400 stroke-2" />
-                          +{quest.expReward} EXP
-                        </span>
-                      </div>
-                      
-                      {quest.description && (
-                        <p className="text-gray-400 mb-4">{quest.description}</p>
-                      )}
-                      
-                      {quest.deadline && (
-                        <div className="flex items-center gap-1 text-xs text-amber-400/80 mb-3 bg-amber-950/20 p-2 rounded-md border border-amber-900/20">
-                          <CalendarClock size={12} className="text-amber-400" />
-                          <div>
-                            <span className="font-medium">Due: {format(new Date(quest.deadline), "h:mm a")}</span>
-                            <p className="text-xs text-amber-200/70 mt-0.5">Missing deadline applies Shadow Penalty</p>
-                          </div>
-                        </div>
-                      )}
-                      
-                      <Button 
-                        variant="outline" 
-                        onClick={() => handleCompleteQuest(quest.id, quest.title, quest.expReward)}
-                        size="sm"
-                        className="w-full flex justify-center items-center gap-2"
-                      >
-                        <CheckCircle size={14} />
-                        Complete Quest
-                      </Button>
-                    </div>
+                    <SideQuestCard key={quest.id} quest={quest} onComplete={handleCompleteSideQuest} />
                   )
                 ))}
             </div>
@@ -730,71 +614,11 @@ const Quests = () => {
               <div className="mb-4">
                 <p className="text-gray-400">Daily quests reset every day. Complete them to earn rewards and maintain your streak.</p>
               </div>
-              
+
               {dailyQuests.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {dailyQuests.map((quest) => (
-                    <div 
-                      key={quest.id} 
-                      className="bg-solo-dark border border-gray-800 hover:border-green-500/50 rounded-lg p-4 transition-all"
-                    >
-                      <div className="flex justify-between items-start mb-2">
-                        <div className="flex items-center gap-2">
-                          <div className="text-green-500">
-                            <ListTodo size={16} />
-                          </div>
-                          <div>
-                            <h3 className="font-medium text-lg">{quest.title}</h3>
-                            <div className="flex items-center gap-1 mt-1">
-                              <span className="text-xs px-2 py-0.5 rounded-full bg-green-500/10 text-green-400 border border-green-500/20">
-                                Daily Quest
-                              </span>
-                              {quest.category && (
-                                <span className={`text-xs px-2 py-0.5 rounded-full ${
-                                  quest.category === 'mental' 
-                                    ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' 
-                                    : quest.category === 'physical'
-                                    ? 'bg-red-500/10 text-red-400 border border-red-500/20'
-                                    : quest.category === 'spiritual'
-                                    ? 'bg-purple-500/10 text-purple-400 border border-purple-500/20'
-                                    : 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20'
-                                }`}>
-                                  {quest.category.charAt(0).toUpperCase() + quest.category.slice(1)}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                        <span className="text-solo-primary font-bold flex items-center gap-1">
-                          <Star size={14} className="text-yellow-400 stroke-2" />
-                          +{quest.expReward} EXP
-                        </span>
-                      </div>
-                      
-                      {quest.description && (
-                        <p className="text-gray-400 mb-4">{quest.description}</p>
-                      )}
-
-                      {quest.deadline && (
-                        <div className="flex items-center gap-1 text-xs bg-amber-950/20 p-2 rounded-md border border-amber-900/20 mb-3">
-                          <CalendarClock size={12} className="text-amber-400 mr-1" />
-                          <div>
-                            <span className="font-medium text-amber-300">Due today at {format(new Date(quest.deadline), "h:mm a")}</span>
-                            <p className="text-xs text-amber-200/70 mt-0.5">Missing deadline applies Shadow Penalty</p>
-                          </div>
-                        </div>
-                      )}
-
-                      <Button 
-                        variant="outline" 
-                        onClick={() => handleCompleteQuest(quest.id, quest.title, quest.expReward)}
-                        size="sm"
-                        className="w-full flex justify-center items-center gap-2"
-                      >
-                        <CheckCircle size={14} />
-                        Complete Quest
-                      </Button>
-                    </div>
+                    <DailyQuestCard key={quest.id} quest={quest} onComplete={handleCompleteDailyQuest} />
                   ))}
                 </div>
               ) : (
@@ -820,109 +644,13 @@ const Quests = () => {
                 {activeQuests
                   .filter(quest => quest.isMainQuest)
                   .map((quest) => (
-                    <div 
+                    <MainQuestCard 
                       key={quest.id} 
-                      className="bg-solo-dark border-2 border-yellow-500/30 hover:border-yellow-500 rounded-lg p-4 transition-all relative overflow-hidden group"
-                    >
-                      <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                      <div className="relative">
-                        {/* Quest Header */}
-                        <div className="flex justify-between items-start mb-3">
-                          <div className="flex items-center gap-2">
-                            <div className="text-yellow-500 bg-yellow-500/10 p-2 rounded-lg">
-                              <Swords size={18} />
-                            </div>
-                            <div>
-                              <h3 className="font-medium text-lg text-yellow-50">{quest.title}</h3>
-                              <div className="flex items-center gap-2 mt-1">
-                                <span className="text-xs px-2 py-0.5 rounded-full bg-yellow-500/10 text-yellow-400 border border-yellow-500/20">
-                                  Main Quest
-                                </span>
-                                {quest.started && (
-                                  <span className="text-xs px-2 py-0.5 rounded-full bg-green-500/10 text-green-400 border border-green-500/20">
-                                    In Progress
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                          <div className="flex flex-col items-end gap-2">
-                            <span className="text-yellow-400 font-bold flex items-center gap-1 bg-yellow-500/10 px-2 py-1 rounded-md">
-                              <Star size={14} className="text-yellow-400 stroke-2" />
-                              +{quest.expReward} EXP
-                            </span>
-                            {quest.started && quest.tasks && (
-                              <span className="text-xs text-gray-400">
-                                {quest.tasks.filter((t: any) => t.completed).length}/{quest.tasks.length} Tasks
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                        
-                        {/* Quest Description */}
-                        {quest.description && (
-                          <div className="mb-4">
-                            <p className="text-gray-300">{quest.description}</p>
-                            {quest.started && quest.tasks && quest.tasks.length > 0 && (
-                              <div className="mt-2 h-1 w-full bg-gray-800 rounded-full overflow-hidden">
-                                <div 
-                                  className="h-full bg-yellow-500/50 rounded-full transition-all duration-300"
-                                  style={{ 
-                                    width: `${(quest.tasks.filter((t: any) => t.completed).length / quest.tasks.length) * 100}%` 
-                                  }}
-                                />
-                              </div>
-                            )}
-                          </div>
-                        )}
-
-                        {/* Quest Actions */}
-                        {!quest.started ? (
-                          <Button 
-                            variant="outline" 
-                            onClick={() => startQuest(quest.id)}
-                            size="sm"
-                            className="w-full flex justify-center items-center gap-2 border-yellow-500/30 hover:border-yellow-500 hover:bg-yellow-500/10 text-yellow-400 hover:text-yellow-300 transition-colors"
-                          >
-                            <ListTodo size={14} />
-                            Start Quest
-                          </Button>
-                        ) : (
-                          <>
-                            <QuestTasks quest={quest} />
-                            {canCompleteQuest(quest.id) && (
-                              <Button 
-                                variant="outline" 
-                                onClick={() => handleCompleteQuest(quest.id, quest.title, quest.expReward)}
-                                size="sm"
-                                className="w-full flex justify-center items-center gap-2 mt-4 border-yellow-500/30 hover:border-yellow-500 hover:bg-yellow-500/10 text-yellow-400 hover:text-yellow-300 transition-colors"
-                              >
-                                <CheckCircle size={14} />
-                                Complete Quest
-                              </Button>
-                            )}
-                          </>
-                        )}
-
-                        {/* Quest Footer */}
-                        {quest.started && (
-                          <div className="mt-3 pt-3 border-t border-yellow-500/10">
-                            <div className="flex items-center justify-between text-xs text-gray-400">
-                              <div className="flex items-center gap-1">
-                                <Clock size={12} />
-                                <span>Started {format(new Date(quest.createdAt), 'MMM d, h:mm a')}</span>
-                              </div>
-                              {quest.deadline && (
-                                <div className="flex items-center gap-1">
-                                  <CalendarClock size={12} />
-                                  <span>Due {format(new Date(quest.deadline), 'MMM d')}</span>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
+                      quest={quest} 
+                      onComplete={handleCompleteQuest} 
+                      onStart={startQuest}
+                      canComplete={canCompleteQuest}
+                    />
                   ))}
               </div>
               {activeQuests.filter(quest => quest.isMainQuest).length === 0 && (
@@ -941,103 +669,60 @@ const Quests = () => {
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {activeQuests
-                  .filter(quest => !quest.isMainQuest && !quest.isDaily)
+                      .filter(quest => !quest.isMainQuest && !quest.isDaily)
                   .map((quest) => (
-                    quest.isRecoveryQuest ? (
-                      <div 
-                        key={quest.id} 
-                        className="bg-slate-900 border-2 border-amber-600/80 rounded-lg overflow-hidden transition-all"
-                      >
-                        <div className="p-4">
-                          <div className="flex justify-between items-start mb-3">
-                            <div className="flex items-center gap-2">
-                              <Shield size={20} className="text-amber-500" />
-                              <h3 className="font-medium text-lg text-amber-400">
-                                {quest.title}
-                              </h3>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Star size={16} className="text-yellow-400" />
-                              <span className="text-amber-400 font-bold">+{quest.expReward} EXP</span>
-                              <div className="bg-amber-950/50 text-xs text-amber-500 ml-1 px-1.5 py-0.5 rounded-sm">Recovery Quest</div>
-                            </div>
-                          </div>
-                          
-                          {quest.description && (
-                            <p className="text-gray-300/90 mb-3 text-sm">
-                              {quest.description}
-                            </p>
-                          )}
-                          
-                          {quest.deadline && (
-                            <div className="flex items-center gap-2 my-3 p-2 bg-amber-950/30 rounded-md border border-amber-800/30">
-                              <Clock size={16} className="text-amber-500" />
-                              <div className="flex flex-col">
-                                <span className="text-xs text-amber-300 font-medium">Complete by end of day</span>
-                                <span className="text-xs text-amber-400/80">
-                                  {format(new Date(quest.deadline), "MMMM d, yyyy")}
-                                </span>
+                        quest.isRecoveryQuest ? (
+                    <div 
+                      key={quest.id} 
+                            className="bg-slate-900 border-2 border-amber-600/80 rounded-lg overflow-hidden transition-all"
+                    >
+                            <div className="p-4">
+                              <div className="flex justify-between items-start mb-3">
+                        <div className="flex items-center gap-2">
+                                  <Shield size={20} className="text-amber-500" />
+                                  <h3 className="font-medium text-lg text-amber-400">
+                                    {quest.title}
+                                  </h3>
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  <Star size={16} className="text-yellow-400" />
+                                  <span className="text-amber-400 font-bold">+{quest.expReward} EXP</span>
+                                  <div className="bg-amber-950/50 text-xs text-amber-500 ml-1 px-1.5 py-0.5 rounded-sm">Recovery Quest</div>
+                        </div>
+                      </div>
+                      
+                    {quest.description && (
+                              <p className="text-gray-300/90 mb-3 text-sm">
+                                {quest.description}
+                              </p>
+                            )}
+                            
+                            {quest.deadline && (
+                              <div className="flex items-center gap-2 my-3 p-2 bg-amber-950/30 rounded-md border border-amber-800/30">
+                                <Clock size={16} className="text-amber-500" />
+                                <div className="flex flex-col">
+                                  <span className="text-xs text-amber-300 font-medium">Complete by end of day</span>
+                                  <span className="text-xs text-amber-400/80">
+                                    {format(new Date(quest.deadline), "MMMM d, yyyy")}
+                                  </span>
+                                </div>
                               </div>
-                            </div>
-                          )}
-                        </div>
-                        
-                        <button 
-                          onClick={() => handleCompleteQuest(quest.id, quest.title, quest.expReward)}
-                          className="w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 py-3 text-center text-white flex items-center justify-center gap-2 transition-colors"
-                        >
-                          <CheckCircle size={18} />
-                          <span>Complete Recovery Quest</span>
-                        </button>
-                      </div>
-                    ) : (
-                      <div 
-                        key={quest.id} 
-                        className="bg-solo-dark border border-gray-800 hover:border-solo-primary/50 rounded-lg p-4 transition-all"
-                      >
-                        <div className="flex justify-between items-start mb-2">
-                          <div className="flex items-center gap-2">
-                            <h3 className="font-medium text-lg">{quest.title}</h3>
+                            )}
                           </div>
-                          <span className="text-solo-primary font-bold flex items-center gap-1">
-                            <Star size={14} className="text-yellow-400 stroke-2" />
-                            +{quest.expReward} EXP
-                          </span>
-                        </div>
-                        
-                        {quest.description && (
-                          <p className="text-gray-400 mb-4">{quest.description}</p>
-                        )}
-                        
-                        {quest.deadline && (
-                          <div className="flex items-center gap-1 text-xs text-amber-400/80 mb-3 bg-amber-950/20 p-2 rounded-md border border-amber-900/20">
-                            <CalendarClock size={12} className="text-amber-400" />
-                            <div>
-                              <span className="font-medium">Due: {format(new Date(quest.deadline), "h:mm a")}</span>
-                              <p className="text-xs text-amber-200/70 mt-0.5">Missing deadline applies Shadow Penalty</p>
-                            </div>
-                          </div>
-                        )}
-                        
-                        <Button 
-                          variant="outline" 
-                          onClick={() => handleCompleteQuest(quest.id, quest.title, quest.expReward)}
-                          size="sm"
-                          className="w-full flex justify-center items-center gap-2"
-                        >
-                          <CheckCircle size={14} />
-                          Complete Quest
-                        </Button>
-                      </div>
-                    )
+                          
+                          <button 
+                            onClick={() => handleCompleteSideQuest(quest.id)}
+                            className="w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 py-3 text-center text-white flex items-center justify-center gap-2 transition-colors"
+                          >
+                            <CheckCircle size={18} />
+                            <span>Complete Recovery Quest</span>
+                          </button>
+                    </div>
+                        ) : (
+                          <SideQuestCard key={quest.id} quest={quest} onComplete={handleCompleteSideQuest} />
+                        )
                   ))}
               </div>
-              {activeQuests.filter(quest => !quest.isMainQuest && !quest.isDaily).length === 0 && (
-                <div className="bg-solo-dark border border-gray-800 rounded-lg p-4 text-center">
-                  <p className="text-gray-400">No active side quests available.</p>
-                  <p className="text-gray-400 text-sm mt-2">Click "Add Quest" to create a side quest.</p>
-                </div>
-              )}
             </div>
             
             {/* Daily Quests Section */}
@@ -1046,82 +731,22 @@ const Quests = () => {
                 <ListTodo className="text-green-500" size={20} />
                 Daily Quests
               </h2>
-              
+                
               {dailyQuests.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {dailyQuests.map((quest) => (
-                    <div 
-                      key={quest.id} 
-                      className="bg-solo-dark border border-gray-800 hover:border-green-500/50 rounded-lg p-4 transition-all"
-                    >
-                      <div className="flex justify-between items-start mb-2">
-                        <div className="flex items-center gap-2">
-                          <div className="text-green-500">
-                            <ListTodo size={16} />
-                          </div>
-                          <div>
-                            <h3 className="font-medium text-lg">{quest.title}</h3>
-                            <div className="flex items-center gap-1 mt-1">
-                              <span className="text-xs px-2 py-0.5 rounded-full bg-green-500/10 text-green-400 border border-green-500/20">
-                                Daily Quest
-                              </span>
-                              {quest.category && (
-                                <span className={`text-xs px-2 py-0.5 rounded-full ${
-                                  quest.category === 'mental' 
-                                    ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' 
-                                    : quest.category === 'physical'
-                                    ? 'bg-red-500/10 text-red-400 border border-red-500/20'
-                                    : quest.category === 'spiritual'
-                                    ? 'bg-purple-500/10 text-purple-400 border border-purple-500/20'
-                                    : 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20'
-                                }`}>
-                                  {quest.category.charAt(0).toUpperCase() + quest.category.slice(1)}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                        <span className="text-solo-primary font-bold flex items-center gap-1">
-                          <Star size={14} className="text-yellow-400 stroke-2" />
-                          +{quest.expReward} EXP
-                        </span>
-                      </div>
-                      
-                      {quest.description && (
-                        <p className="text-gray-400 mb-4">{quest.description}</p>
-                      )}
-                      
-                      {quest.deadline && (
-                        <div className="flex items-center gap-1 text-xs bg-amber-950/20 p-2 rounded-md border border-amber-900/20 mb-3">
-                          <CalendarClock size={12} className="text-amber-400 mr-1" />
-                          <div>
-                            <span className="font-medium text-amber-300">Due today at {format(new Date(quest.deadline), "h:mm a")}</span>
-                            <p className="text-xs text-amber-200/70 mt-0.5">Missing deadline applies Shadow Penalty</p>
-                          </div>
-                        </div>
-                      )}
-
-                      <Button 
-                        variant="outline" 
-                        onClick={() => handleCompleteQuest(quest.id, quest.title, quest.expReward)}
-                        size="sm"
-                        className="w-full flex justify-center items-center gap-2"
-                      >
-                        <CheckCircle size={14} />
-                        Complete Quest
-                      </Button>
-                    </div>
+                    <DailyQuestCard key={quest.id} quest={quest} onComplete={handleCompleteDailyQuest} />
                   ))}
                 </div>
               ) : (
                 <div className="bg-solo-dark border border-green-500/20 rounded-lg p-4">
                   <div className="mb-4">
                     <p className="text-gray-400">Daily quests reset every day. Complete them to earn rewards and maintain your streak.</p>
-                  </div>
+              </div>
                   <div className="bg-solo-dark border border-gray-800 rounded-lg p-4 text-center">
                     <p className="text-gray-400">No active daily quests available.</p>
                     <p className="text-gray-400 text-sm mt-2">Click "Add Quest" to create a daily quest.</p>
-                  </div>
+              </div>
                 </div>
               )}
             </div>
