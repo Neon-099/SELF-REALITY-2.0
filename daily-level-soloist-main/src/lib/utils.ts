@@ -24,12 +24,8 @@ export function formatExp(exp: number | undefined | null): string {
 // Get difficulty color for UI elements
 export function getDifficultyColor(difficulty: Difficulty): string {
   switch (difficulty) {
-    case 'easy':
-      return 'bg-green-500';
-    case 'medium':
-      return 'bg-yellow-500';
-    case 'hard':
-      return 'bg-orange-500';
+    case 'normal':
+      return 'bg-blue-500';
     case 'boss':
       return 'bg-red-500';
     default:

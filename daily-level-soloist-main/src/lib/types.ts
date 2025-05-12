@@ -1,6 +1,6 @@
 // Type definitions for the Solo Leveling app
 
-export type Difficulty = 'easy' | 'medium' | 'hard' | 'boss';
+export type Difficulty = 'normal' | 'boss';
 
 export type DailyWinCategory = 'mental' | 'physical' | 'spiritual' | 'intelligence';
 

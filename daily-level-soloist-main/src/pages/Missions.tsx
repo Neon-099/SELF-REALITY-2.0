@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Lock, Plus } from 'lucide-react';
+import { Lock, Plus, Star } from 'lucide-react';
 import { useSoloLevelingStore } from '@/lib/store';
 import { Rank, Mission, Difficulty } from '@/lib/types';
 import { PredefinedMission } from '@/data/predefined-missions';
@@ -12,6 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
 
 // Utility function to convert Mission to PredefinedMission format
 const convertMissionToPredefined = (mission: Mission): PredefinedMission => {
@@ -127,7 +128,7 @@ const Missions = () => {
     description: '',
     day: 1,
     rank: 'F',
-    difficulty: 'medium' as Difficulty
+    difficulty: 'normal' as Difficulty
   });
 
   const handleNewMissionChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -139,9 +140,7 @@ const Missions = () => {
     
     // Use XP reward based on difficulty level
     const difficultyExpRewards = {
-      'easy': 15,
-      'medium': 30,
-      'hard': 60,
+      'normal': 30,
       'boss': 100
     };
     
@@ -173,7 +172,7 @@ const Missions = () => {
       description: '', 
       day: 1, 
       rank: 'F', 
-      difficulty: 'medium' 
+      difficulty: 'normal' as Difficulty 
     });
     
     toast({ 
@@ -255,29 +254,112 @@ const Missions = () => {
 
     const displayMissions = recentMissions.slice(0, 3);
     
+    // Helper to get rank color classes
+    const getRankColor = (rank: Rank) => {
+      switch (rank) {
+        case 'F': return 'from-gray-400 to-gray-600 border-gray-400';
+        case 'E': return 'from-orange-400 to-orange-600 border-orange-400';
+        case 'D': return 'from-blue-400 to-blue-600 border-blue-400';
+        case 'C': return 'from-green-400 to-green-600 border-green-400';
+        case 'B': return 'from-purple-400 to-purple-600 border-purple-400';
+        case 'A': return 'from-red-400 to-red-600 border-red-400';
+        case 'S': return 'from-yellow-400 to-yellow-600 border-yellow-400';
+        case 'SS': return 'from-emerald-400 to-emerald-600 border-emerald-400';
+        case 'SSS': return 'from-indigo-400 to-indigo-600 border-indigo-400';
+        default: return 'from-gray-400 to-gray-600 border-gray-400';
+      }
+    };
+    
+    // Helper to get solid rank colors
+    const getRankSolidColor = (rank: Rank) => {
+      switch (rank) {
+        case 'F': return 'bg-gray-500';
+        case 'E': return 'bg-orange-500';
+        case 'D': return 'bg-blue-500';
+        case 'C': return 'bg-green-500';
+        case 'B': return 'bg-purple-500';
+        case 'A': return 'bg-red-500';
+        case 'S': return 'bg-yellow-500';
+        case 'SS': return 'bg-emerald-500';
+        case 'SSS': return 'bg-indigo-500';
+        default: return 'bg-gray-500';
+      }
+    };
+    
+    // Helper to get badge rank colors
+    const getRankBadgeColor = (rank: Rank) => {
+      switch (rank) {
+        case 'F': return 'border-gray-400 text-gray-500';
+        case 'E': return 'border-orange-400 text-orange-500';
+        case 'D': return 'border-blue-400 text-blue-500';
+        case 'C': return 'border-green-400 text-green-500';
+        case 'B': return 'border-purple-400 text-purple-500';
+        case 'A': return 'border-red-400 text-red-500';
+        case 'S': return 'border-yellow-400 text-yellow-500';
+        case 'SS': return 'border-emerald-400 text-emerald-500';
+        case 'SSS': return 'border-indigo-400 text-indigo-500';
+        default: return 'border-gray-400 text-gray-500';
+      }
+    };
+    
     return (
-      <div className="mt-8">
-        <h2 className="text-2xl font-bold text-primary mb-4">
-          Recently Added Missions
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {displayMissions.map(mission => (
-            <div 
-              key={mission.id}
-              className="bg-card rounded-lg p-4 border border-border/50 hover:shadow-md transition-shadow"
-            >
-              <div className="flex items-center justify-between mb-2">
-                <span className="px-2 py-1 text-xs rounded-full bg-primary/10 text-primary">
-                  {mission.rank} Rank
-                </span>
-                <span className="text-sm font-medium text-muted-foreground">
-                  {mission.expReward} EXP
-                </span>
+      <div className="mt-12 border-t border-border pt-8">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-bold text-primary">
+            Recently Added Missions
+          </h2>
+          <Badge variant="outline" className="px-3 py-1">
+            Last {displayMissions.length} added
+          </Badge>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {displayMissions.map(mission => {
+            const rankGradient = getRankColor(mission.rank);
+            const rankSolid = getRankSolidColor(mission.rank);
+            const rankBadge = getRankBadgeColor(mission.rank);
+            const rankLocked = rankLevels.find(r => r.id === mission.rank)?.isLocked || false;
+            
+            return (
+              <div 
+                key={mission.id}
+                className="bg-card rounded-xl overflow-hidden border-2 border-border/50 hover:shadow-md transition-shadow relative"
+              >
+                {/* Rank indicator strip */}
+                <div className={`absolute top-0 left-0 w-2 h-full ${rankSolid}`}></div>
+                
+                <div className={`p-4 border-b bg-gradient-to-br from-${mission.rank.toLowerCase()}-400/5 to-${mission.rank.toLowerCase()}-600/10`}>
+                  <div className="flex justify-between items-center mb-3">
+                    <Badge className={`px-2 py-1 ${rankBadge} bg-transparent font-semibold`}>
+                      {mission.rank} Rank
+                    </Badge>
+                    <Badge className="flex items-center gap-1 bg-transparent border-amber-500 text-amber-500 py-1 px-2">
+                      <Star className="h-3 w-3 fill-amber-500" />
+                      +{mission.expReward} EXP
+                    </Badge>
+                  </div>
+                  
+                  <h3 className={`font-bold text-lg bg-gradient-to-r ${rankGradient} bg-clip-text text-transparent`}>
+                    {mission.title}
+                  </h3>
+                  
+                  {rankLocked && (
+                    <div className="mt-2">
+                      <Badge variant="outline" className="text-gray-400 border-gray-400 flex items-center gap-1">
+                        <Lock className="h-3 w-3" /> Locked
+                      </Badge>
+                    </div>
+                  )}
+                </div>
+                
+                <div className="p-4">
+                  <p className="text-sm text-muted-foreground line-clamp-2">{mission.description}</p>
+                  <div className="mt-3 text-xs text-muted-foreground">
+                    Added {new Date(mission.releaseDate).toLocaleDateString()}
+                  </div>
+                </div>
               </div>
-              <h3 className="font-bold">{mission.title}</h3>
-              <p className="text-sm text-muted-foreground mt-1">{mission.description}</p>
-            </div>
-          ))}
+            )}
+          )}
         </div>
       </div>
     );
@@ -343,9 +425,7 @@ const Missions = () => {
                         <SelectValue placeholder="Select difficulty" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="easy">Easy (15 XP)</SelectItem>
-                        <SelectItem value="medium">Medium (30 XP)</SelectItem>
-                        <SelectItem value="hard">Hard (60 XP)</SelectItem>
+                        <SelectItem value="normal">Normal (30 XP)</SelectItem>
                         <SelectItem value="boss">Boss (100 XP)</SelectItem>
                       </SelectContent>
                     </Select>
@@ -394,8 +474,6 @@ const Missions = () => {
               onNextRank={handleNextRank}
             />
           </div>
-          {/* Recently Added Missions Section */}
-          {renderRecentMissions()}
           {/* Mission section title */}
           <div className="mt-8 mb-4">
             <h2 className="text-2xl font-bold text-primary">
@@ -452,6 +530,9 @@ const Missions = () => {
               />
             )}
           </div>
+          
+          {/* Recently Added Missions Section */}
+          {renderRecentMissions()}
         </div>
       </div>
     </div>
