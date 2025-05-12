@@ -17,7 +17,7 @@ export function Layout() {
         </div>
         
         {/* Main content */}
-        <main className="flex-1 p-4 lg:p-6 w-full pb-24 lg:pb-6">
+        <main className="flex-1 p-4 lg:p-6 w-full pb-28 lg:pb-6">
           <div className="container mx-auto">
             <Outlet />
           </div>
@@ -25,7 +25,7 @@ export function Layout() {
       </div>
       
       {/* Mobile Bottom Navigation */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 shadow-lg">
+      <div className="lg:hidden">
         <BottomNav />
       </div>
       

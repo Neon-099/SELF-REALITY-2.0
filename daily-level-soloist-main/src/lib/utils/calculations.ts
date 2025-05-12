@@ -4,6 +4,9 @@ export const calculateExpToNextLevel = (level: number) => Math.floor(100 * Math.
 
 export const getExpForDifficulty = (difficulty: Difficulty): number => {
   const rewards = {
+    easy: 15,
+    medium: 30,
+    hard: 60,
     normal: 30,
     boss: 100
   };

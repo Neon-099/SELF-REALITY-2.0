@@ -497,43 +497,36 @@ const Character = () => {
   return (
     <div className="container mx-auto px-4 py-8 space-y-8">
       <div>
-        <h1 className="text-3xl font-bold text-solo-text mb-2">Character Stats</h1>
+        <h1 className="text-4xl font-bold bg-gradient-to-r from-solo-primary to-blue-500 bg-clip-text text-transparent mb-2">Character Stats</h1>
         <p className="text-gray-400">Increase your stats to become stronger.</p>
       </div>
       
       {/* Character Overview */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="bg-solo-dark border-gray-800">
+        <Card className="bg-solo-dark border-gray-800 hover:shadow-lg hover:shadow-solo-primary/5 transition-all duration-300 overflow-hidden">
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-solo-primary to-blue-500"></div>
           <CardContent className="pt-6">
             <div className="text-center space-y-4">
               <div className="relative inline-block">
-                <div className="w-20 h-20 rounded-full bg-solo-primary/20 flex items-center justify-center mx-auto">
-                  <span className="text-3xl font-bold text-solo-primary">{user.level}</span>
+                <div className="w-24 h-24 rounded-full bg-gradient-to-br from-solo-primary/20 to-blue-500/20 flex items-center justify-center mx-auto backdrop-blur-sm p-1 shadow-inner">
+                  <div className="w-full h-full rounded-full bg-gray-900 flex items-center justify-center">
+                    <span className="text-3xl font-extrabold bg-gradient-to-r from-solo-primary to-blue-500 bg-clip-text text-transparent">{user.level}</span>
+                  </div>
                 </div>
-                <div className="absolute -top-2 -right-2 bg-solo-primary text-white text-xs rounded-full px-2 py-1 animate-pulse">
+                <div className="absolute -top-2 -right-2 bg-gradient-to-r from-solo-primary to-blue-500 text-white text-xs font-bold rounded-full px-2.5 py-1 animate-pulse shadow-lg shadow-solo-primary/20">
                   {user.rank} Rank
                 </div>
               </div>
               
-              <div className="grid grid-cols-2 gap-2 text-center">
-                <div className="bg-gray-800 rounded p-2">
-                  <p className="text-xs text-gray-400 flex items-center justify-center gap-1">
-                    <Star size={12} className="text-yellow-400 stroke-2" />
-                    <span>Experience</span>
-                  </p>
-                  <div className="font-semibold flex items-center justify-center gap-1">
+              <div className="text-center">
+                <div className="bg-gray-800/80 rounded-xl p-4 backdrop-blur-sm shadow-inner">
+                  <p className="text-xs text-gray-400 flex items-center justify-center gap-1 mb-2">
                     <Star size={14} className="text-yellow-400 stroke-2" />
-                    <span>{formatExp(user.exp)}</span>
-                  </div>
-                </div>
-                <div className="bg-gray-800 rounded p-2">
-                  <p className="text-xs text-gray-400 flex items-center justify-center gap-1">
-                    <Coins size={12} className="text-yellow-400" />
-                    <span>Gold</span>
+                    <span className="uppercase tracking-wider font-medium">Experience</span>
                   </p>
-                  <div className="font-semibold flex items-center justify-center gap-1">
-                    <Coins size={14} className="text-yellow-400" />
-                    <span>{user.gold}</span>
+                  <div className="font-bold flex items-center justify-center gap-1 text-lg">
+                    <Star size={16} className="text-yellow-400 stroke-2" />
+                    <span className="bg-gradient-to-r from-yellow-400 to-amber-500 bg-clip-text text-transparent">{formatExp(user.exp)}</span>
                   </div>
                 </div>
               </div>
@@ -541,96 +534,101 @@ const Character = () => {
           </CardContent>
         </Card>
         
-        <Card className="bg-solo-dark border-gray-800 md:col-span-2">
+        <Card className="bg-solo-dark border-gray-800 md:col-span-2 hover:shadow-lg hover:shadow-solo-primary/5 transition-all duration-300 overflow-hidden">
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-solo-primary to-blue-500"></div>
           <CardHeader>
-            <CardTitle>Status</CardTitle>
+            <CardTitle className="text-xl font-bold bg-gradient-to-r from-solo-primary to-blue-500 bg-clip-text text-transparent">Status</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="flex justify-between">
+              <div className="flex justify-between p-3 bg-gray-850/30 rounded-lg backdrop-blur-sm">
                 <div>
-                  <p className="text-sm text-gray-400">Next Level</p>
-                  <p className="font-semibold">Level {user.level + 1}</p>
+                  <p className="text-sm text-gray-400 mb-1">Next Level</p>
+                  <p className="font-bold text-lg">Level {user.level + 1}</p>
                 </div>
-                <div>
-                  <p className="text-sm text-gray-400">Required EXP</p>
-                  <p className="font-semibold">{user.exp} / {user.expToNextLevel}</p>
+                <div className="text-right">
+                  <p className="text-sm text-gray-400 mb-1">Required EXP</p>
+                  <p className="font-bold text-lg">
+                    <span className="text-solo-primary">{user.exp}</span> 
+                    <span className="text-gray-500"> / </span>
+                    <span>{user.expToNextLevel}</span>
+                  </p>
                 </div>
               </div>
               
-              <div className="w-full bg-gray-800 h-2 rounded-full overflow-hidden">
+              <div className="w-full bg-gray-800/50 h-3 rounded-full overflow-hidden backdrop-blur-sm shadow-inner">
                 <div 
-                  className="bg-gradient-to-r from-solo-primary to-solo-secondary h-full rounded-full transition-all duration-700 ease-out" 
+                  className="bg-gradient-to-r from-solo-primary to-blue-500 h-full rounded-full transition-all duration-700 ease-out" 
                   style={{ width: `${expPercentage}%` }} 
                 />
               </div>
               
               {/* Shadow Chance Counter */}
-              <div className="mt-2">
-                <div className="flex justify-between items-center mb-1">
-                  <div className="flex items-center gap-1">
-                    <p className="text-sm text-gray-400">Shadow Chances</p>
+              <div className="mt-4 p-4 bg-gray-850/30 rounded-lg backdrop-blur-sm">
+                <div className="flex justify-between items-center mb-2">
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-medium text-gray-300">Shadow Chances</p>
                     <Dialog>
                       <DialogTrigger asChild>
-                        <button className="text-gray-500 hover:text-gray-300">
+                        <button className="text-gray-500 hover:text-gray-300 transition-colors">
                           <Info size={14} />
                         </button>
                       </DialogTrigger>
-                      <DialogContent className="bg-gray-900 text-white max-w-md">
+                      <DialogContent className="bg-gray-900 text-white max-w-md border-gray-700">
                         <DialogHeader>
-                          <DialogTitle>Shadow Chance System</DialogTitle>
+                          <DialogTitle className="text-xl font-bold bg-gradient-to-r from-solo-primary to-blue-500 bg-clip-text text-transparent">Shadow Chance System</DialogTitle>
                         </DialogHeader>
-                        <div className="space-y-3 text-sm">
-                          <p>You have 5 chances per week before becoming cursed. Each missed deadline uses one chance.</p>
-                          <div className="space-y-2">
+                        <div className="space-y-4 text-sm">
+                          <p className="leading-relaxed">You have 5 chances per week before becoming cursed. Each missed deadline uses one chance.</p>
+                          <div className="space-y-2 p-3 bg-gray-800/50 rounded-lg">
                             <div className="flex justify-between">
                               <span>0-1 chance used:</span>
-                              <span className="text-green-400">Safe</span>
+                              <span className="text-green-400 font-semibold">Safe</span>
                             </div>
                             <div className="flex justify-between">
                               <span>2-3 chances used:</span>
-                              <span className="text-yellow-400">Warning</span>
+                              <span className="text-yellow-400 font-semibold">Warning</span>
                             </div>
                             <div className="flex justify-between">
                               <span>4-5 chances used:</span>
-                              <span className="text-red-400">Danger</span>
+                              <span className="text-red-400 font-semibold">Danger</span>
                             </div>
                           </div>
-                          <p className="mt-2 text-red-400">Once all 5 chances are used, you'll be cursed until the end of the week, receiving only 50% EXP from all activities.</p>
+                          <p className="mt-2 text-red-400 font-medium">Once all 5 chances are used, you'll be cursed until the end of the week, receiving only 50% EXP from all activities.</p>
                           <p className="text-gray-400 text-xs mt-2">Chances reset every Sunday.</p>
                         </div>
                       </DialogContent>
                     </Dialog>
                   </div>
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-2">
                     <p className={cn(
-                      "text-xs font-medium",
-                      chanceCounter === 0 ? "text-green-400" :
-                      chanceCounter <= 2 ? "text-green-400" :
-                      chanceCounter <= 3 ? "text-yellow-400" :
-                      "text-red-400"
+                      "text-xs font-semibold px-2 py-1 rounded-full",
+                      chanceCounter === 0 ? "bg-green-500/20 text-green-400" :
+                      chanceCounter <= 2 ? "bg-green-500/20 text-green-400" :
+                      chanceCounter <= 3 ? "bg-yellow-500/20 text-yellow-400" :
+                      "bg-red-500/20 text-red-400"
                     )}>
                       {chanceCounter}/5 used
                     </p>
                     {isCursed && (
-                      <span className="bg-red-500/20 text-red-400 text-xs px-1.5 py-0.5 rounded animate-pulse">
+                      <span className="bg-red-500/20 text-red-400 text-xs font-semibold px-2.5 py-1 rounded-full animate-pulse">
                         CURSED
                       </span>
                     )}
                   </div>
                 </div>
                 
-                <div className="w-full bg-gray-800 h-1.5 rounded-full overflow-hidden">
+                <div className="w-full bg-gray-800/70 h-2 rounded-full overflow-hidden shadow-inner">
                   {isCursed ? (
                     <div className="h-full bg-red-500 w-full animate-pulse" />
                   ) : (
                     <div 
                       className={cn(
                         "h-full transition-all duration-500",
-                        chanceCounter === 0 ? "bg-green-500" :
-                        chanceCounter <= 2 ? "bg-green-500" :
-                        chanceCounter <= 3 ? "bg-yellow-500" :
-                        "bg-red-500"
+                        chanceCounter === 0 ? "bg-gradient-to-r from-green-400 to-green-500" :
+                        chanceCounter <= 2 ? "bg-gradient-to-r from-green-400 to-green-500" :
+                        chanceCounter <= 3 ? "bg-gradient-to-r from-yellow-400 to-yellow-500" :
+                        "bg-gradient-to-r from-red-400 to-red-500"
                       )}
                       style={{ width: `${(chanceCounter / 5) * 100}%` }} 
                     />
@@ -638,31 +636,31 @@ const Character = () => {
                 </div>
                 
                 {hasShadowFatigue && (
-                  <div className="mt-1 text-xs text-amber-400 flex items-center gap-1">
-                    <AlertCircle size={12} />
-                    <span>Shadow Fatigue active: 75% EXP from tasks</span>
+                  <div className="mt-2 text-xs text-amber-400 flex items-center gap-1 p-2 bg-amber-500/10 rounded-md">
+                    <AlertCircle size={14} />
+                    <span className="font-medium">Shadow Fatigue active: 75% EXP from tasks</span>
                   </div>
                 )}
               </div>
               
               <div className="grid grid-cols-2 gap-4 mt-4">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-solo-primary/20 flex items-center justify-center text-solo-primary">
-                    <Clock3Icon size={16} />
+                <div className="flex items-center gap-3 p-3 bg-gray-850/30 rounded-lg backdrop-blur-sm hover:bg-gray-800/50 transition-colors duration-300">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-solo-primary/20 to-blue-500/20 flex items-center justify-center text-solo-primary shadow-lg shadow-solo-primary/5">
+                    <Clock3Icon size={18} />
                   </div>
                   <div>
                     <p className="text-sm text-gray-400">Current Streak</p>
-                    <p className="font-semibold">{user.streakDays} days</p>
+                    <p className="font-bold text-lg">{user.streakDays} days</p>
                   </div>
                 </div>
                 
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-solo-primary/20 flex items-center justify-center text-solo-primary">
-                    <HeartIcon size={16} />
+                <div className="flex items-center gap-3 p-3 bg-gray-850/30 rounded-lg backdrop-blur-sm hover:bg-gray-800/50 transition-colors duration-300">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-solo-primary/20 to-blue-500/20 flex items-center justify-center text-solo-primary shadow-lg shadow-solo-primary/5">
+                    <HeartIcon size={18} />
                   </div>
                   <div>
                     <p className="text-sm text-gray-400">Longest Streak</p>
-                    <p className="font-semibold">{user.longestStreak} days</p>
+                    <p className="font-bold text-lg">{user.longestStreak} days</p>
                   </div>
                 </div>
               </div>
@@ -673,59 +671,60 @@ const Character = () => {
       
       {/* Stats Grid */}
       <div>
-        <h2 className="text-xl font-bold text-solo-text mb-4">Attributes</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+        <h2 className="text-2xl font-bold bg-gradient-to-r from-solo-primary to-blue-500 bg-clip-text text-transparent mb-4">Attributes</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
           <StatCard 
             name="physical" 
             value={user.stats.physical}
-            icon={<DumbbellIcon size={16} />}
+            icon={<DumbbellIcon size={18} />}
           />
           <StatCard 
             name="cognitive" 
             value={user.stats.cognitive}
-            icon={<BrainIcon size={16} />}
+            icon={<BrainIcon size={18} />}
           />
           <StatCard 
             name="emotional" 
             value={user.stats.emotional}
-            icon={<HeartIcon size={16} />}
+            icon={<HeartIcon size={18} />}
           />
           <StatCard 
             name="spiritual" 
             value={user.stats.spiritual}
-            icon={<SparklesIcon size={16} />}
+            icon={<SparklesIcon size={18} />}
           />
           <StatCard 
             name="social" 
             value={user.stats.social}
-            icon={<SmileIcon size={16} />}
+            icon={<SmileIcon size={18} />}
           />
         </div>
       </div>
       
       {/* Rank System */}
       <div>
-        <h2 className="text-xl font-bold text-solo-text mb-4 flex items-center gap-2">
-          <Crown className="text-yellow-400" size={20} />
-          Rank System
+        <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
+          <Crown className="text-yellow-400" size={24} />
+          <span className="bg-gradient-to-r from-yellow-400 to-amber-500 bg-clip-text text-transparent">Rank System</span>
         </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Card className="bg-solo-dark border-gray-800">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <Card className="bg-solo-dark border-gray-800 hover:shadow-lg hover:shadow-solo-primary/5 transition-all duration-300 overflow-hidden">
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-solo-primary to-blue-500"></div>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-xl">
                 <div className="text-solo-primary animate-pulse-slow">
-                  <Crown size={18} />
+                  <Crown size={20} />
                 </div>
-                Current Progress
+                <span className="bg-gradient-to-r from-solo-primary to-blue-500 bg-clip-text text-transparent">Current Progress</span>
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4 p-3 bg-gray-900/50 rounded-lg border border-gray-800">
-                  <div className="space-y-1">
+                <div className="grid grid-cols-2 gap-4 p-4 bg-gray-850/30 rounded-lg border border-gray-800/50 backdrop-blur-sm">
+                  <div className="space-y-2">
                     <p className="text-sm text-gray-400">Current Rank</p>
                     <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-full bg-solo-primary/20 flex items-center justify-center text-solo-primary">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-solo-primary/20 to-blue-500/20 flex items-center justify-center text-solo-primary shadow-lg shadow-solo-primary/10">
                         {typeof rankDetails.find(r => r.rank === user.rank)?.icon === 'string' ? (
                           <span className="font-bold">
                             {rankDetails.find(r => r.rank === user.rank)?.icon}
@@ -734,16 +733,16 @@ const Character = () => {
                           rankDetails.find(r => r.rank === user.rank)?.icon || 'F'
                         )}
                       </div>
-                      <span className="text-2xl font-bold text-solo-primary animate-pulse-slow">
+                      <span className="text-3xl font-bold bg-gradient-to-r from-solo-primary to-blue-500 bg-clip-text text-transparent">
                         {user.rank}
                       </span>
                     </div>
                   </div>
-                  <div className="space-y-1 text-right">
+                  <div className="space-y-2 text-right">
                     <p className="text-sm text-gray-400">Current Level</p>
-                    <div className="text-2xl font-bold flex items-center justify-end">
-                      <span className="text-gray-300">{user.level}</span>
-                      <div className="w-1.5 h-1.5 bg-solo-primary rounded-full ml-2 animate-pulse"></div>
+                    <div className="text-3xl font-bold flex items-center justify-end">
+                      <span className="bg-gradient-to-r from-gray-200 to-gray-400 bg-clip-text text-transparent">{user.level}</span>
+                      <div className="w-2 h-2 bg-solo-primary rounded-full ml-2 animate-pulse"></div>
                     </div>
                   </div>
                 </div>
@@ -768,20 +767,21 @@ const Character = () => {
             </CardContent>
           </Card>
           
-          <Card className="bg-solo-dark border-gray-800">
+          <Card className="bg-solo-dark border-gray-800 hover:shadow-lg hover:shadow-solo-primary/5 transition-all duration-300 overflow-hidden">
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-yellow-400 to-amber-500"></div>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-xl">
                 <div className="text-yellow-400">
-                  <Trophy size={18} />
+                  <Trophy size={20} />
                 </div>
-                Current Rank Benefits
+                <span className="bg-gradient-to-r from-yellow-400 to-amber-500 bg-clip-text text-transparent">Current Rank Benefits</span>
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
-                <div className="p-3 bg-gray-900/50 rounded-lg border border-gray-800 mb-4">
-                  <p className="text-sm text-gray-400 mb-1">Rank {user.rank} Benefits</p>
-                  <div className="text-sm text-gray-300 italic">
+              <div className="space-y-4">
+                <div className="p-4 bg-gray-850/30 rounded-lg border border-gray-800/50 backdrop-blur-sm mb-4">
+                  <p className="text-sm text-gray-400 mb-2 uppercase tracking-wider">Rank {user.rank} Benefits</p>
+                  <div className="text-sm text-gray-300 italic leading-relaxed">
                     {rankDetails.find(r => r.rank === user.rank)?.description || "Beginning hunter with standard rewards."}
                   </div>
                 </div>
@@ -789,10 +789,10 @@ const Character = () => {
                 {rankDetails.find(r => r.rank === user.rank)?.benefits.map((benefit, index) => (
                   <div 
                     key={index} 
-                    className="flex items-center gap-3 p-2 hover:bg-gray-800/50 rounded-md transition-all duration-300 hover:translate-x-1 group"
+                    className="flex items-center gap-3 p-3 hover:bg-gray-800/50 rounded-md transition-all duration-300 hover:translate-x-1 group"
                   >
-                    <div className="w-7 h-7 rounded-full bg-solo-primary/10 flex items-center justify-center text-solo-primary">
-                      <Star size={14} className="transition-transform duration-300 group-hover:scale-110" />
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-solo-primary/20 to-blue-500/20 flex items-center justify-center text-solo-primary shadow-lg shadow-solo-primary/10 group-hover:shadow-solo-primary/20 transition-all duration-300">
+                      <Star size={16} className="transition-transform duration-300 group-hover:scale-110" />
                     </div>
                     <span className="text-sm text-gray-300 group-hover:text-white transition-colors duration-300">{benefit}</span>
                   </div>

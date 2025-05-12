@@ -21,7 +21,7 @@ const AddQuestDialog = ({ onClose }: { onClose: () => void }) => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [questType, setQuestType] = useState<QuestType>('side');
-  const [difficulty, setDifficulty] = useState<Difficulty>('medium');
+  const [difficulty, setDifficulty] = useState<Difficulty>('normal');
   const [deadline, setDeadline] = useState('');
   const [category, setCategory] = useState<DailyWinCategory | ''>('mental');
 
@@ -106,7 +106,7 @@ const AddQuestDialog = ({ onClose }: { onClose: () => void }) => {
     setTitle('');
     setDescription('');
     setQuestType('side');
-    setDifficulty('medium');
+    setDifficulty('normal');
     setDeadline('');
     setCategory('mental');
     onClose();
@@ -244,7 +244,7 @@ const AddTaskDialog = ({ questId, onClose }: { questId: string; onClose: () => v
   const [taskTitle, setTaskTitle] = useState('');
   const [taskDescription, setTaskDescription] = useState('');
   const [category, setCategory] = useState<DailyWinCategory>('mental');
-  const [difficulty, setDifficulty] = useState<Difficulty>('medium');
+  const [difficulty, setDifficulty] = useState<Difficulty>('normal');
   const [deadline, setDeadline] = useState<Date>(new Date(Date.now() + 24 * 60 * 60 * 1000));
 
   const handleAddTask = () => {

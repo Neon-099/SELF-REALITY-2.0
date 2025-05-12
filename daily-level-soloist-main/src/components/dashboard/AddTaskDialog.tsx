@@ -16,8 +16,12 @@ import { getExpForDifficulty } from '@/lib/utils/calculations';
 import { Switch } from '@/components/ui/switch';
 import { DateTimePicker } from '@/components/ui/date-time-picker';
 
+interface AddTaskDialogProps {
+  children?: React.ReactNode;
+}
+
 // Export as a named export and as default export to support both import styles
-export const AddTaskDialog = () => {
+export const AddTaskDialog = ({ children }: AddTaskDialogProps) => {
   // Added this log to confirm component is refreshing
   console.log('AddTaskDialog rendered with glassmorphism styles - ' + new Date().toISOString());
   
@@ -165,9 +169,11 @@ export const AddTaskDialog = () => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="bg-solo-primary hover:bg-solo-primary/80">
-          <Plus className="mr-2 h-4 w-4" /> Add Task
-        </Button>
+        {children || (
+          <Button className="bg-solo-primary hover:bg-solo-primary/80">
+            <Plus className="mr-2 h-4 w-4" /> Add Task
+          </Button>
+        )}
       </DialogTrigger>
       
       <DialogContent
@@ -242,7 +248,7 @@ export const AddTaskDialog = () => {
               <Label htmlFor="difficulty" className="text-white/80 font-medium">Difficulty</Label>
               <Select 
                 value={difficulty} 
-                onValueChange={(value) => setDifficulty(value as Difficulty)}
+                onValueChange={(value: Difficulty) => setDifficulty(value)}
               >
                 <SelectTrigger id="difficulty" className="border-indigo-500/20 bg-gray-800/90 h-9 focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all">
                   <SelectValue placeholder="Select difficulty" />

@@ -21,13 +21,15 @@ import {
   Sword, 
   Zap,
   Target,
-  TrendingUp
+  TrendingUp,
+  Plus
 } from 'lucide-react';
 import { areAllDailyWinsCompleted, isSameDay } from '@/lib/utils';
 import { useToast } from '@/components/ui/use-toast';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const Index = () => {
   const [user, tasks, updateStreak, checkResetDailyWins] = useSoloLevelingStore(
@@ -36,6 +38,7 @@ const Index = () => {
   const { toast } = useToast();
   const [showCompletedTasks, setShowCompletedTasks] = useState(false);
   const [currentDate, setCurrentDate] = useState(new Date());
+  const isMobile = useIsMobile();
   
   // Check for day change periodically
   useEffect(() => {
@@ -206,10 +209,19 @@ const Index = () => {
             <div className="flex gap-2">
               <Link to="/planner">
                 <Button variant="outline" size="sm" className="gap-1 text-sm">
-                  <CalendarDays className="h-4 w-4" /> Weekly Planner
+                  <CalendarDays className="h-4 w-4" /> 
+                  {!isMobile && "Weekly Planner"}
                 </Button>
               </Link>
-              <AddTaskDialog />
+              {isMobile ? (
+                <AddTaskDialog>
+                  <Button variant="default" size="sm" className="p-2">
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </AddTaskDialog>
+              ) : (
+                <AddTaskDialog />
+              )}
             </div>
           </div>
         </CardHeader>
@@ -221,7 +233,15 @@ const Index = () => {
               </div>
               <p className="text-gray-400 mb-4 text-lg font-semibold">No active tasks. <span className="text-blue-400">Add new tasks</span> to start leveling up!</p>
               <div className="flex justify-center gap-4">
-                <AddTaskDialog />
+                {isMobile ? (
+                  <AddTaskDialog>
+                    <Button variant="default" size="sm" className="gap-1">
+                      <Plus className="h-4 w-4" /> Add Task
+                    </Button>
+                  </AddTaskDialog>
+                ) : (
+                  <AddTaskDialog />
+                )}
               </div>
             </div>
           ) : (
@@ -241,7 +261,7 @@ const Index = () => {
           <div className="flex justify-between items-center">
             <CardTitle className="flex items-center gap-2 text-2xl font-extrabold tracking-tight bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent drop-shadow-glow">
               <CheckSquare className="h-7 w-7 text-green-400 drop-shadow-glow" />
-              Today's <span className="text-green-400">Completed Tasks</span>
+              <span className="text-green-400">Completed Tasks</span>
               {completedTasks.length > 0 && (
                 <span className="ml-2 bg-green-500/20 text-green-500 text-xs px-2 py-1 rounded-full font-bold shadow-sm">
                   {completedTasks.length} task{completedTasks.length !== 1 ? 's' : ''}
@@ -258,12 +278,12 @@ const Index = () => {
               {showCompletedTasks ? (
                 <>
                 <EyeOff className="h-4 w-4" /> 
-                Hide completed
+                {!isMobile && "Hide completed"}
                 </>
               ) : (
                 <>
                 <Eye className="h-4 w-4" /> 
-                Show completed
+                {!isMobile && "Show completed"}
                 </>
               )}
             </Button>
