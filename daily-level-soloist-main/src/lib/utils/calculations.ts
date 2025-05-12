@@ -23,13 +23,13 @@ export const applyExpModifier = (baseExp: number, modifier: number): number => {
 };
 
 export const calculateRank = (level: number): Rank => {
-  if (level >= 100) return 'SSS';
-  if (level >= 90) return 'SS';
-  if (level >= 80) return 'S';
-  if (level >= 70) return 'A';
-  if (level >= 50) return 'B';
-  if (level >= 30) return 'C';
-  if (level >= 20) return 'D';
-  if (level >= 10) return 'E';
+  if (level >= 360) return 'SSS';
+  if (level >= 270) return 'SS';
+  if (level >= 180) return 'S';
+  if (level >= 150) return 'A';
+  if (level >= 120) return 'B';
+  if (level >= 90) return 'C';
+  if (level >= 60) return 'D';
+  if (level >= 30) return 'E';
   return 'F';
 };

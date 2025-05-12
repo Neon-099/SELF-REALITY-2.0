@@ -38,7 +38,7 @@ const createRankLevels = (): RankLevel[] => [
     id: 'F',
     name: 'F Rank',
     color: 'from-gray-400 to-gray-600',
-    daysRequired: 6,
+    daysRequired: 12,
     isLocked: false,
     missions: []
   },
@@ -46,7 +46,7 @@ const createRankLevels = (): RankLevel[] => [
     id: 'E',
     name: 'E Rank',
     color: 'from-orange-400 to-orange-600',
-    daysRequired: 10,
+    daysRequired: 18,
     isLocked: false,
     missions: []
   },
@@ -54,7 +54,7 @@ const createRankLevels = (): RankLevel[] => [
     id: 'D',
     name: 'D Rank',
     color: 'from-blue-400 to-blue-600',
-    daysRequired: 15,
+    daysRequired: 30,
     isLocked: true,
     missions: []
   },
@@ -62,7 +62,7 @@ const createRankLevels = (): RankLevel[] => [
     id: 'C',
     name: 'C Rank',
     color: 'from-green-400 to-green-600',
-    daysRequired: 25,
+    daysRequired: 60,
     isLocked: true,
     missions: []
   },
@@ -70,7 +70,7 @@ const createRankLevels = (): RankLevel[] => [
     id: 'B',
     name: 'B Rank',
     color: 'from-purple-400 to-purple-600',
-    daysRequired: 40,
+    daysRequired: 90,
     isLocked: true,
     missions: []
   },
@@ -78,7 +78,7 @@ const createRankLevels = (): RankLevel[] => [
     id: 'A',
     name: 'A Rank',
     color: 'from-red-400 to-red-600',
-    daysRequired: 60,
+    daysRequired: 120,
     isLocked: true,
     missions: []
   },
@@ -86,7 +86,7 @@ const createRankLevels = (): RankLevel[] => [
     id: 'S',
     name: 'S Rank',
     color: 'from-yellow-400 to-yellow-600',
-    daysRequired: 80,
+    daysRequired: 150,
     isLocked: true,
     missions: []
   },
@@ -94,7 +94,7 @@ const createRankLevels = (): RankLevel[] => [
     id: 'SS',
     name: 'SS Rank',
     color: 'from-emerald-400 to-emerald-600',
-    daysRequired: 100,
+    daysRequired: 180,
     isLocked: true,
     missions: []
   },
@@ -102,7 +102,7 @@ const createRankLevels = (): RankLevel[] => [
     id: 'SSS',
     name: 'SSS Rank',
     color: 'from-indigo-400 to-indigo-600',
-    daysRequired: 120,
+    daysRequired: 200,
     isLocked: true,
     missions: []
   }
