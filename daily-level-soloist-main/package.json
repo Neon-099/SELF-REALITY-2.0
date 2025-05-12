@@ -5,9 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build --config vite.config.ts",
     "build:dev": "vite build --mode development",
-    "vercel-build": "vite build",
+    "vercel-build": "vite build --config vite.config.ts",
     "lint": "eslint .",
     "preview": "vite preview"
   },
