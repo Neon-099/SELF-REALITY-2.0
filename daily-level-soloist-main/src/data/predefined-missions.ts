@@ -14,6 +14,7 @@ export interface PredefinedMission {
   isSpecial?: boolean; // For special event missions or featured missions
   requiredTasks?: string[]; // IDs of tasks that must be completed before this mission is available
   completed?: boolean; // Whether the mission has been completed
+  difficulty?: 'normal' | 'boss'; // Difficulty level of the mission
 }
 
 /**

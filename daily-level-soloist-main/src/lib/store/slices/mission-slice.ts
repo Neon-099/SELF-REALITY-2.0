@@ -19,7 +19,7 @@ export interface MissionSlice {
   missions: Mission[];
   completedMissionIds: string[]; // Store just the IDs of completed missions
   completedMissionHistory: CompletedMission[]; // Store completion history with dates
-  addMission: (title: string, description: string, expReward: number, rank?: string, day?: number) => void;
+  addMission: (title: string, description: string, expReward: number, rank?: string, day?: number, difficulty?: string) => void;
   completeMission: (id: string) => Promise<void>;
   getMissionsByDay: (date: Date) => CompletedMission[];
   loadCompletedMissions: () => Promise<void>;
@@ -30,7 +30,7 @@ export const createMissionSlice: StateCreator<MissionSlice & any> = (set, get) =
   completedMissionIds: [],
   completedMissionHistory: [],
 
-  addMission: (title, description, expReward, rank = 'F', day = 1) => {
+  addMission: (title, description, expReward, rank = 'F', day = 1, difficulty = 'normal') => {
     set((state: MissionSlice) => ({
       missions: [
         ...state.missions,
@@ -43,7 +43,8 @@ export const createMissionSlice: StateCreator<MissionSlice & any> = (set, get) =
           createdAt: new Date(),
           rank,
           day,
-          releaseDate: new Date()
+          releaseDate: new Date(),
+          difficulty
         }
       ]
     }));
@@ -142,7 +143,7 @@ export const createMissionSlice: StateCreator<MissionSlice & any> = (set, get) =
       toast({
         title,
         description,
-        variant: missedDeadline ? "warning" : "default"
+        variant: missedDeadline ? "destructive" : "default"
       });
       
     } catch (error) {

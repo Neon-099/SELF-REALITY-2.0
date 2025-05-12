@@ -57,6 +57,7 @@ export interface Mission {
   day?: number;
   releaseDate?: Date;
   missed?: boolean; // To track if the deadline was missed
+  difficulty?: 'normal' | 'boss'; // Difficulty level of the mission
 }
 
 export type Stat = 'physical' | 'cognitive' | 'emotional' | 'spiritual' | 'social';

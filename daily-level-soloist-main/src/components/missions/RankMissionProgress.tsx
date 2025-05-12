@@ -189,6 +189,7 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
       const isCompleted = mission.completed || completedMissionIds.includes(mission.id);
       // Try to find the completed mission in history to get actual EXP earned
       const completedMission = completedMissionHistory.find(cm => cm.id === mission.id);
+      const isBoss = mission.difficulty === 'boss';
       
       // Get the rank colors
       const rankGradient = getRankColor(mission.rank as Rank);
@@ -198,18 +199,30 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
       
       // Glassmorphism and border classes
       const glassClasses = 'backdrop-blur-lg bg-card dark:bg-background/80';
-      const borderClasses = `border-2 ${isLocked ? 'border-gray-300/40' : `border-${mission.rank.toLowerCase()}-400/60`}`;
+      
+      // Special styling for boss missions
+      const borderClasses = isBoss 
+        ? `border-2 border-amber-500/60 ${isLocked ? 'border-opacity-30' : 'border-opacity-80'}` 
+        : `border-2 ${isLocked ? 'border-gray-300/40' : `border-${mission.rank.toLowerCase()}-400/60`}`;
       
       // Shadow and hover effects
       const shadowClasses = isCompleted
         ? 'shadow-md'
-        : 'shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-transform duration-200';
+        : isBoss 
+          ? 'shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-transform duration-200 shadow-amber-500/20'
+          : 'shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-transform duration-200';
       
       // Glow effect for non-completed missions
-      const glowClasses = !isCompleted && !isLocked ? `ring-2 ring-offset-1 ${rankGlow}` : '';
+      const glowClasses = !isCompleted && !isLocked 
+        ? isBoss 
+          ? 'ring-2 ring-offset-1 ring-amber-400/70' 
+          : `ring-2 ring-offset-1 ${rankGlow}` 
+        : '';
       
       // Background gradient based on rank
-      const rankBg = `bg-gradient-to-br from-${mission.rank.toLowerCase()}-400/5 to-${mission.rank.toLowerCase()}-600/10`;
+      const rankBg = isBoss 
+        ? 'bg-gradient-to-br from-amber-500/10 to-amber-800/20' 
+        : `bg-gradient-to-br from-${mission.rank.toLowerCase()}-400/5 to-${mission.rank.toLowerCase()}-600/10`;
       
       // Completion styles
       const completedClasses = isCompleted ? 'opacity-70' : '';
@@ -220,25 +233,36 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
           className={`relative overflow-hidden rounded-xl ${borderClasses} ${glassClasses} ${shadowClasses} ${glowClasses} ${completedClasses}`}
         >
           {/* Rank indicator strip */}
-          <div className={`absolute top-0 left-0 w-2 h-full ${rankSolid.split(' ')[0]}`}></div>
+          <div className={`absolute top-0 left-0 w-2 h-full ${isBoss ? 'bg-amber-500' : rankSolid.split(' ')[0]}`}></div>
+
+          {/* Boss indicator */}
+          {isBoss && (
+            <div className="absolute top-0 right-0">
+              <div className="w-16 h-16 overflow-hidden">
+                <div className="absolute transform rotate-45 bg-amber-500 text-xs font-bold py-1 right-[-35px] top-[12px] w-[120px] text-center text-gray-900 shadow-md">
+                  BOSS
+                </div>
+              </div>
+            </div>
+          )}
 
           <CardContent className="p-0">
             {/* Mission header with rank-colored background */}
             <div className={`p-4 border-b ${rankBg}`}>
               {/* Rank badge */}
               <div className="flex justify-between items-center mb-3">
-                <Badge className={`px-2 py-1 ${rankBadge} bg-transparent font-semibold`}>
-                  {mission.rank} Rank
+                <Badge className={`px-2 py-1 ${isBoss ? 'border-amber-400 text-amber-500 font-bold' : rankBadge} bg-transparent font-semibold`}>
+                  {mission.rank} Rank {isBoss && '• BOSS'}
                 </Badge>
                 <Badge className="flex items-center gap-1 bg-transparent border-amber-500 text-amber-500 py-1 px-2">
-                  <Star className="h-3 w-3 fill-amber-500" />
+                  <Star className={`h-3 w-3 ${isBoss ? 'fill-amber-500 animate-pulse' : 'fill-amber-500'}`} />
                   +{mission.expReward} EXP
                 </Badge>
               </div>
               
               {/* Mission title with rank gradient */}
               <div className="flex items-center gap-2 mt-2">
-                <h3 className={`font-extrabold text-xl bg-gradient-to-r ${rankGradient} bg-clip-text text-transparent ${isCompleted ? 'line-through' : ''}`}>
+                <h3 className={`font-extrabold text-xl ${isBoss ? 'bg-gradient-to-r from-amber-400 to-amber-600 bg-clip-text text-transparent drop-shadow-glow' : `bg-gradient-to-r ${rankGradient} bg-clip-text text-transparent`} ${isCompleted ? 'line-through' : ''}`}>
                   {mission.title}
                 </h3>
                 {isCompleted && <CheckCircle className="text-green-500 w-5 h-5" />}
@@ -267,10 +291,10 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
             {/* Mission action button */}
             {!isCompleted && !isLocked && (
               <Button
-                className={`w-full rounded-none h-14 text-lg font-medium ${rankSolid}`}
+                className={`w-full rounded-none h-14 text-lg font-medium ${isBoss ? 'bg-amber-500 hover:bg-amber-600 text-gray-900' : rankSolid}`}
                 onClick={() => handleCompleteMission(mission)}
               >
-                Complete Mission
+                {isBoss ? '⚔️ Defeat Boss' : 'Complete Mission'}
               </Button>
             )}
             {!isCompleted && isLocked && (

@@ -20,7 +20,8 @@ const convertMissionToPredefined = (mission: Mission): PredefinedMission => {
     ...mission,
     rank: (mission.rank || 'F') as Rank,
     day: mission.day || 1,
-    releaseDate: mission.releaseDate || mission.createdAt || new Date()
+    releaseDate: mission.releaseDate || mission.createdAt || new Date(),
+    difficulty: mission.difficulty || 'normal'
   };
 };
 
@@ -128,7 +129,8 @@ const Missions = () => {
     description: '',
     day: 1,
     rank: 'F',
-    difficulty: 'normal' as Difficulty
+    difficulty: 'normal' as Difficulty,
+    expReward: '30' // Default XP value
   });
 
   const handleNewMissionChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -138,13 +140,8 @@ const Missions = () => {
   const handleCreateMission = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Use XP reward based on difficulty level
-    const difficultyExpRewards = {
-      'normal': 30,
-      'boss': 100
-    };
-    
-    const expReward = difficultyExpRewards[newMission.difficulty as keyof typeof difficultyExpRewards] || 30;
+    // Get XP reward from input
+    const expReward = parseInt(newMission.expReward) || 30; // Default to 30 if invalid
     
     // Validate day number against rank requirements
     const rankLevel = rankLevels.find(r => r.id === newMission.rank);
@@ -163,7 +160,8 @@ const Missions = () => {
       newMission.description,
       expReward,
       newMission.rank,
-      Number(newMission.day)
+      Number(newMission.day),
+      newMission.difficulty
     );
     
     setShowModal(false);
@@ -172,7 +170,8 @@ const Missions = () => {
       description: '', 
       day: 1, 
       rank: 'F', 
-      difficulty: 'normal' as Difficulty 
+      difficulty: 'normal', 
+      expReward: '30'
     });
     
     toast({ 
@@ -425,10 +424,23 @@ const Missions = () => {
                         <SelectValue placeholder="Select difficulty" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="normal">Normal (30 XP)</SelectItem>
-                        <SelectItem value="boss">Boss (100 XP)</SelectItem>
+                        <SelectItem value="normal">Normal</SelectItem>
+                        <SelectItem value="boss">Boss</SelectItem>
                       </SelectContent>
                     </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="mission-exp">XP Reward</Label>
+                    <Input
+                      id="mission-exp"
+                      name="expReward"
+                      type="number"
+                      min="1"
+                      placeholder="Enter XP amount"
+                      value={newMission.expReward}
+                      onChange={handleNewMissionChange}
+                      required
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="mission-rank">Rank</Label>
