@@ -13,6 +13,7 @@ export interface PredefinedMission {
   isHidden?: boolean; // Whether to hide this mission until its release date
   isSpecial?: boolean; // For special event missions or featured missions
   requiredTasks?: string[]; // IDs of tasks that must be completed before this mission is available
+  completed?: boolean; // Whether the mission has been completed
 }
 
 /**

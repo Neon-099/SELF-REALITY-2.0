@@ -35,6 +35,29 @@ import { areAllDailyWinsCompleted, isDailyWinCompleted, hasPendingDailyWinTask, 
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { DateTimePicker } from '@/components/ui/date-time-picker';
 
+// Helper functions for color (move to top level)
+const getDifficultyColor = (difficulty: string) => {
+  switch (difficulty) {
+    case 'easy': return 'bg-blue-500 text-blue-500';
+    case 'medium': return 'bg-purple-500 text-purple-500';
+    case 'hard': return 'bg-red-500 text-red-500';
+    case 'boss': return 'bg-yellow-500 text-yellow-500';
+    default: return 'bg-gray-500 text-gray-500';
+  }
+};
+const getCategoryColor = (category: string) => {
+  switch (category) {
+    case 'mental': return 'bg-purple-500 text-purple-500';
+    case 'physical': return 'bg-blue-500 text-blue-500';
+    case 'spiritual': return 'bg-teal-500 text-teal-500';
+    case 'intelligence': return 'bg-amber-500 text-amber-500';
+    case 'cognitive': return 'bg-pink-500 text-pink-500';
+    case 'emotional': return 'bg-rose-500 text-rose-500';
+    case 'social': return 'bg-green-500 text-green-500';
+    default: return 'bg-gray-500 text-gray-500';
+  }
+};
+
 // Type guard to check if a string is a valid DailyWinCategory
 const isDailyWinCategory = (category: string): category is DailyWinCategory => {
   return ['mental', 'physical', 'spiritual', 'intelligence'].includes(category);
@@ -501,29 +524,44 @@ const TaskCard = ({ task, onClick }: { task: any; onClick: () => void }) => {
   return (
     <div 
       onClick={onClick}
-      className="text-sm p-2 rounded bg-gray-800/50 border border-gray-700 cursor-pointer hover:border-solo-primary/50 hover:bg-gray-800/80 transition-all"
+      className={
+        `relative rounded-xl border bg-solo-dark p-4 transition-all cursor-pointer flex flex-col shadow-md overflow-hidden
+        hover:border-solo-primary hover:shadow-lg group`
+      }
     >
-      <div className="font-medium truncate">{task.title}</div>
-      {task.description && (
-        <div className="text-xs text-gray-400 mt-1 line-clamp-1">{task.description}</div>
-      )}
-      <div className="text-xs text-gray-400 mt-1 flex flex-wrap items-center gap-1">
-        <span>{task.category}</span>
-        <span>•</span>
-        <span className="text-solo-primary">{task.expReward} EXP</span>
-        {task.deadline && (
-          <>
-            <span>•</span>
-            <span className="text-indigo-300">
-              Due: {new Date(task.deadline).toLocaleString([], { 
-                month: 'short', 
-                day: 'numeric', 
-                hour: '2-digit', 
-                minute: '2-digit' 
-              })}
-            </span>
-          </>
+      {/* Colored left accent bar */}
+      <div className={`absolute left-0 top-0 h-full w-2 rounded-l-xl ${getDifficultyColor(task.difficulty)}`}></div>
+      <div className="flex flex-col gap-1">
+        <div className="flex items-center gap-2 mb-1">
+          {/* Difficulty badge */}
+          <span className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold uppercase ${getDifficultyColor(task.difficulty)} bg-opacity-20 bg-solo-primary/10`}> 
+            <span className="w-2 h-2 rounded-full mr-1" style={{ background: 'currentColor' }}></span>
+            {task.difficulty}
+          </span>
+          {/* Category badge */}
+          <span className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold capitalize ${getCategoryColor(task.category)} bg-opacity-20 bg-solo-primary/10 ml-1`}> 
+            {task.category}
+          </span>
+        </div>
+        {/* Title with gradient and shadow */}
+        <div className="font-extrabold text-base bg-gradient-to-r from-solo-primary to-solo-secondary bg-clip-text text-transparent drop-shadow-glow truncate">
+          {task.title}
+        </div>
+        {/* Description */}
+        {task.description && (
+          <div className="text-xs text-gray-400 mt-1 line-clamp-1 italic">{task.description}</div>
         )}
+        {/* EXP, Deadline, and Details */}
+        <div className="flex flex-wrap items-center gap-2 mt-2 text-xs">
+          <span className="flex items-center gap-1 px-2 py-0.5 rounded-full font-bold bg-gradient-to-r from-yellow-400 to-yellow-500 text-white shadow-md">
+            +{task.expReward} EXP
+          </span>
+          {task.deadline && (
+            <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-300 font-semibold">
+              <span className="font-bold">Due:</span> {new Date(task.deadline).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+            </span>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -846,9 +884,9 @@ const Planner = () => {
         
         <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
           <PopoverTrigger asChild>
-            <button className="flex items-center gap-2 text-xl font-medium text-white hover:text-solo-primary transition-colors">
+            <button className="flex items-center gap-2 text-2xl font-extrabold tracking-tight bg-gradient-to-r from-solo-primary to-solo-secondary bg-clip-text text-transparent drop-shadow-glow hover:scale-105 transition-transform">
               {dateRangeFormatted()}
-              <CalendarIcon className="h-5 w-5" />
+              <CalendarIcon className="h-5 w-5 text-solo-primary drop-shadow-glow" />
             </button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0 bg-gray-900 border border-gray-800" align="center">
@@ -875,8 +913,11 @@ const Planner = () => {
       {/* Weekly Overview */}
       <div className="bg-gray-900 py-4 px-6 rounded-lg">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-xl font-bold text-solo-text">Weekly Overview</h3>
-          <p className="text-xs text-gray-400">Your planned tasks for this week</p>
+          <h3 className="text-2xl font-extrabold tracking-tight bg-gradient-to-r from-solo-primary to-solo-secondary bg-clip-text text-transparent drop-shadow-glow flex items-center gap-2">
+            <CalendarDays className="h-7 w-7 text-solo-primary drop-shadow-glow" />
+            Weekly Overview
+          </h3>
+          <p className="text-sm text-gray-400 font-medium italic">Your planned tasks for this week</p>
           <Popover>
             <PopoverTrigger asChild>
               <button className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-500 hover:bg-blue-500/30 transition-colors">
@@ -934,11 +975,11 @@ const Planner = () => {
                       <CalendarIcon className="h-4 w-4" />
                     </div>
                     <h4 className={cn(
-                      "text-lg font-medium capitalize",
-                      isTodayDate ? "text-indigo-300" : "text-white"
+                      "text-xl font-bold capitalize tracking-tight flex items-center gap-2 bg-gradient-to-r from-solo-primary to-solo-secondary bg-clip-text text-transparent drop-shadow-glow",
+                      isTodayDate ? "text-indigo-300" : ""
                     )}>
                       {getDayName(date)}
-                      {isTodayDate && <span className="ml-2 text-xs bg-indigo-500/30 text-indigo-300 px-2 py-0.5 rounded-full">Today</span>}
+                      {isTodayDate && <span className="ml-2 text-xs bg-indigo-500/30 text-indigo-300 px-2 py-0.5 rounded-full font-semibold shadow">Today</span>}
                     </h4>
                   </div>
                   
@@ -985,50 +1026,66 @@ const Planner = () => {
                         {/* Pending Tasks Section */}
                         {incompleteTasks.length > 0 && (
                           <div>
-                            <h5 className="text-sm font-medium text-gray-400 mb-2 ml-1">Pending Tasks</h5>
+                            <h5 className="text-base font-semibold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent drop-shadow-glow mb-2 ml-1 flex items-center gap-1">
+                              <AlertCircle className="h-4 w-4 text-blue-400" /> Pending Tasks
+                            </h5>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                               {incompleteTasks.map(task => (
-                        <div 
-                          key={task.id}
-                                  className="bg-gray-800/80 border border-gray-700 rounded-lg px-4 py-3 cursor-pointer hover:border-blue-500/30 transition-all"
+                                <div 
+                                  key={task.id}
+                                  className="relative rounded-xl border bg-gray-800/80 p-4 cursor-pointer hover:border-blue-500/30 transition-all shadow-md overflow-hidden group"
                                   onClick={() => {
-                            setSelectedTask({...task});
-                            setSelectedDate(date);
-                            setIsTaskDialogOpen(true);
-                          }}
-                        >
-                                  <div className="flex justify-between items-start">
-                                    <span className="font-medium text-gray-200 truncate">{task.title}</span>
-                                    <span className="ml-2 text-xs px-2 py-0.5 bg-blue-500/20 text-blue-400 rounded-full">
-                                      Pending
-                                    </span>
-                                  </div>
-                                  {task.description && (
-                                    <div className="text-xs text-gray-400 mt-1 line-clamp-1">{task.description}</div>
-                                  )}
-                                  <div className="text-xs text-gray-400 mt-1 truncate">
-                                    {task.category}
-                                    {task.deadline && (
-                                      <span className="ml-2 text-indigo-300">
-                                        Due: {new Date(task.deadline).toLocaleString([], { 
-                                          month: 'short', 
-                                          day: 'numeric', 
-                                          hour: '2-digit', 
-                                          minute: '2-digit' 
-                                        })}
+                                    setSelectedTask({...task});
+                                    setSelectedDate(date);
+                                    setIsTaskDialogOpen(true);
+                                  }}
+                                >
+                                  {/* Colored left accent bar */}
+                                  <div className={`absolute left-0 top-0 h-full w-2 rounded-l-xl ${getDifficultyColor(task.difficulty)}`}></div>
+                                  <div className="flex flex-col gap-1">
+                                    <div className="flex items-center gap-2 mb-1">
+                                      {/* Difficulty badge */}
+                                      <span className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold uppercase ${getDifficultyColor(task.difficulty)} bg-opacity-20 bg-solo-primary/10`}> 
+                                        <span className="w-2 h-2 rounded-full mr-1" style={{ background: 'currentColor' }}></span>
+                                        {task.difficulty}
                                       </span>
+                                      {/* Category badge */}
+                                      <span className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold capitalize ${getCategoryColor(task.category)} bg-opacity-20 bg-solo-primary/10 ml-1`}> 
+                                        {task.category}
+                                      </span>
+                                    </div>
+                                    {/* Title with gradient and shadow */}
+                                    <div className="font-extrabold text-base bg-gradient-to-r from-solo-primary to-solo-secondary bg-clip-text text-transparent drop-shadow-glow truncate">
+                                      {task.title}
+                                    </div>
+                                    {/* Description */}
+                                    {task.description && (
+                                      <div className="text-xs text-gray-400 mt-1 line-clamp-1 italic">{task.description}</div>
                                     )}
+                                    {/* EXP, Deadline, and Details */}
+                                    <div className="flex flex-wrap items-center gap-2 mt-2 text-xs">
+                                      <span className="flex items-center gap-1 px-2 py-0.5 rounded-full font-bold bg-gradient-to-r from-yellow-400 to-yellow-500 text-white shadow-md">
+                                        +{task.expReward} EXP
+                                      </span>
+                                      {task.deadline && (
+                                        <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-300 font-semibold">
+                                          <span className="font-bold">Due:</span> {new Date(task.deadline).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
                           </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
                         )}
                         
                         {/* Completed Tasks Section */}
                         {completedTasks.length > 0 && (
                           <div>
-                            <h5 className="text-sm font-medium text-gray-400 mb-2 ml-1">Completed Tasks</h5>
+                            <h5 className="text-base font-semibold bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent drop-shadow-glow mb-2 ml-1 flex items-center gap-1">
+                              <CheckCircle2 className="h-4 w-4 text-green-400" /> Completed Tasks
+                            </h5>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                               {completedTasks.map(task => {
                                 // Check task completion status

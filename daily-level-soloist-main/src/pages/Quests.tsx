@@ -756,9 +756,12 @@ const Quests = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
+      <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-solo-primary to-solo-secondary bg-clip-text text-transparent drop-shadow-glow mb-4 flex items-center gap-2">
+        <Swords className="h-8 w-8 text-yellow-400 drop-shadow-glow" />
+        Quests
+      </h1>
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-solo-text">Quests</h1>
         <div className="flex items-center gap-2">
           <Dialog open={isAddQuestDialogOpen} onOpenChange={setIsAddQuestDialogOpen}>
             <DialogTrigger asChild>
@@ -778,12 +781,12 @@ const Quests = () => {
       </div>
 
       {/* Quest type filter buttons */}
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-2 mt-2">
         <Button 
           variant={activeFilter === 'all' ? 'default' : 'outline'} 
           size="sm" 
           onClick={() => setActiveFilter('all')}
-          className="flex items-center gap-1"
+          className={`flex items-center gap-1 font-bold ${activeFilter === 'all' ? 'bg-gradient-to-r from-solo-primary to-solo-secondary text-white drop-shadow-glow' : ''}`}
         >
           <Filter className="h-4 w-4" />
           All Quests
@@ -792,7 +795,7 @@ const Quests = () => {
           variant={activeFilter === 'main' ? 'default' : 'outline'} 
           size="sm" 
           onClick={() => setActiveFilter('main')}
-          className="flex items-center gap-1"
+          className={`flex items-center gap-1 font-bold ${activeFilter === 'main' ? 'bg-gradient-to-r from-yellow-400 to-amber-500 text-white drop-shadow-glow' : ''}`}
         >
           <Swords className="h-4 w-4 text-yellow-500" />
           Main Quests
@@ -801,7 +804,7 @@ const Quests = () => {
           variant={activeFilter === 'side' ? 'default' : 'outline'} 
           size="sm" 
           onClick={() => setActiveFilter('side')}
-          className="flex items-center gap-1"
+          className={`flex items-center gap-1 font-bold ${activeFilter === 'side' ? 'bg-gradient-to-r from-solo-primary to-solo-secondary text-white drop-shadow-glow' : ''}`}
         >
           <Sword className="h-4 w-4 text-solo-primary" />
           Side Quests
@@ -810,7 +813,7 @@ const Quests = () => {
           variant={activeFilter === 'daily' ? 'default' : 'outline'} 
           size="sm" 
           onClick={() => setActiveFilter('daily')}
-          className="flex items-center gap-1"
+          className={`flex items-center gap-1 font-bold ${activeFilter === 'daily' ? 'bg-gradient-to-r from-green-400 to-emerald-400 text-white drop-shadow-glow' : ''}`}
         >
           <ListTodo className="h-4 w-4 text-green-500" />
           Daily Quests

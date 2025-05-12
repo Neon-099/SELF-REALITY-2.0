@@ -32,100 +32,103 @@ const Milestones = () => {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold text-solo-text">Milestones</h1>
+      <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-solo-primary to-solo-secondary bg-clip-text text-transparent drop-shadow-glow mb-2 flex items-center gap-2">
+        <Trophy className="h-8 w-8 text-yellow-400 drop-shadow-glow" />
+        Milestones
+      </h1>
 
       {/* Streak Section */}
-      <div className="bg-solo-dark border border-gray-800 rounded-lg p-6">
+      <div className="bg-solo-dark border border-gray-800 rounded-lg p-6 shadow-lg">
         <div className="flex items-center gap-3 mb-6">
-          <div className="h-10 w-10 rounded-full bg-solo-primary/20 flex items-center justify-center text-solo-primary">
-            <Calendar size={20} />
+          <div className="h-12 w-12 rounded-full bg-gradient-to-br from-solo-primary/30 to-indigo-500/30 flex items-center justify-center text-solo-primary shadow-md">
+            <Calendar size={24} />
           </div>
           <div>
-            <h2 className="text-xl font-bold">Streak Tracker</h2>
-            <p className="text-gray-400 text-sm">Keep showing up every day!</p>
+            <h2 className="text-2xl font-bold bg-gradient-to-r from-solo-primary to-solo-secondary bg-clip-text text-transparent drop-shadow-glow">Streak Tracker</h2>
+            <p className="text-gray-400 text-base italic">Keep showing up every day!</p>
           </div>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-gray-800/30 rounded-lg p-4">
-            <div className="text-4xl font-bold text-solo-primary mb-2">{user.streakDays}</div>
-            <div className="text-gray-400">Current Streak (days)</div>
+          <div className="bg-gray-800/40 rounded-lg p-6 flex flex-col items-center shadow">
+            <div className="text-5xl font-extrabold bg-gradient-to-r from-yellow-400 to-yellow-500 bg-clip-text text-transparent drop-shadow-glow mb-2">{user.streakDays}</div>
+            <div className="text-gray-300 text-lg font-semibold">Current Streak (days)</div>
           </div>
           
-          <div className="bg-gray-800/30 rounded-lg p-4">
-            <div className="text-4xl font-bold text-solo-primary mb-2">{user.longestStreak}</div>
-            <div className="text-gray-400">Longest Streak (days)</div>
+          <div className="bg-gray-800/40 rounded-lg p-6 flex flex-col items-center shadow">
+            <div className="text-5xl font-extrabold bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent drop-shadow-glow mb-2">{user.longestStreak}</div>
+            <div className="text-gray-300 text-lg font-semibold">Longest Streak (days)</div>
           </div>
         </div>
       </div>
 
       {/* Achievements */}
-      <div className="bg-solo-dark border border-gray-800 rounded-lg p-6">
+      <div className="bg-solo-dark border border-gray-800 rounded-lg p-6 shadow-lg">
         <div className="flex items-center gap-3 mb-6">
-          <div className="h-10 w-10 rounded-full bg-solo-primary/20 flex items-center justify-center text-solo-primary">
-            <Trophy size={20} />
+          <div className="h-12 w-12 rounded-full bg-gradient-to-br from-yellow-400/30 to-amber-500/30 flex items-center justify-center text-yellow-400 shadow-md">
+            <Trophy size={24} />
           </div>
           <div>
-            <h2 className="text-xl font-bold">Achievements</h2>
-            <p className="text-gray-400 text-sm">Track your progress</p>
+            <h2 className="text-2xl font-bold bg-gradient-to-r from-yellow-400 to-amber-500 bg-clip-text text-transparent drop-shadow-glow">Achievements</h2>
+            <p className="text-gray-400 text-base italic">Track your progress</p>
           </div>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="bg-gray-800/30 rounded-lg p-4 flex flex-col items-center justify-center">
-            <div className="text-3xl font-bold text-solo-primary mb-2">{completedTotalQuests}</div>
-            <div className="text-gray-400 text-lg font-semibold mb-1">Quests</div>
-            <div className="flex gap-6 text-base mt-1">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-gray-800/40 rounded-lg p-6 flex flex-col items-center justify-center shadow">
+            <div className="text-4xl font-extrabold bg-gradient-to-r from-solo-primary to-solo-secondary bg-clip-text text-transparent drop-shadow-glow mb-2">{completedTotalQuests}</div>
+            <div className="text-gray-300 text-lg font-semibold mb-1">Quests</div>
+            <div className="flex gap-6 text-base mt-1 justify-center w-full">
               <div className="flex flex-col items-center">
                 <span className="text-gray-400">Side</span>
-                <span className="text-solo-primary font-bold">{completedSideQuests}</span>
+                <span className="text-solo-primary font-bold text-lg">{completedSideQuests}</span>
               </div>
               <div className="flex flex-col items-center">
                 <span className="text-gray-400">Main</span>
-                <span className="text-solo-primary font-bold">{completedMainQuests}</span>
+                <span className="text-solo-primary font-bold text-lg">{completedMainQuests}</span>
               </div>
               <div className="flex flex-col items-center">
                 <span className="text-gray-400">Daily</span>
-                <span className="text-solo-primary font-bold">{completedDailyQuests}</span>
+                <span className="text-solo-primary font-bold text-lg">{completedDailyQuests}</span>
               </div>
             </div>
           </div>
-          <div className="bg-gray-800/30 rounded-lg p-4">
-            <div className="text-3xl font-bold text-solo-primary mb-2">{completedTasks}</div>
-            <div className="text-gray-400">Tasks Completed</div>
+          <div className="bg-gray-800/40 rounded-lg p-6 flex flex-col items-center shadow">
+            <div className="text-4xl font-extrabold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent drop-shadow-glow mb-2">{completedTasks}</div>
+            <div className="text-gray-300 text-lg font-semibold">Tasks Completed</div>
           </div>
-          <div className="bg-gray-800/30 rounded-lg p-4">
-            <div className="text-3xl font-bold text-solo-primary mb-2">{completedMissions}</div>
-            <div className="text-gray-400">Missions Completed</div>
+          <div className="bg-gray-800/40 rounded-lg p-6 flex flex-col items-center shadow">
+            <div className="text-4xl font-extrabold bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent drop-shadow-glow mb-2">{completedMissions}</div>
+            <div className="text-gray-300 text-lg font-semibold">Missions Completed</div>
           </div>
         </div>
       </div>
 
       {/* Level Milestones */}
-      <div className="bg-solo-dark border border-gray-800 rounded-lg p-6">
+      <div className="bg-solo-dark border border-gray-800 rounded-lg p-6 shadow-lg">
         <div className="flex items-center gap-3 mb-6">
-          <div className="h-10 w-10 rounded-full bg-solo-primary/20 flex items-center justify-center text-solo-primary">
-            <Award size={20} />
+          <div className="h-12 w-12 rounded-full bg-gradient-to-br from-solo-primary/30 to-indigo-500/30 flex items-center justify-center text-solo-primary shadow-md">
+            <Award size={24} />
           </div>
           <div>
-            <h2 className="text-xl font-bold">Level Milestones</h2>
-            <p className="text-gray-400 text-sm">Your journey so far</p>
+            <h2 className="text-2xl font-bold bg-gradient-to-r from-solo-primary to-solo-secondary bg-clip-text text-transparent drop-shadow-glow">Level Milestones</h2>
+            <p className="text-gray-400 text-base italic">Your journey so far</p>
           </div>
         </div>
         
         {/* Progress toward max level */}
         <div className="mb-8">
-          <div className="flex justify-between text-sm mb-2">
+          <div className="flex justify-between text-base font-semibold mb-2 text-gray-300">
             <span>Level {user.level}</span>
             <span>Max Level: 365</span>
           </div>
-          <div className="w-full h-2 bg-gray-800 rounded-full overflow-hidden">
+          <div className="w-full h-3 bg-gray-800 rounded-full overflow-hidden shadow-inner">
             <div 
-              className="h-full bg-gradient-to-r from-blue-500 to-purple-600" 
+              className="h-full bg-gradient-to-r from-blue-500 to-purple-600 shadow-lg" 
               style={{ width: `${Math.min((user.level / 365) * 100, 100)}%` }}
             />
           </div>
-          <div className="flex justify-center mt-2 text-xs text-gray-400">
+          <div className="flex justify-center mt-2 text-base font-bold bg-gradient-to-r from-solo-primary to-solo-secondary bg-clip-text text-transparent drop-shadow-glow">
             {Math.round((user.level / 365) * 100)}% complete
           </div>
         </div>
@@ -136,12 +139,12 @@ const Milestones = () => {
           <div className="space-y-6 relative">
             {/* Current Level */}
             <div className="ml-10 relative">
-              <div className="absolute -left-14 top-0 w-8 h-8 rounded-full bg-solo-primary flex items-center justify-center">
-                <span className="text-white font-bold">{user.level}</span>
+              <div className="absolute -left-14 top-0 w-10 h-10 rounded-full bg-gradient-to-br from-solo-primary to-solo-secondary flex items-center justify-center shadow-lg">
+                <span className="text-white font-extrabold text-lg drop-shadow-glow">{user.level}</span>
               </div>
-              <div className="bg-gray-800/30 p-4 rounded-lg">
-                <h3 className="text-lg font-bold">Current Level: {user.level}</h3>
-                <p className="text-gray-400">
+              <div className="bg-gray-800/40 p-5 rounded-lg shadow">
+                <h3 className="text-xl font-bold bg-gradient-to-r from-solo-primary to-solo-secondary bg-clip-text text-transparent drop-shadow-glow">Current Level: {user.level}</h3>
+                <p className="text-gray-300 text-base font-semibold">
                   {user.exp} / {user.expToNextLevel} XP to next level
                 </p>
               </div>
@@ -173,21 +176,22 @@ const Milestones = () => {
               
               return (
                 <div key={level} className="ml-10 relative">
-                  <div className={`absolute -left-14 top-0 w-8 h-8 rounded-full flex items-center justify-center
-                    ${achieved ? 'bg-green-500' : 'bg-gray-700'}`}>
+                  <div className={`absolute -left-14 top-0 w-10 h-10 rounded-full flex items-center justify-center
+                    ${achieved ? 'bg-green-500 shadow-lg' : 'bg-gray-700 shadow'}
+                  `}>
                     {achieved ? (
-                      <span className="text-white font-bold">{level}</span>
+                      <span className="text-white font-extrabold text-lg drop-shadow-glow">{level}</span>
                     ) : (
-                      <span className="text-gray-300 font-bold">{level}</span>
+                      <span className="text-gray-300 font-bold text-lg">{level}</span>
                     )}
                   </div>
-                  <div className={`${
-                    achieved ? 'bg-green-500/10 border border-green-500/30' : 'bg-gray-800/30'
-                  } p-4 rounded-lg`}>
-                    <h3 className="text-lg font-bold">
+                  <div className={`$
+                    {achieved ? 'bg-green-500/10 border border-green-500/30 shadow-lg' : 'bg-gray-800/40 shadow'}
+                  p-5 rounded-lg`}>
+                    <h3 className="text-lg font-bold bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent drop-shadow-glow">
                       {achieved ? `Level ${level} - ${milestoneText} - Achieved!` : `Level ${level} - ${milestoneText}`}
                     </h3>
-                    <p className="text-gray-400">
+                    <p className="text-gray-300 text-base font-semibold">
                       {achieved 
                         ? "You've reached this milestone! Keep going!" 
                         : `Reach level ${level} to unlock this milestone and rank up`}

@@ -183,40 +183,45 @@ export function TaskCard({ task }: TaskCardProps) {
     <>
       <div 
         className={cn(
-          "rounded-lg border border-gray-800 bg-solo-dark p-4 transition-all cursor-pointer",
-          task.completed ? "opacity-70" : "hover:border-solo-primary hover:shadow-md"
+          `relative rounded-xl border bg-solo-dark p-5 transition-all cursor-pointer flex flex-col shadow-md overflow-hidden ${task.completed ? 'opacity-60' : 'hover:border-solo-primary hover:shadow-lg'}`
         )}
         onClick={handleEditClick}
       >
-        <div className="flex justify-between items-start">
+        {/* Colored left accent bar */}
+        <div className={`absolute left-0 top-0 h-full w-2 rounded-l-xl ${getDifficultyColor(task.difficulty)}`}></div>
+        <div className="flex justify-between items-start gap-4">
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-2">
-              <div className={`h-2 w-2 rounded-full ${getDifficultyColor(task.difficulty)}`} />
-              <span className="text-xs text-gray-400 uppercase">{task.difficulty}</span>
-              <div className={`ml-2 px-2 py-0.5 text-xs rounded ${getCategoryColor(task.category)}`}>
+              {/* Difficulty badge */}
+              <span className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold uppercase ${getDifficultyColor(task.difficulty)} bg-opacity-20 bg-solo-primary/10`}> 
+                <AlertCircle className="h-3 w-3 mr-1" />
+                {task.difficulty}
+              </span>
+              {/* Category badge */}
+              <span className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold capitalize ${getCategoryColor(task.category)} bg-opacity-20 bg-solo-primary/10 ml-1`}> 
+                <CheckCircle className="h-3 w-3 mr-1" />
                 {task.category}
-              </div>
+              </span>
             </div>
-            
+            {/* Title with gradient and shadow */}
             <h3 className={cn(
-              "font-medium mb-1",
-              task.completed ? "line-through text-gray-500" : "text-solo-text"
+              "font-extrabold text-lg mb-1 bg-gradient-to-r from-solo-primary to-solo-secondary bg-clip-text text-transparent drop-shadow-glow",
+              task.completed ? "line-through text-gray-500 opacity-60" : ""
             )}>
               {task.title}
             </h3>
-            
+            {/* Description */}
             {task.description && (
-              <p className="text-sm text-gray-400 mb-3">{task.description}</p>
+              <p className="text-sm text-gray-400 mb-3 italic">{task.description}</p>
             )}
-            
-            <div className="flex justify-between items-center">
-              <div className="text-xs text-solo-primary font-semibold">
-                +{task.expReward} EXP
-              </div>
-              
+            {/* EXP and Deadline */}
+            <div className="flex justify-between items-center mt-2">
+              <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold bg-gradient-to-r from-yellow-400 to-yellow-500 text-white shadow-md">
+                <span className="text-yellow-900 drop-shadow-glow">+{task.expReward} EXP</span>
+              </span>
               {deadlineInfo && !task.completed && (
-                <div className={cn(
-                  "flex items-center text-xs px-2 py-1 rounded-full",
+                <span className={cn(
+                  "flex items-center text-xs px-2 py-1 rounded-full font-semibold shadow-sm",
                   deadlineInfo.isPast 
                     ? "bg-red-500/20 text-red-400 animate-pulse" 
                     : deadlineInfo.urgencyLevel === "critical"
@@ -227,34 +232,33 @@ export function TaskCard({ task }: TaskCardProps) {
                       ? "bg-yellow-500/20 text-yellow-400"
                     : "bg-indigo-500/20 text-indigo-300"
                 )}>
-                  <Clock className="h-3 w-3 mr-1" />
+                  <Clock className="h-4 w-4 mr-1" />
                   {deadlineInfo.text}
-                </div>
+                </span>
               )}
             </div>
           </div>
-          
-          <div className="flex space-x-2">
+          {/* Edit/Delete Buttons */}
+          <div className="flex flex-col space-y-2 items-end ml-4">
             <button 
               onClick={(e) => {
                 e.stopPropagation(); // Prevent card click from triggering
                 handleEditClick(e);
               }}
-              className="p-1.5 rounded hover:bg-blue-500/20 text-blue-500"
+              className="p-2 rounded-full hover:bg-blue-500/20 text-blue-500 transition-colors"
               aria-label="Edit task"
             >
-              <Edit size={18} />
+              <Edit size={20} />
             </button>
-            
             <button 
               onClick={(e) => {
                 e.stopPropagation(); // Prevent card click from triggering
                 deleteTask(task.id);
               }}
-              className="p-1.5 rounded hover:bg-red-500/20 text-red-500"
+              className="p-2 rounded-full hover:bg-red-500/20 text-red-500 transition-colors"
               aria-label="Delete task"
             >
-              <Trash2 size={18} />
+              <Trash2 size={20} />
             </button>
           </div>
         </div>
