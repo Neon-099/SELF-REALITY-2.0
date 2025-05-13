@@ -4,48 +4,13 @@ import { Button } from '@/components/ui/button';
 import { CheckCircle, Swords, Star, ListTodo, ChevronDown, ChevronUp, Sword, Coins, Filter, Database, X, CalendarClock, Shield, Clock, Eye, EyeOff } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from '@/hooks/use-toast';
-import { DailyWinCategory, Difficulty } from '@/lib/types';
+import { DailyWinCategory, Difficulty, Quest, Task as QuestTask } from '@/lib/types';
 import { isSameDay, format } from 'date-fns';
 import { getDB } from '@/lib/db';
 import { DateTimePicker } from '@/components/ui/date-time-picker';
 import SideQuestCard from '../components/SideQuestCard';
 import DailyQuestCard from '../components/DailyQuestCard';
 import MainQuestCard from '../components/MainQuestCard';
-
-// Define the Quest interface
-export interface Quest {
-  id: string;
-  title: string;
-  description: string;
-  isMainQuest: boolean;
-  expReward: number;
-  deadline?: Date; // Optional as it might not always be set
-  difficulty: Difficulty;
-  completed: boolean;
-  isDaily?: boolean; // Optional for daily quests
-  category?: DailyWinCategory | ''; // Optional for daily quests
-  tasks?: QuestTask[]; // Assuming you might have tasks associated
-  // Add any other properties that a quest object has
-  // For example, if progress is tracked:
-  // progress?: number;
-  // totalTasks?: number;
-  createdAt: Date;
-  completedAt?: Date;
-  failedAt?: Date; 
-  isBonus?: boolean;
-  bonusExp?: number;
-  systemMessage?: string;
-  isRecoveryQuest?: boolean;
-}
-
-// Define a type for quest tasks if you have them
-export interface QuestTask {
-  id: string;
-  title: string;
-  description: string;
-  completed: boolean;
-  // Add any other task properties
-}
 
 // Define a type for quest types
 type QuestType = 'main' | 'side' | 'daily';
@@ -76,6 +41,7 @@ const AddQuestDialog = ({ onClose }: { onClose: () => void }) => {
       medium: 30,
       hard: 60,
       boss: 100,
+      normal: 20,
     };
     const expPoints = expRewards[difficulty];
     
@@ -99,7 +65,7 @@ const AddQuestDialog = ({ onClose }: { onClose: () => void }) => {
     }
     
     // Add the quest
-    addQuest(title, description, isMainQuest, expPoints, deadlineDate, difficulty);
+    addQuest(title, description, isMainQuest, expPoints, deadlineDate, difficulty, category, questType === 'daily');
     
     // After quest is added, if it's a daily quest, find and update it
     if (questType === 'daily') {
@@ -114,12 +80,7 @@ const AddQuestDialog = ({ onClose }: { onClose: () => void }) => {
         
         if (newQuest) {
           // Update with daily quest properties
-          const updates: any = { isDaily: true };
-          
-          // Only include category if one was selected
-          if (category !== '') {
-            updates.category = category;
-          }
+          const updates: Partial<Quest> = { isDaily: true, category };
           
           updateQuest(newQuest.id, updates);
           
@@ -217,6 +178,7 @@ const AddQuestDialog = ({ onClose }: { onClose: () => void }) => {
           <option value="medium">Medium (30 XP)</option>
           <option value="hard">Hard (60 XP)</option>
           <option value="boss">Boss (100 XP)</option>
+          <option value="normal">Normal (20 XP)</option>
         </select>
       </div>
       
@@ -460,13 +422,24 @@ const Quests = () => {
       try {
         const questStore = db.transaction('quests').objectStore('quests');
         const rawFetchedQuests = await questStore.getAll(); 
-        fetchedQuestsFromDB = rawFetchedQuests.map((q: any) => ({
-          ...q,
+        fetchedQuestsFromDB = rawFetchedQuests.map((q: any): Quest => ({
+          id: q.id || String(Date.now() + Math.random()),
+          title: q.title || 'Untitled Quest',
+          description: q.description,
           isMainQuest: q.isMainQuest !== undefined ? q.isMainQuest : false, 
           difficulty: q.difficulty !== undefined ? q.difficulty : 'easy',
           createdAt: q.createdAt ? new Date(q.createdAt) : new Date(),
           completed: q.completed !== undefined ? q.completed : false,
-        })) as Quest[];
+          expReward: q.expReward || expRewards[q.difficulty as Difficulty || 'easy'],
+          tasks: q.tasks || [],
+          started: q.started !== undefined ? q.started : false,
+          category: q.category || (q.isDaily ? 'mental' : undefined),
+          deadline: q.deadline ? new Date(q.deadline) : undefined,
+          completedAt: q.completedAt ? new Date(q.completedAt) : undefined,
+          missed: q.missed,
+          isRecoveryQuest: q.isRecoveryQuest,
+          isDaily: q.isDaily,
+        }));
       } catch (error) {
         if (error instanceof Error) {
           console.error('Error fetching quests directly from DB:', error.message);
@@ -478,13 +451,24 @@ const Quests = () => {
       let questsToSet: Quest[] = fetchedQuestsFromDB;
 
       if (storeData && storeData.state && Array.isArray(storeData.state.quests)) {
-        questsToSet = (storeData.state.quests as any[]).map(q => ({
-            ...q,
+        questsToSet = (storeData.state.quests as any[]).map((q: any): Quest => ({
+            id: q.id || String(Date.now() + Math.random()),
+            title: q.title || 'Untitled Quest',
+            description: q.description,
             isMainQuest: q.isMainQuest !== undefined ? q.isMainQuest : false,
             difficulty: q.difficulty !== undefined ? q.difficulty : 'easy',
             createdAt: q.createdAt ? new Date(q.createdAt) : new Date(),
             completed: q.completed !== undefined ? q.completed : false,
-        })) as Quest[];
+            expReward: q.expReward || expRewards[q.difficulty as Difficulty || 'easy'],
+            tasks: q.tasks || [],
+            started: q.started !== undefined ? q.started : false,
+            category: q.category || (q.isDaily ? 'mental' : undefined),
+            deadline: q.deadline ? new Date(q.deadline) : undefined,
+            completedAt: q.completedAt ? new Date(q.completedAt) : undefined,
+            missed: q.missed,
+            isRecoveryQuest: q.isRecoveryQuest,
+            isDaily: q.isDaily,
+        }));
       }
 
       setQuestsData(questsToSet);
