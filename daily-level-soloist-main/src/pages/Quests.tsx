@@ -373,7 +373,7 @@ const AddTaskDialog = ({ questId, onClose }: { questId: string; onClose: () => v
   );
 };
 
-const QuestTasks = ({ quest }: { quest: any }) => {
+const QuestTasks = ({ quest }: { quest: Quest }) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const completeQuestTask = useSoloLevelingStore(state => state.completeQuestTask);
 
@@ -396,11 +396,11 @@ const QuestTasks = ({ quest }: { quest: any }) => {
         </Dialog>
       </div>
       
-      {quest.tasks.length === 0 ? (
+      {quest.tasks?.length === 0 ? (
         <p className="text-sm text-gray-500 italic">No tasks added yet. Break down your quest into smaller tasks.</p>
       ) : (
         <div className="space-y-2">
-          {quest.tasks.map((task: any) => (
+          {quest.tasks?.map((task: QuestTask) => (
             <div 
               key={task.id}
               className="flex items-center justify-between p-2 bg-gray-800/50 rounded-md"
@@ -453,21 +453,33 @@ const Quests = () => {
       setIsLoadingDb(true);
       const db = await getDB();
       
-      // Get the raw data from the database
       const storeData = await db.get('store', 'soloist-store');
       
-      // Get direct quest data if available
-      let questsData = [];
+      let fetchedQuests: Quest[] = []; // Use a differently named, typed variable
       try {
         const questStore = db.transaction('quests').objectStore('quests');
-        questsData = await questStore.getAll();
+        fetchedQuests = await questStore.getAll(); // Assign to the new typed variable
       } catch (error) {
-        console.error('Error fetching quests directly:', error);
+        // Apply error handling fix for this inner catch block too
+        if (error instanceof Error) {
+          console.error('Error fetching quests directly:', error.message);
+        } else {
+          console.error('An unknown error occurred fetching quests directly:', error);
+        }
       }
       
+      // Update the state with the fetched quests
+      // If storeData.state.quests is the source of truth and is typed, use that.
+      // For now, assuming directQuests (fetchedQuests) is what we want for questsData state.
+      if (storeData && storeData.state && Array.isArray(storeData.state.quests)) {
+        setQuestsData(storeData.state.quests as Quest[]); // Assuming storeData.state.quests matches Quest[]
+      } else {
+        setQuestsData(fetchedQuests); // Fallback to directly fetched quests
+      }
+
       setDbContents({
-        zustandStore: storeData ? JSON.parse(storeData) : null,
-        directQuests: questsData
+        zustandStore: storeData ? JSON.parse(storeData) : null, // Be cautious with JSON.parse if storeData is not a string
+        directQuests: fetchedQuests 
       });
       
       toast({
@@ -475,6 +487,7 @@ const Quests = () => {
         description: "IndexedDB data has been retrieved successfully.",
       });
     } catch (error) {
+      // This catch block should already have the instanceof Error check from previous edit
       if (error instanceof Error) {
         console.error("Error loading data from DB:", error.message);
         toast({
@@ -502,7 +515,7 @@ const Quests = () => {
   };
 
   // Filter active quests
-  const activeQuests = quests.filter(quest => {
+  const activeQuests = questsData.filter(quest => {
     // Skip completed quests
     if (quest.completed) return false;
     
@@ -520,13 +533,14 @@ const Quests = () => {
   });
 
   // Get daily quests (if any have the isDaily flag)
-  const dailyQuests = activeQuests.filter(quest => 
+  const dailyQuests = questsData.filter(quest => 
     quest.isDaily === true && 
-    (!quest.completedAt || isSameDay(new Date(quest.completedAt), new Date()))
+    (!quest.completedAt || isSameDay(new Date(quest.completedAt), new Date())) &&
+    !quest.completed // ensure it's not completed if activeQuests doesn't already filter this
   );
 
   // Filter completed quests for today only
-  const completedQuests = quests.filter(quest => 
+  const completedQuests = questsData.filter(quest => 
     quest.completed && 
     quest.completedAt && 
     isSameDay(new Date(quest.completedAt), new Date())
