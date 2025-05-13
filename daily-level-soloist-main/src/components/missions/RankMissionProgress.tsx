@@ -7,9 +7,8 @@ import { getAvailableMissions } from '@/data/predefined-missions';
 import { updateMission } from '@/lib/db';
 import { useToast } from '@/components/ui/use-toast';
 import { Badge } from '@/components/ui/badge';
-import { Rank } from '@/lib/types';
+import { Rank, Mission } from '@/lib/types';
 import { PredefinedMission } from '@/data/predefined-missions';
-import { CompletedMission } from '@/lib/store/slices/mission-slice';
 import { motion } from 'framer-motion';
 
 interface RankMissionProgressProps {
@@ -24,12 +23,9 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
   const { toast } = useToast();
   const [currentDay, setCurrentDay] = useState(1);
   const completeMission = useSoloLevelingStore(state => state.completeMission);
-  const completedMissionIds = useSoloLevelingStore(state => state.completedMissionIds);
+  const completedMissionHistory = useSoloLevelingStore(state => state.completedMissionHistory);
   const [isLoading, setIsLoading] = useState(false);
   const [showAll, setShowAll] = useState(false);
-  
-  // Access store state
-  const { completedMissionHistory } = useSoloLevelingStore();
   
   // Ensure missions is always an array
   const safeMissions = Array.isArray(missions) ? missions : [];
@@ -59,7 +55,9 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
       });
       return;
     }
-    if (completedMissionIds.includes(mission.id)) {
+    
+    // Check if mission is already completed
+    if (completedMissionHistory.some(m => m.id === mission.id)) {
       toast({
         title: "Mission Already Completed",
         description: `You have already claimed the reward for "${mission.title}"`,
@@ -67,6 +65,7 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
       });
       return;
     }
+    
     // Complete the mission in the store and persist in IndexedDB
     try {
       await completeMission(mission.id);
@@ -86,7 +85,7 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
   };
   
   // Get total completed missions for this rank
-  const completedCount = missions.filter(m => completedMissionIds.includes(m.id)).length;
+  const completedCount = missions.filter(m => completedMissionHistory.some(cm => cm.id === m.id)).length;
   const completionPercentage = Math.round((completedCount / missions.length) * 100);
   
   // Group missions by day
@@ -208,7 +207,7 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
     }
     
     return dayMissions.map((mission, index) => {
-      const isCompleted = mission.completed || completedMissionIds.includes(mission.id);
+      const isCompleted = mission.completed || completedMissionHistory.some(cm => cm.id === mission.id);
       // Try to find the completed mission in history to get actual EXP earned
       const completedMission = completedMissionHistory.find(cm => cm.id === mission.id);
       const isBoss = mission.difficulty === 'boss';

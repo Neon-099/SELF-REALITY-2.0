@@ -39,7 +39,7 @@ export interface Quest {
   createdAt: Date;
   deadline?: Date;
   difficulty: Difficulty;
-  category: DailyWinCategory;
+  category: DailyWinCategory | '';  // Allow empty string
   missed?: boolean; // To track if the deadline was missed
   isRecoveryQuest?: boolean; // To mark quests that are part of redemption challenges
   isDaily?: boolean; // To mark quests that are daily quests
@@ -53,11 +53,12 @@ export interface Mission {
   expReward: number;
   createdAt: Date;
   completedAt?: Date;
-  rank?: string;
+  rank?: Rank;  // Use the Rank type instead of string
   day?: number;
   releaseDate?: Date;
   missed?: boolean; // To track if the deadline was missed
   difficulty?: 'normal' | 'boss'; // Difficulty level of the mission
+  expEarned?: number; // Added to track actual EXP earned (for compatibility with MissionBoard.tsx)
 }
 
 export type Stat = 'physical' | 'cognitive' | 'emotional' | 'spiritual' | 'social';

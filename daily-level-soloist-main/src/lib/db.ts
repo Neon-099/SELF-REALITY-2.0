@@ -268,20 +268,22 @@ export async function updateMission(mission: Mission) {
   }
 }
 
-export async function getMissionsByDay(date: Date) {
-  // Retrieve from the Zustand store instead
+export async function getMissionsByDay(date: Date): Promise<Mission[]> {
   try {
     const completedMissions = await getCompletedMissions();
-  return completedMissions.filter((mission) => {
-    const missionDate = new Date(mission.completedAt);
-    return (
-      missionDate.getDate() === date.getDate() &&
-      missionDate.getMonth() === date.getMonth() &&
-      missionDate.getFullYear() === date.getFullYear()
-    );
-  });
+    return completedMissions.filter((mission: any) => {
+      // In case we get missions from other sources, ensure we have a completedAt date
+      if (!mission.completedAt) return false;
+      
+      const missionDate = new Date(mission.completedAt);
+      return (
+        missionDate.getDate() === date.getDate() &&
+        missionDate.getMonth() === date.getMonth() &&
+        missionDate.getFullYear() === date.getFullYear()
+      );
+    });
   } catch (error) {
-    console.error("Error getting missions by day:", error);
+    console.error('Error fetching missions by day:', error);
     return [];
   }
 }

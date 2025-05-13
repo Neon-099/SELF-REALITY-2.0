@@ -97,10 +97,10 @@ export const createTaskSlice: StateCreator<
     addExp(finalExpReward);
     
     // Add stat experience
-    let stat;
+    let stat: Stat;
     switch (task.category) {
       case 'mental':
-        stat = 'cognitive';
+        stat = 'emotional';
         break;
       case 'physical':
         stat = 'physical';

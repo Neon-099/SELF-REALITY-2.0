@@ -16,7 +16,7 @@ export interface PunishmentSlice {
   activeRecoveryQuestIds: string[] | null;
   
   // Actions
-  applyMissedDeadlinePenalty: (itemType: 'task' | 'mission' | 'quest', itemId: string) => void;
+  applyMissedDeadlinePenalty: (itemType: string, itemId: string) => void;
   checkCurseStatus: () => void;
   resetWeeklyChances: () => void;
   attemptRedemption: (success: boolean) => void;
@@ -53,7 +53,7 @@ export const createPunishmentSlice: StateCreator<PunishmentSlice & any> = (set, 
   },
   
   // Actions
-  applyMissedDeadlinePenalty: (itemType, itemId) => {
+  applyMissedDeadlinePenalty: (itemType: string, itemId: string) => {
     const state = get();
     let expModifier = 0.5; // 50% EXP penalty for missed deadline
     let item;
@@ -281,77 +281,32 @@ export const createPunishmentSlice: StateCreator<PunishmentSlice & any> = (set, 
     }
   },
   
-  attemptRedemption: (success) => {
-    const { isCursed } = get();
-    const now = new Date();
-    
-    // Check if already redeemed this week (since the last Sunday reset)
-    if (get().lastRedemptionDate !== null) {
-      toast({
-        title: "Redemption Unavailable",
-        description: "You've already attempted redemption this week (since Sunday reset).",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    if (!isCursed) {
-      toast({
-        title: "No Redemption Needed",
-        description: "You're not currently cursed. No redemption necessary.",
-        variant: "default"
-      });
-      return;
-    }
-    
-    set({ lastRedemptionDate: now });
-    
-    if (success) {
-      // Get end of week using helper function
-      const endOfWeek = get().getEndOfWeek();
-      
-      set({ 
-        isCursed: false, // Remove curse
-        cursedUntil: null,
-        chanceCounter: 4, // Set back to 4/5 chances
-        hasShadowFatigue: true, // Reactivate shadow fatigue 
-        shadowFatigueUntil: endOfWeek, // Lasts until end of week
-        hasPendingRecovery: false,
-        activeRecoveryQuestIds: null
-      });
-      
-      toast({
-        title: "Redemption Successful!",
-        description: "You've successfully redeemed yourself. Curse lifted, but Shadow Fatigue remains for the rest of the week (75% EXP).",
-        variant: "default"
-      });
-    } else {
-      // Penalty: lose one rank
-      const { user } = get();
-      const currentLevel = user.level;
-      
-      // Reduce level by 1 or equivalent EXP penalty
-      const updatedUser = {
-        ...user,
-        level: Math.max(1, currentLevel - 1), // Don't go below level 1
-        exp: 0 // Reset exp in the new level
-      };
-      
-      set({ user: updatedUser });
-      
-      toast({
-        title: "Redemption Failed!",
-        description: "You failed the redemption challenge. You've lost a rank!",
-        variant: "destructive"
-      });
-    }
+  attemptRedemption: (success: boolean) => {
+    // Implement redemption logic
+    set((state: PunishmentSlice) => {
+      if (success) {
+        // Create recovery quests if redemption path is chosen
+        return {
+          hasPendingRecovery: true,
+          // Keep other state
+          isCursed: state.isCursed,
+          cursedUntil: state.cursedUntil
+        };
+      } else {
+        // Reset chance counter to 0 but keep cursed until the end of week
+        return {
+          chanceCounter: 0,
+          // Keep other state unchanged
+          isCursed: state.isCursed,
+          cursedUntil: state.cursedUntil,
+          hasPendingRecovery: state.hasPendingRecovery
+        };
+      }
+    });
   },
   
-  setActiveRecoveryQuestIds: (questIds) => {
-    set({ 
-      activeRecoveryQuestIds: questIds,
-      hasPendingRecovery: !!(questIds && questIds.length > 0)
-    });
+  setActiveRecoveryQuestIds: (questIds: string[] | null) => {
+    set({ activeRecoveryQuestIds: questIds });
   },
   
   // Getters

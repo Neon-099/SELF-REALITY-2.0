@@ -9,31 +9,42 @@ import { useToast } from '@/components/ui/use-toast';
 import { Calendar, DayClickEventHandler } from '@/components/ui/calendar';
 import { format, isEqual, isBefore, isAfter, isToday, addDays } from 'date-fns';
 import { CalendarIcon, ChevronLeft, ChevronRight, Calendar as CalendarDayIcon } from 'lucide-react';
-import { CompletedMission } from '@/lib/store/slices/mission-slice';
+import { Mission } from '@/lib/types';
 
 export default function MissionBoard() {
   const { toast } = useToast();
   const user = useSoloLevelingStore(state => state.user);
   const completeMission = useSoloLevelingStore(state => state.completeMission);
-  const completedMissionIds = useSoloLevelingStore(state => state.completedMissionIds);
+  const missions = useSoloLevelingStore(state => state.missions);
   const completedMissionHistory = useSoloLevelingStore(state => state.completedMissionHistory);
-  const loadCompletedMissions = useSoloLevelingStore(state => state.loadCompletedMissions);
-  const getMissionsByDay = useSoloLevelingStore(state => state.getMissionsByDay);
   
   const [availableMissions, setAvailableMissions] = useState<PredefinedMission[]>([]);
   const [upcomingMissions, setUpcomingMissions] = useState<PredefinedMission[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [missionsByDay, setMissionsByDay] = useState<CompletedMission[]>([]);
+  const [missionsByDay, setMissionsByDay] = useState<Mission[]>([]);
   const [viewMode, setViewMode] = useState<'calendar' | 'list'>('list');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentDay, setCurrentDay] = useState<number>(1);
   const [showDayFilter, setShowDayFilter] = useState<boolean>(false);
 
+  // Get the missions for a specific day
+  const getMissionsByDay = (date: Date): Mission[] => {
+    return completedMissionHistory.filter((mission: Mission) => {
+      const missionDate = new Date(mission.completedAt as Date);
+      return (
+        missionDate.getDate() === date.getDate() &&
+        missionDate.getMonth() === date.getMonth() &&
+        missionDate.getFullYear() === date.getFullYear()
+      );
+    });
+  };
+
   // Load completed missions on mount
   useEffect(() => {
-    loadCompletedMissions();
-  }, [loadCompletedMissions]);
+    // The loadCompletedMissions function is no longer needed
+    // as completedMissionHistory is directly available from state
+  }, []);
 
   useEffect(() => {
     const fetchMissions = async () => {
@@ -71,10 +82,12 @@ export default function MissionBoard() {
       const missionsForDay = getMissionsByDay(selectedDate);
       setMissionsByDay(missionsForDay);
     }
-  }, [selectedDate, completedMissionHistory, getMissionsByDay]);
+  }, [selectedDate, completedMissionHistory]);
 
   const handleClaimReward = async (mission: PredefinedMission) => {
-    if (completedMissionIds.includes(mission.id)) {
+    // Check if mission is already completed by checking completedMissionHistory
+    const isCompleted = completedMissionHistory.some(m => m.id === mission.id);
+    if (isCompleted) {
       toast({
         title: "Mission Already Completed",
         description: `You have already claimed the reward for "${mission.title}"`,
@@ -85,9 +98,6 @@ export default function MissionBoard() {
 
     // Complete the mission in the store
     await completeMission(mission.id);
-    
-    // Reload completed missions to ensure UI is up to date
-    await loadCompletedMissions();
 
     toast({
       title: "Mission Reward Claimed!",
@@ -256,60 +266,55 @@ export default function MissionBoard() {
         </div>
       ) : (
         <Tabs defaultValue="available" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="available">Available ({availableMissions.length})</TabsTrigger>
-            <TabsTrigger value="upcoming">Upcoming ({upcomingMissions.length})</TabsTrigger>
-            <TabsTrigger value="completed">Completed ({completedMissionIds.length})</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="available">Available</TabsTrigger>
+            <TabsTrigger value="completed">Completed ({completedMissionHistory.length})</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="available" className="space-y-4 mt-4">
-            {availableMissions.length === 0 ? (
-              <div className="text-center p-4">
-                {showDayFilter 
-                  ? `No available missions at your current rank for Day ${currentDay}` 
-                  : 'No available missions at your current rank'}
-              </div>
+          <TabsContent value="available" className="space-y-4">
+            {showDayFilter && availableMissions
+              .filter(mission => !completedMissionHistory.some(m => m.id === mission.id))
+              .length === 0 ? (
+              <Card>
+                <CardContent className="pt-6 text-center">
+                  <p className="text-muted-foreground">No missions available for Day {currentDay}.</p>
+                  <Button onClick={incrementCurrentDay} className="mt-4">Check Next Day</Button>
+                </CardContent>
+              </Card>
             ) : (
-              availableMissions
-                .filter(mission => !completedMissionIds.includes(mission.id))
-                .map((mission) => (
-                  <MissionCard 
-                    key={mission.id} 
-                    mission={mission} 
-                    isCompleted={false}
-                    onClaim={() => handleClaimReward(mission)}
-                  />
-                ))
+              <>
+                {availableMissions
+                  .filter(mission => !completedMissionHistory.some(m => m.id === mission.id))
+                  .map(mission => (
+                    <MissionCard 
+                      key={mission.id} 
+                      mission={mission} 
+                      onClaim={() => handleClaimReward(mission)} 
+                    />
+                  ))}
+              </>
             )}
           </TabsContent>
           
-          <TabsContent value="upcoming" className="space-y-4 mt-4">
-            {upcomingMissions.length === 0 ? (
-              <div className="text-center p-4">No upcoming missions</div>
+          <TabsContent value="completed" className="space-y-4">
+            {completedMissionHistory.length === 0 ? (
+              <Card>
+                <CardContent className="pt-6 text-center">
+                  <p className="text-muted-foreground">No completed missions yet. Complete a mission to see it here!</p>
+                </CardContent>
+              </Card>
             ) : (
-              upcomingMissions.map((mission) => (
-                <MissionCard 
-                  key={mission.id} 
-                  mission={mission} 
-                  isUpcoming
-                />
-              ))
-            )}
-          </TabsContent>
-          
-          <TabsContent value="completed" className="space-y-4 mt-4">
-            {completedMissionIds.length === 0 ? (
-              <div className="text-center p-4">You haven't completed any missions yet</div>
-            ) : (
-              availableMissions
-                .filter((mission) => completedMissionIds.includes(mission.id))
-                .map((mission) => (
-                  <MissionCard 
-                    key={mission.id} 
-                    mission={mission} 
-                    isCompleted={true}
-                  />
-                ))
+              <>
+                {availableMissions
+                  .filter((mission) => completedMissionHistory.some(m => m.id === mission.id))
+                  .map(mission => (
+                    <MissionCard 
+                      key={mission.id} 
+                      mission={mission} 
+                      isCompleted={true} 
+                    />
+                  ))}
+              </>
             )}
           </TabsContent>
         </Tabs>

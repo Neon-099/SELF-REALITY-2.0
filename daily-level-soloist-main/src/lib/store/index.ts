@@ -12,7 +12,7 @@ import { getDB } from '../db';
 export type StoreState = TaskSlice & QuestSlice & MissionSlice & UserSlice & ShopSlice & PunishmentSlice;
 
 // Define a custom type that extends PersistOptions and adds onError
-interface CustomPersistOptions<T> extends PersistOptions<T> {
+interface CustomPersistOptions<T> extends PersistOptions<T, T> {
   onError?: (error: Error) => void;
 }
 

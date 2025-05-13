@@ -11,7 +11,7 @@ export interface ShopSlice {
 export const createShopSlice: StateCreator<ShopSlice & any> = (set) => ({
   shopItems: [],
   
-  purchaseItem: (id) => {
+  purchaseItem: (id: string) => {
     set((state: any) => {
       const item = state.shopItems.find((i: ShopItem) => i.id === id);
       if (!item || item.purchased || state.user.gold < item.cost) return state;
@@ -44,7 +44,7 @@ export const createShopSlice: StateCreator<ShopSlice & any> = (set) => ({
     });
   },
   
-  addShopItem: (name, description, cost, type) => {
+  addShopItem: (name: string, description: string, cost: number, type: 'reward' | 'boost' | 'cosmetic') => {
     set((state: ShopSlice) => ({
       shopItems: [
         ...state.shopItems,

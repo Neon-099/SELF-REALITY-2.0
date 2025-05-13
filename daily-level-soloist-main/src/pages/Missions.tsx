@@ -128,7 +128,7 @@ const Missions = () => {
     title: '',
     description: '',
     day: 1,
-    rank: 'F',
+    rank: 'F' as Rank,
     difficulty: 'normal' as Difficulty,
     expReward: '30' // Default XP value
   });
@@ -159,9 +159,9 @@ const Missions = () => {
       newMission.title,
       newMission.description,
       expReward,
-      newMission.rank,
+      newMission.rank as Rank,
       Number(newMission.day),
-      newMission.difficulty
+      newMission.difficulty === 'boss' ? 'boss' : 'normal'
     );
     
     setShowModal(false);
@@ -444,7 +444,7 @@ const Missions = () => {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="mission-rank">Rank</Label>
-                    <Select name="rank" value={newMission.rank} onValueChange={val => setNewMission(n => ({ ...n, rank: val }))}>
+                    <Select name="rank" value={newMission.rank} onValueChange={val => setNewMission(n => ({ ...n, rank: val as Rank }))}>
                       <SelectTrigger id="mission-rank">
                         <SelectValue placeholder="Select rank" />
                       </SelectTrigger>

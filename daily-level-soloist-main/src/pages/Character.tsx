@@ -357,7 +357,8 @@ const Character = () => {
       try {
         const shopStore = db.transaction('shop').objectStore('shop');
         const rawShopData = await shopStore.getAll();
-        shopItemsDataArray = rawShopData as ShopItem[];
+        // Cast through unknown first
+        shopItemsDataArray = rawShopData as unknown as ShopItem[];
       } catch (error) {
         console.error('Error fetching shop items directly:', error);
       }
