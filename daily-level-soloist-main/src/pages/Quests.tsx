@@ -35,6 +35,7 @@ export interface Quest {
   isBonus?: boolean;
   bonusExp?: number;
   systemMessage?: string;
+  isRecoveryQuest?: boolean;
 }
 
 // Define a type for quest tasks if you have them
@@ -55,7 +56,7 @@ const AddQuestDialog = ({ onClose }: { onClose: () => void }) => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [questType, setQuestType] = useState<QuestType>('side');
-  const [difficulty, setDifficulty] = useState<Difficulty>('normal');
+  const [difficulty, setDifficulty] = useState<Difficulty>('easy');
   const [deadline, setDeadline] = useState('');
   const [category, setCategory] = useState<DailyWinCategory | ''>('mental');
 
@@ -70,11 +71,11 @@ const AddQuestDialog = ({ onClose }: { onClose: () => void }) => {
     }
 
     // Get exp reward based on difficulty
-    const expRewards = {
+    const expRewards: { [key in Difficulty]: number } = {
       easy: 15,
       medium: 30,
       hard: 60,
-      boss: 100
+      boss: 100,
     };
     const expPoints = expRewards[difficulty];
     
@@ -140,7 +141,7 @@ const AddQuestDialog = ({ onClose }: { onClose: () => void }) => {
     setTitle('');
     setDescription('');
     setQuestType('side');
-    setDifficulty('normal');
+    setDifficulty('easy');
     setDeadline('');
     setCategory('mental');
     onClose();
@@ -445,7 +446,7 @@ const Quests = () => {
   const [activeFilter, setActiveFilter] = useState<'all' | 'main' | 'side' | 'daily'>('all');
   const [isLoadingDb, setIsLoadingDb] = useState(false);
   const [dbContents, setDbContents] = useState<any>(null);
-  const [questsData, setQuestsData] = useState<Quest[]>([]); // Typed state
+  const [questsData, setQuestsData] = useState<Quest[]>([]);
 
   // Function to load and display IndexedDB data
   const loadDbData = async () => {
@@ -455,31 +456,42 @@ const Quests = () => {
       
       const storeData = await db.get('store', 'soloist-store');
       
-      let fetchedQuests: Quest[] = []; // Use a differently named, typed variable
+      let fetchedQuestsFromDB: Quest[] = [];
       try {
         const questStore = db.transaction('quests').objectStore('quests');
-        fetchedQuests = await questStore.getAll(); // Assign to the new typed variable
+        const rawFetchedQuests = await questStore.getAll(); 
+        fetchedQuestsFromDB = rawFetchedQuests.map((q: any) => ({
+          ...q,
+          isMainQuest: q.isMainQuest !== undefined ? q.isMainQuest : false, 
+          difficulty: q.difficulty !== undefined ? q.difficulty : 'easy',
+          createdAt: q.createdAt ? new Date(q.createdAt) : new Date(),
+          completed: q.completed !== undefined ? q.completed : false,
+        })) as Quest[];
       } catch (error) {
-        // Apply error handling fix for this inner catch block too
         if (error instanceof Error) {
-          console.error('Error fetching quests directly:', error.message);
+          console.error('Error fetching quests directly from DB:', error.message);
         } else {
-          console.error('An unknown error occurred fetching quests directly:', error);
+          console.error('An unknown error occurred fetching quests directly from DB:', error);
         }
       }
       
-      // Update the state with the fetched quests
-      // If storeData.state.quests is the source of truth and is typed, use that.
-      // For now, assuming directQuests (fetchedQuests) is what we want for questsData state.
+      let questsToSet: Quest[] = fetchedQuestsFromDB;
+
       if (storeData && storeData.state && Array.isArray(storeData.state.quests)) {
-        setQuestsData(storeData.state.quests as Quest[]); // Assuming storeData.state.quests matches Quest[]
-      } else {
-        setQuestsData(fetchedQuests); // Fallback to directly fetched quests
+        questsToSet = (storeData.state.quests as any[]).map(q => ({
+            ...q,
+            isMainQuest: q.isMainQuest !== undefined ? q.isMainQuest : false,
+            difficulty: q.difficulty !== undefined ? q.difficulty : 'easy',
+            createdAt: q.createdAt ? new Date(q.createdAt) : new Date(),
+            completed: q.completed !== undefined ? q.completed : false,
+        })) as Quest[];
       }
 
+      setQuestsData(questsToSet);
+
       setDbContents({
-        zustandStore: storeData ? JSON.parse(storeData) : null, // Be cautious with JSON.parse if storeData is not a string
-        directQuests: fetchedQuests 
+        zustandStore: storeData ? JSON.parse(storeData) : null,
+        directQuests: fetchedQuestsFromDB 
       });
       
       toast({
@@ -487,7 +499,6 @@ const Quests = () => {
         description: "IndexedDB data has been retrieved successfully.",
       });
     } catch (error) {
-      // This catch block should already have the instanceof Error check from previous edit
       if (error instanceof Error) {
         console.error("Error loading data from DB:", error.message);
         toast({
