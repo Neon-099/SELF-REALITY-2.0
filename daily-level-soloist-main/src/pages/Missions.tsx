@@ -243,6 +243,13 @@ const Missions = () => {
     setCurrentRankIndex(prev => Math.min(rankLevels.length - 1, prev + 1));
   };
 
+  const handleSelectRank = (index: number) => {
+    console.log(`Missions: Setting current rank index to ${index}`);
+    if (index >= 0 && index < rankLevels.length) {
+      setCurrentRankIndex(index);
+    }
+  };
+
   const currentRank = rankLevels[currentRankIndex];
 
   // Helper function to safely render recent missions
@@ -484,6 +491,7 @@ const Missions = () => {
               currentRankIndex={currentRankIndex}
               onPrevRank={handlePrevRank}
               onNextRank={handleNextRank}
+              onSelectRank={handleSelectRank}
             />
           </div>
           {/* Mission section title */}
