@@ -12,6 +12,7 @@ import { toast } from '@/hooks/use-toast';
 import { predefinedMissions } from '@/data/predefined-missions';
 import { endOfDay } from 'date-fns';
 import { getDB } from '@/lib/db';
+import { Quest, ShopItem } from '@/lib/types';
 
 const rankDetails = [
   {
@@ -328,6 +329,10 @@ const Character = () => {
   const [dbContents, setDbContents] = useState<any>(null);
   const [isLoadingDb, setIsLoadingDb] = useState(false);
 
+  // Type the specific data arrays appropriately
+  const [questsData, setQuestsData] = useState<Quest[]>([]);
+  const [shopItemsData, setShopItemsData] = useState<ShopItem[]>([]);
+
   // Function to load and display IndexedDB data
   const loadDbData = async () => {
     try {
@@ -338,27 +343,32 @@ const Character = () => {
       const storeData = await db.get('store', 'soloist-store');
       
       // Get direct quest data if available
-      let questsData = [];
+      let questsDataArray: Quest[] = [];
       try {
         const questStore = db.transaction('quests').objectStore('quests');
-        questsData = await questStore.getAll();
+        const rawQuestsData = await questStore.getAll();
+        questsDataArray = rawQuestsData as Quest[];
       } catch (error) {
         console.error('Error fetching quests directly:', error);
       }
       
       // Get shop items data
-      let shopItemsData = [];
+      let shopItemsDataArray: ShopItem[] = [];
       try {
         const shopStore = db.transaction('shop').objectStore('shop');
-        shopItemsData = await shopStore.getAll();
+        const rawShopData = await shopStore.getAll();
+        shopItemsDataArray = rawShopData as ShopItem[];
       } catch (error) {
         console.error('Error fetching shop items directly:', error);
       }
       
+      setQuestsData(questsDataArray);
+      setShopItemsData(shopItemsDataArray);
+      
       setDbContents({
         zustandStore: storeData ? JSON.parse(storeData) : null,
-        directQuests: questsData,
-        shopItems: shopItemsData
+        directQuests: questsDataArray,
+        shopItems: shopItemsDataArray
       });
       
       toast({
@@ -369,7 +379,7 @@ const Character = () => {
       console.error('Error loading IndexedDB data:', error);
       toast({
         title: "Database Error",
-        description: `Failed to load IndexedDB: ${error.message}`,
+        description: `Failed to load IndexedDB: ${error instanceof Error ? error.message : String(error)}`,
         variant: "destructive"
       });
     } finally {

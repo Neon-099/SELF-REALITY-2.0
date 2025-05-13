@@ -6,10 +6,10 @@ import { toast } from '@/hooks/use-toast';
 
 export interface QuestSlice {
   quests: Quest[];
-  addQuest: (title: string, description: string, isMainQuest: boolean, expReward: number, deadline?: Date, difficulty?: Difficulty) => void;
+  addQuest: (title: string, description: string, isMainQuest: boolean, expReward: number, deadline?: Date, difficulty?: Difficulty, category?: DailyWinCategory | '', isDaily?: boolean) => void;
   completeQuest: (id: string) => void;
   startQuest: (id: string) => void;
-  addQuestTask: (questId: string, title: string, description: string, category: DailyWinCategory, difficulty: Difficulty) => void;
+  addQuestTask: (questId: string, title: string, description: string, category: DailyWinCategory, difficulty: Difficulty, deadline?: Date) => void;
   completeQuestTask: (questId: string, taskId: string) => void;
   canCompleteQuest: (id: string) => boolean;
   updateQuest: (id: string, updates: Partial<Quest>) => void;
@@ -41,7 +41,7 @@ const attributeToDailyWin = (attributeCategory: string): DailyWinCategory | null
 
 export const createQuestSlice: StateCreator<QuestSlice & any> = (set, get) => ({
   quests: [],
-  addQuest: (title, description, isMainQuest, expReward, deadline, difficulty = 'easy') => {
+  addQuest: (title, description, isMainQuest, expReward, deadline, difficulty = 'easy', category = 'mental', isDaily = false) => {
     set((state: QuestSlice) => ({
       quests: [
         ...state.quests,
@@ -57,7 +57,8 @@ export const createQuestSlice: StateCreator<QuestSlice & any> = (set, get) => ({
           deadline,
           started: false,
           difficulty,
-          category: 'mental' // Default category
+          category, // Use passed category
+          isDaily // Set isDaily flag
         }
       ]
     }));
@@ -69,7 +70,7 @@ export const createQuestSlice: StateCreator<QuestSlice & any> = (set, get) => ({
       )
     }));
   },
-  addQuestTask: (questId, title, description, category, difficulty) => {
+  addQuestTask: (questId, title, description, category, difficulty, deadline) => {
     set((state: QuestSlice) => ({
       quests: state.quests.map(quest => {
         if (quest.id !== questId) return quest;

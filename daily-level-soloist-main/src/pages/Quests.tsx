@@ -12,6 +12,15 @@ import SideQuestCard from '../components/SideQuestCard';
 import DailyQuestCard from '../components/DailyQuestCard';
 import MainQuestCard from '../components/MainQuestCard';
 
+// Define experience reward values by difficulty
+const expRewards: { [key in Difficulty]: number } = {
+  easy: 15,
+  medium: 30,
+  hard: 60,
+  boss: 100,
+  normal: 20,
+};
+
 // Define a type for quest types
 type QuestType = 'main' | 'side' | 'daily';
 
@@ -36,13 +45,6 @@ const AddQuestDialog = ({ onClose }: { onClose: () => void }) => {
     }
 
     // Get exp reward based on difficulty
-    const expRewards: { [key in Difficulty]: number } = {
-      easy: 15,
-      medium: 30,
-      hard: 60,
-      boss: 100,
-      normal: 20,
-    };
     const expPoints = expRewards[difficulty];
     
     // For now, daily quests are treated as side quests in terms of storage
@@ -64,8 +66,11 @@ const AddQuestDialog = ({ onClose }: { onClose: () => void }) => {
       deadlineDate = deadline ? new Date(deadline) : undefined;
     }
     
+    // Use quest DailyWinCategory or 'mental' as default if empty string
+    const questCategory = (category || 'mental') as DailyWinCategory;
+    
     // Add the quest
-    addQuest(title, description, isMainQuest, expPoints, deadlineDate, difficulty, category, questType === 'daily');
+    addQuest(title, description, isMainQuest, expPoints, deadlineDate, difficulty, questCategory, questType === 'daily');
     
     // After quest is added, if it's a daily quest, find and update it
     if (questType === 'daily') {
@@ -80,7 +85,7 @@ const AddQuestDialog = ({ onClose }: { onClose: () => void }) => {
         
         if (newQuest) {
           // Update with daily quest properties
-          const updates: Partial<Quest> = { isDaily: true, category };
+          const updates: Partial<Quest> = { isDaily: true, category: questCategory };
           
           updateQuest(newQuest.id, updates);
           

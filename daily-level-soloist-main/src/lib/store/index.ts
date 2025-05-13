@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
+import { persist, createJSONStorage, PersistOptions } from 'zustand/middleware';
 import { initialUser } from './initial-state';
 import { createTaskSlice, TaskSlice } from './slices/task-slice';
 import { createQuestSlice, QuestSlice } from './slices/quest-slice';
@@ -10,6 +10,11 @@ import { createPunishmentSlice, PunishmentSlice } from './slices/punishment-slic
 import { getDB } from '../db';
 
 export type StoreState = TaskSlice & QuestSlice & MissionSlice & UserSlice & ShopSlice & PunishmentSlice;
+
+// Define a custom type that extends PersistOptions and adds onError
+interface CustomPersistOptions<T> extends PersistOptions<T> {
+  onError?: (error: Error) => void;
+}
 
 // Custom async storage for IndexedDB (store and retrieve strings only) with improved error handling
 const indexedDBStorage = {
@@ -68,7 +73,7 @@ export const useSoloLevelingStore = create<StoreState>()(
       onError: (error) => {
         console.error('An error occurred during state persistence:', error);
       }
-    }
+    } as CustomPersistOptions<StoreState>
   )
 );
 

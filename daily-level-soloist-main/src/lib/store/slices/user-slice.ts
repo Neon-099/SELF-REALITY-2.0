@@ -16,6 +16,7 @@ export interface UserSlice {
   updateStreak: () => void;
   updateDailyWin: (category: DailyWinCategory, taskId: string) => void;
   checkResetDailyWins: () => void;
+  getExpModifier: () => number;
 }
 
 const createEmptyDailyWins = (): Record<DailyWinCategory, DailyWinProgress> => ({
@@ -301,5 +302,10 @@ export const createUserSlice: StateCreator<UserSlice> = (set, get) => ({
         }
       };
     });
+  },
+  getExpModifier: () => {
+    // Implementation of getExpModifier
+    // This is a placeholder and should be implemented based on your specific requirements
+    return 1; // Placeholder return, actual implementation needed
   }
 });

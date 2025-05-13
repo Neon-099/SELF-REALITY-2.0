@@ -6,18 +6,18 @@ import { useSoloLevelingStore } from '@/lib/store';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useState } from 'react';
 import { DateTimePicker } from '@/components/ui/date-time-picker';
-import { DailyWinCategory, Difficulty } from '@/lib/types';
+import { DailyWinCategory, Difficulty, Quest } from '@/lib/types';
 import { toast } from '@/hooks/use-toast';
 
 interface MainQuestCardProps {
-  quest: any;
+  quest: Quest;
   onComplete: (id: string, title: string, expReward: number) => void;
   onStart: (id: string) => void;
   canComplete: (id: string) => boolean;
 }
 
 // Import QuestTasks component as a local component for clean integration
-const QuestTasks = ({ quest }: { quest: any }) => {
+const QuestTasks = ({ quest }: { quest: Quest }) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const completeQuestTask = useSoloLevelingStore(state => state.completeQuestTask);
   
@@ -44,7 +44,7 @@ const QuestTasks = ({ quest }: { quest: any }) => {
         <p className="text-sm text-gray-500 italic">No tasks added yet. Break down your quest into smaller tasks.</p>
       ) : (
         <div className="space-y-2">
-          {quest.tasks.map((task: any) => (
+          {quest.tasks.map((task) => (
             <div 
               key={task.id}
               className="flex items-center justify-between p-2 bg-gray-800/50 rounded-md"

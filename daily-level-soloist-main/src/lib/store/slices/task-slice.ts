@@ -12,6 +12,8 @@ export interface TaskSlice {
   completeTask: (taskId: string) => void;
   deleteTask: (id: string) => void;
   markTaskAsMissed: (id: string) => void;
+  getExpModifier: () => number;
+  applyMissedDeadlinePenalty: (itemType: string, itemId: string) => void;
 }
 
 // Helper to map daily win categories to attribute stats
@@ -161,5 +163,13 @@ export const createTaskSlice: StateCreator<
       description: "The task has been marked as missed and penalties applied.",
       variant: "destructive"
     });
+  },
+  getExpModifier: () => {
+    // This will be overridden by the punishment-slice implementation
+    return 1;
+  },
+  applyMissedDeadlinePenalty: (itemType: string, itemId: string) => {
+    // This will be overridden by the punishment-slice implementation
+    console.log(`Missed deadline for ${itemType} ${itemId}`);
   }
 });

@@ -84,7 +84,7 @@ const UserSetup = () => {
 const queryClient = new QueryClient();
 
 // Component to check for curse status and missed deadlines
-function CurseChecker() {
+function CurseChecker(): React.ReactNode {
   const checkCurseStatus = useSoloLevelingStore(state => state.checkCurseStatus);
   
   useEffect(() => {
