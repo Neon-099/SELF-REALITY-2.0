@@ -12,6 +12,40 @@ import SideQuestCard from '../components/SideQuestCard';
 import DailyQuestCard from '../components/DailyQuestCard';
 import MainQuestCard from '../components/MainQuestCard';
 
+// Define the Quest interface
+export interface Quest {
+  id: string;
+  title: string;
+  description: string;
+  isMainQuest: boolean;
+  expReward: number;
+  deadline?: Date; // Optional as it might not always be set
+  difficulty: Difficulty;
+  completed: boolean;
+  isDaily?: boolean; // Optional for daily quests
+  category?: DailyWinCategory | ''; // Optional for daily quests
+  tasks?: QuestTask[]; // Assuming you might have tasks associated
+  // Add any other properties that a quest object has
+  // For example, if progress is tracked:
+  // progress?: number;
+  // totalTasks?: number;
+  createdAt: Date;
+  completedAt?: Date;
+  failedAt?: Date; 
+  isBonus?: boolean;
+  bonusExp?: number;
+  systemMessage?: string;
+}
+
+// Define a type for quest tasks if you have them
+export interface QuestTask {
+  id: string;
+  title: string;
+  description: string;
+  completed: boolean;
+  // Add any other task properties
+}
+
 // Define a type for quest types
 type QuestType = 'main' | 'side' | 'daily';
 
@@ -411,6 +445,7 @@ const Quests = () => {
   const [activeFilter, setActiveFilter] = useState<'all' | 'main' | 'side' | 'daily'>('all');
   const [isLoadingDb, setIsLoadingDb] = useState(false);
   const [dbContents, setDbContents] = useState<any>(null);
+  const [questsData, setQuestsData] = useState<Quest[]>([]); // Typed state
 
   // Function to load and display IndexedDB data
   const loadDbData = async () => {
@@ -440,12 +475,21 @@ const Quests = () => {
         description: "IndexedDB data has been retrieved successfully.",
       });
     } catch (error) {
-      console.error('Error loading IndexedDB data:', error);
-      toast({
-        title: "Database Error",
-        description: `Failed to load IndexedDB: ${error.message}`,
-        variant: "destructive"
-      });
+      if (error instanceof Error) {
+        console.error("Error loading data from DB:", error.message);
+        toast({
+          title: "Database Error",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        console.error("An unknown error occurred while loading data:", error);
+        toast({
+          title: "Database Error",
+          description: "An unexpected error occurred while loading data.",
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsLoadingDb(false);
     }
