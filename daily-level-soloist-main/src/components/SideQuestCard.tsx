@@ -24,24 +24,25 @@ const SideQuestCard: React.FC<SideQuestCardProps> = ({ quest, onComplete }) => {
       {/* Header */}
       <div className="flex justify-between items-start mb-2">
         <div className="flex flex-col gap-1">
-          <h3 className={`font-bold text-lg ${quest.completed ? 'line-through text-gray-400' : 'text-solo-text'}`}>{quest.title}</h3>
-          <span className="text-xs px-2 py-0.5 rounded-full bg-solo-primary/10 text-solo-primary border border-solo-primary/20 w-max">
-            Side Quest
-          </span>
+          <h3 className={`font-bold text-lg tracking-tight ${quest.completed ? 'line-through text-gray-400' : 'text-white drop-shadow-sm'}`}>{quest.title}</h3>
         </div>
-        <span className="text-solo-primary font-bold flex items-center gap-1 bg-solo-primary/10 px-2 py-1 rounded-md">
-          <Star size={16} className="text-yellow-400 stroke-2" />
-          +{quest.expReward} EXP
-        </span>
+        <div className="flex flex-col items-end gap-2">
+          <div className="flex items-center gap-1">
+            <span className="text-solo-primary font-bold flex items-center gap-1 bg-gradient-to-r from-solo-primary/10 to-solo-primary/20 px-2 py-0.5 rounded-md text-xs shadow-sm">
+              <Star size={14} className="text-yellow-400 stroke-2 drop-shadow-glow" />
+              +{quest.expReward} XP
+            </span>
+          </div>
+        </div>
       </div>
       {/* Description */}
       {quest.description && (
-        <p className="text-gray-300 mb-3 text-sm">{quest.description}</p>
+        <p className="text-gray-300/90 mb-3 text-xs leading-relaxed">{quest.description}</p>
       )}
       {/* Deadline */}
       {quest.deadline && (
-        <div className="flex items-center gap-2 my-2 p-2 bg-amber-950/30 rounded-md border border-amber-800/30">
-          <CalendarClock size={16} className="text-amber-500" />
+        <div className="flex items-center gap-1 my-1 p-1.5 bg-gradient-to-r from-amber-950/20 to-amber-900/20 rounded-md border border-amber-800/30 shadow-sm">
+          <CalendarClock size={12} className="text-amber-500 drop-shadow-sm" />
           <span className="text-xs text-amber-300 font-medium">
             Due: {format(new Date(quest.deadline), 'MMM d, h:mm a')}
           </span>
@@ -53,15 +54,15 @@ const SideQuestCard: React.FC<SideQuestCardProps> = ({ quest, onComplete }) => {
           variant="outline"
           onClick={() => onComplete(quest.id)}
           size="sm"
-          className="w-full flex justify-center items-center gap-2 mt-2 border-solo-primary/40 hover:border-solo-primary hover:bg-solo-primary/10 text-solo-primary hover:text-solo-primary/90 transition-colors"
+          className="w-full flex justify-center items-center gap-2 mt-2 border-solo-primary/40 hover:border-solo-primary bg-gradient-to-r from-solo-primary/5 to-solo-primary/10 hover:bg-gradient-to-r hover:from-solo-primary/10 hover:to-solo-primary/20 text-solo-primary hover:text-solo-primary transition-all shadow-sm"
         >
-          <CheckCircle size={16} />
-          Complete Quest
+          <CheckCircle size={16} className="drop-shadow-sm" />
+          <span className="font-medium tracking-wide">Complete Quest</span>
         </Button>
       )}
       {quest.completed && (
-        <div className="flex items-center justify-center gap-2 mt-2 text-green-400 text-sm">
-          <CheckCircle size={16} /> Completed
+        <div className="flex items-center justify-center gap-2 mt-2 text-green-400 text-xs font-medium">
+          <CheckCircle size={14} className="drop-shadow-sm" /> Completed
         </div>
       )}
     </div>

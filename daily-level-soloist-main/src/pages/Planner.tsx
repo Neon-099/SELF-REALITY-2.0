@@ -58,6 +58,20 @@ const getCategoryColor = (category: string) => {
   }
 };
 
+// Gradient colors for categories
+const getCategoryColorGradient = (category: string) => {
+  switch (category) {
+    case 'mental': return 'from-purple-400 to-purple-600';
+    case 'physical': return 'from-blue-400 to-blue-600';
+    case 'spiritual': return 'from-teal-400 to-teal-600';
+    case 'intelligence': return 'from-amber-400 to-amber-600';
+    case 'cognitive': return 'from-pink-400 to-pink-600';
+    case 'emotional': return 'from-rose-400 to-rose-600';
+    case 'social': return 'from-green-400 to-green-600';
+    default: return 'from-gray-400 to-gray-600';
+  }
+};
+
 // Type guard to check if a string is a valid DailyWinCategory
 const isDailyWinCategory = (category: string): category is DailyWinCategory => {
   return ['mental', 'physical', 'spiritual', 'intelligence'].includes(category);
@@ -314,207 +328,164 @@ const TaskDialog = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="backdrop-blur-xl bg-gray-900/40 border border-white/10 shadow-xl text-solo-text sm:max-w-[400px] w-[90%] p-3 sm:p-4 max-h-[85vh] overflow-y-auto rounded-xl before:absolute before:inset-0 before:rounded-xl before:bg-gradient-to-br before:from-indigo-500/10 before:to-purple-500/5 before:backdrop-blur-xl before:-z-10">
+      <DialogContent className="sm:max-w-[400px] max-h-[80vh] w-[90%] p-4 overflow-y-auto">
         <DialogHeader className="pb-2">
-          <DialogTitle className="text-base font-semibold text-white/90 tracking-wide">
-            {editingTask ? (isTaskCompleted ? 'View Completed Task' : 'Edit Task') : 'Add Task'}
+          <DialogTitle className="text-lg">
+            {editingTask ? 'Edit Task' : 'Add Task'}
           </DialogTitle>
         </DialogHeader>
         
-        <form onSubmit={(e) => { e.preventDefault(); handleSave(); }} className="space-y-3 relative z-10">
+        <form onSubmit={(e) => {
+          e.preventDefault();
+          handleSave();
+        }} className="space-y-3">
           <div className="space-y-1.5">
-            <Label htmlFor="title" className="text-sm text-white/80 font-medium">Title</Label>
+            <Label htmlFor="title" className="text-sm">Title</Label>
             <Input
               id="title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Enter task title"
-              className="border-white/10 bg-gray-800/50 backdrop-blur-sm h-8 focus:border-solo-primary/50 focus:ring-1 focus:ring-solo-primary/30 transition-all"
+              className="h-9"
               disabled={isTaskCompleted}
             />
           </div>
           
           <div className="space-y-1.5">
-            <Label htmlFor="description" className="text-sm text-white/80 font-medium">Description (optional)</Label>
+            <Label htmlFor="description" className="text-sm">Description (optional)</Label>
             <Textarea
               id="description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Enter task description"
-              className="border-white/10 bg-gray-800/50 backdrop-blur-sm min-h-[50px] text-sm focus:border-solo-primary/50 focus:ring-1 focus:ring-solo-primary/30 transition-all"
+              className="min-h-[60px]"
               disabled={isTaskCompleted}
             />
           </div>
           
-          <div className="space-y-1.5">
-            <Label className="text-sm text-white/80 font-medium">Category</Label>
-            <div className="grid grid-cols-2 gap-0 rounded-md overflow-hidden border border-white/10 bg-gray-800/30 backdrop-blur-sm">
-              <button
-                type="button"
-                onClick={() => !isTaskCompleted && setCategoryType('attribute')}
-                disabled={isTaskCompleted}
-                className={cn(
-                  "py-1 px-3 text-center transition-all duration-200 text-xs",
-                  categoryType === 'attribute' 
-                    ? "bg-gradient-to-r from-solo-primary/20 to-indigo-500/20 border-b-2 border-solo-primary font-medium text-solo-primary" 
-                    : "text-gray-300 hover:bg-white/5 border-b-2 border-transparent",
-                  isTaskCompleted && "opacity-50 cursor-not-allowed"
-                )}
-              >
-                Attribute
-              </button>
-              <button
-                type="button"
-                onClick={() => !isTaskCompleted && (!isDateTodayOrPast(selectedDate) || !allDailyWinsCompleted) && setCategoryType('dailyWin')}
-                disabled={isTaskCompleted || (isDateTodayOrPast(selectedDate) && allDailyWinsCompleted && categoryType !== 'dailyWin')}
-                className={cn(
-                  "py-1 px-3 text-center transition-all duration-200 text-xs",
-                  categoryType === 'dailyWin' 
-                    ? "bg-gradient-to-r from-solo-primary/20 to-indigo-500/20 border-b-2 border-solo-primary font-medium text-solo-primary" 
-                    : "text-gray-300 hover:bg-white/5 border-b-2 border-transparent",
-                  (isTaskCompleted || (isDateTodayOrPast(selectedDate) && allDailyWinsCompleted && categoryType !== 'dailyWin')) && "opacity-50 cursor-not-allowed"
-                )}
-              >
-                Daily Win
-              </button>
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="space-y-1.5">
-              <Label htmlFor="difficulty" className="text-sm text-white/80 font-medium">Difficulty</Label>
+              <Label htmlFor="difficulty" className="text-sm">Difficulty</Label>
               <Select 
-                value={difficulty}
-                onValueChange={(value) => !isTaskCompleted && setDifficulty(value as Difficulty)}
+                value={difficulty} 
+                onValueChange={(value: Difficulty) => setDifficulty(value)}
                 disabled={isTaskCompleted}
               >
-                <SelectTrigger id="difficulty" className="border-white/10 bg-gray-800/50 backdrop-blur-sm h-8 text-sm focus:ring-1 focus:ring-solo-primary/30 focus:border-solo-primary/50">
+                <SelectTrigger id="difficulty" className="h-9">
                   <SelectValue placeholder="Select difficulty" />
                 </SelectTrigger>
-                <SelectContent className="border-white/10 bg-gray-800/90 backdrop-blur-md">
+                <SelectContent>
                   <SelectItem value="easy">Easy</SelectItem>
                   <SelectItem value="medium">Medium</SelectItem>
+                  <SelectItem value="hard">Hard</SelectItem>
+                  <SelectItem value="boss">Boss</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-
+            
             <div className="space-y-1.5">
-              <Label htmlFor="category" className="text-sm text-white/80 font-medium">Type</Label>
-              <Select 
-                value={category} 
-                onValueChange={(value) => !isTaskCompleted && setCategory(value as string)}
-                disabled={isTaskCompleted}
-              >
-                <SelectTrigger id="category" className="border-white/10 bg-gray-800/50 backdrop-blur-sm h-8 text-sm focus:ring-1 focus:ring-solo-primary/30 focus:border-solo-primary/50">
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
-                <SelectContent className="border-white/10 bg-gray-800/90 backdrop-blur-md">
-                  {categoryType === 'dailyWin' ? (
-                    // Daily Win Categories
-                    <>
-                      {dailyWinCategories.map((cat) => {
-                        const isCompleted = isDateTodayOrPast(selectedDate) && isDailyWinCompleted(user.dailyWins, cat as DailyWinCategory);
-                        const hasPending = hasPendingDailyWinTask(tasks, cat as DailyWinCategory, selectedDate);
-                        const isDisabled = isCompleted || hasPending;
-                        
-                        return (
-                          <SelectItem 
-                            key={cat}
-                            value={cat} 
-                            disabled={isDisabled}
-                            className={cn("text-sm", isDisabled ? "opacity-50" : "")}
-                          >
-                            {cat.charAt(0).toUpperCase() + cat.slice(1)}{' '}
-                            {isCompleted ? "✓" : hasPending ? "(Pending)" : ""}
-                          </SelectItem>
-                        );
-                      })}
-                    </>
-                  ) : (
-                    // Attribute Categories
-                    <>
-                      {attributeCategories.map((cat) => {
-                        const isLimited = isAttributeCategoryLimited(cat);
-                        return (
-                          <SelectItem 
-                            key={cat} 
-                            value={cat} 
-                            disabled={isLimited}
-                            className={cn("text-sm", isLimited ? "opacity-50" : "")}
-                          >
-                            {cat.charAt(0).toUpperCase() + cat.slice(1)}{' '}
-                            {isLimited ? `(Limit: 5/5)` : `(${getAttributeTaskCount(tasks, cat, selectedDate)}/5)`}
-                          </SelectItem>
-                        );
-                      })}
-                    </>
+              <Label className="text-sm">Category</Label>
+              <div className="grid grid-cols-2 gap-0 rounded-md overflow-hidden border">
+                <button
+                  type="button"
+                  onClick={() => !isTaskCompleted && setCategoryType('attribute')}
+                  disabled={isTaskCompleted}
+                  className={cn(
+                    "py-1.5 px-2 text-sm text-center transition-all",
+                    categoryType === 'attribute' 
+                      ? "bg-indigo-500/10 border-b-2 border-indigo-500 font-medium text-indigo-300" 
+                      : "text-gray-400 hover:bg-gray-800/50 border-b-2 border-transparent"
                   )}
-                </SelectContent>
-              </Select>
+                >
+                  Attribute
+                </button>
+                <button
+                  type="button"
+                  onClick={() => !isTaskCompleted && !allDailyWinsCompleted && setCategoryType('dailyWin')}
+                  disabled={isTaskCompleted || (allDailyWinsCompleted && categoryType !== 'dailyWin')}
+                  className={cn(
+                    "py-1.5 px-2 text-sm text-center transition-all",
+                    categoryType === 'dailyWin' 
+                      ? "bg-indigo-500/10 border-b-2 border-indigo-500 font-medium text-indigo-300" 
+                      : "text-gray-400 hover:bg-gray-800/50 border-b-2 border-transparent",
+                    (allDailyWinsCompleted && categoryType !== 'dailyWin') && "opacity-50 cursor-not-allowed hover:bg-transparent"
+                  )}
+                >
+                  Daily Win
+                </button>
+              </div>
             </div>
           </div>
           
           <div className="space-y-1.5">
-            <Label className="text-sm text-white/80 font-medium">Deadline</Label>
-            <div className="flex items-center justify-between mb-2">
-              <div className="text-xs text-indigo-300 flex items-center">
-                <CalendarClock className="h-3 w-3 mr-1" /> Automatic deadline enforcement
-              </div>
-            </div>
-            
-            <DateTimePicker 
-              date={deadline || new Date(Date.now() + 24 * 60 * 60 * 1000)}
-              setDate={setDeadline}
-              className="mt-2"
+            <Label htmlFor="category-select" className="text-sm">Type</Label>
+            <Select 
+              value={category} 
+              onValueChange={(value) => setCategory(value)}
               disabled={isTaskCompleted}
-            />
-            <p className="text-xs text-gray-400 mt-1">
-              Missing a deadline will automatically apply Shadow Penalty, reducing EXP reward by 50%.
-            </p>
+            >
+              <SelectTrigger id="category-select" className="h-9">
+                <SelectValue placeholder="Select category" />
+              </SelectTrigger>
+              <SelectContent>
+                {categoryType === 'dailyWin' ? (
+                  dailyWinCategories.map(cat => (
+                    <SelectItem 
+                      key={cat} 
+                      value={cat}
+                      disabled={isDateTodayOrPast(selectedDate) && 
+                        (isDailyWinCompleted(user.dailyWins, cat as DailyWinCategory) || 
+                        hasPendingDailyWinTask(tasks, cat as DailyWinCategory, selectedDate))}
+                    >
+                      {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                    </SelectItem>
+                  ))
+                ) : (
+                  attributeCategories.map(cat => (
+                    <SelectItem 
+                      key={cat} 
+                      value={cat}
+                      disabled={isAttributeCategoryLimited(cat)}
+                    >
+                      {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                    </SelectItem>
+                  ))
+                )}
+              </SelectContent>
+            </Select>
           </div>
           
-          {!isTaskCompleted && (
-            <div className="flex justify-between pt-2">
-              {/* Delete button on the left side */}
-            {editingTask && onDelete && (
+          <div className="space-y-1.5">
+            <Label className="text-sm">Deadline</Label>
+            <DateTimePicker 
+              date={deadline} 
+              setDate={setDeadline}
+              disabled={isTaskCompleted}
+              className="h-9"
+            />
+          </div>
+          
+          <div className="flex justify-end gap-2 pt-2">
+            {editingTask && !isTaskCompleted && onDelete && (
               <Button 
+                type="button" 
                 variant="destructive" 
-                  size="sm"
+                size="sm"
                 onClick={onDelete}
-                  type="button"
-                  className="h-8 text-xs bg-red-500/20 border border-red-500/30 hover:bg-red-500/30 text-red-400"
+                className="px-3 py-1 text-xs"
               >
-                  Delete Task
-                </Button>
-              )}
-              
-              {/* If there's no delete function, this creates an empty space */}
-              {(!editingTask || !onDelete) && <div></div>}
-              
-              {/* Update/Add button on the right side */}
-              <Button 
-                type="submit" 
-                className="bg-gradient-to-r from-solo-primary to-indigo-600 hover:from-solo-primary/90 hover:to-indigo-600/90 h-8 text-xs shadow-md shadow-indigo-500/20"
-                disabled={categoryType === 'dailyWin' && isSelectedCategoryCompleted}
-              >
-                {editingTask ? 'Update Task' : 'Add Task'}
+                Delete
               </Button>
-            </div>
             )}
-        </form>
-        
-        {isTaskCompleted && (
-          <div className="flex justify-center pt-2">
-            <Button
-              variant="secondary"
-              onClick={onClose}
-              type="button"
-              className="h-8 text-xs bg-white/5 border border-white/10 hover:bg-white/10 backdrop-blur-sm"
+            <Button 
+              type="submit" 
+              disabled={isTaskCompleted}
+              className="px-4 py-1 text-sm"
             >
-              Close
+              {editingTask ? 'Save Changes' : 'Create Task'}
             </Button>
           </div>
-        )}
+        </form>
       </DialogContent>
     </Dialog>
   );
@@ -530,7 +501,7 @@ const TaskCard = ({ task, onClick }: { task: any; onClick: () => void }) => {
       }
     >
       {/* Colored left accent bar */}
-      <div className={`absolute left-0 top-0 h-full w-2 rounded-l-xl ${getDifficultyColor(task.difficulty)}`}></div>
+      <div className={`absolute left-0 top-0 h-full w-1.5 rounded-l-md ${getDifficultyColor(task.difficulty)}`}></div>
       <div className="flex flex-col gap-1">
         <div className="flex items-center gap-2 mb-1">
           {/* Difficulty badge */}
@@ -544,7 +515,7 @@ const TaskCard = ({ task, onClick }: { task: any; onClick: () => void }) => {
           </span>
         </div>
         {/* Title with gradient and shadow */}
-        <div className="font-extrabold text-base bg-gradient-to-r from-solo-primary to-solo-secondary bg-clip-text text-transparent drop-shadow-glow truncate">
+        <div className="font-extrabold text-sm md:text-base bg-gradient-to-r from-solo-primary to-solo-secondary bg-clip-text text-transparent drop-shadow-glow truncate">
           {task.title}
         </div>
         {/* Description */}
@@ -558,7 +529,13 @@ const TaskCard = ({ task, onClick }: { task: any; onClick: () => void }) => {
           </span>
           {task.deadline && (
             <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-300 font-semibold">
-              <span className="font-bold">Due:</span> {new Date(task.deadline).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+              <span className="font-bold">Due:</span> {new Date(task.deadline).toLocaleString([], { 
+                month: 'short', 
+                day: 'numeric', 
+                hour: '2-digit', 
+                minute: '2-digit',
+                hour12: window.innerWidth > 768 // Only show AM/PM on larger screens
+              })}
             </span>
           )}
         </div>
@@ -584,20 +561,20 @@ const DayDialog = ({
 }) => {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>
+      <DialogContent className="sm:max-w-[400px] max-h-[80vh] w-[90%] p-4 overflow-y-auto">
+        <DialogHeader className="pb-2">
+          <DialogTitle className="text-lg">
             {format(date, 'EEEE, MMMM d')}
           </DialogTitle>
         </DialogHeader>
-        <div className="space-y-4 py-4">
+        <div className="space-y-3 py-2">
           {tasks.length === 0 ? (
-            <div className="text-center text-gray-400 py-8">
+            <div className="text-center text-gray-400 py-6">
               <p>No tasks scheduled for this day.</p>
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="mt-4"
+                className="mt-3"
                 onClick={onAddTask}
               >
                 <PlusCircle className="h-4 w-4 mr-2" />
@@ -605,25 +582,25 @@ const DayDialog = ({
               </Button>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-2">
               {tasks.map(task => (
                 <div 
                   key={task.id}
-                  className="p-3 rounded-lg border border-gray-800 bg-gray-900/50 hover:border-solo-primary/50 cursor-pointer transition-all"
+                  className="p-2.5 rounded-lg border border-gray-800 bg-gray-900/50 hover:border-solo-primary/50 cursor-pointer transition-all"
                   onClick={() => onEditTask({...task})}
                 >
                   <div className="flex justify-between items-start">
                     <div>
-                      <h3 className="font-medium">{task.title}</h3>
+                      <h3 className="font-medium text-sm">{task.title}</h3>
                       {task.description && (
-                        <p className="text-sm text-gray-400 mt-1">{task.description}</p>
+                        <p className="text-xs text-gray-400 mt-0.5 line-clamp-1">{task.description}</p>
                       )}
                     </div>
-                    <span className="text-solo-primary text-sm font-medium">
+                    <span className="text-solo-primary text-xs font-medium">
                       {task.expReward} EXP
                     </span>
                   </div>
-                  <div className="mt-2 flex items-center gap-2 text-xs text-gray-500">
+                  <div className="mt-1.5 flex items-center gap-2 text-xs text-gray-500">
                     <span className="capitalize">{task.category}</span>
                     {task.deadline && (
                       <>
@@ -644,10 +621,10 @@ const DayDialog = ({
               <Button 
                 variant="outline" 
                 size="sm" 
-                className="w-full"
+                className="w-full mt-2 py-1.5 text-xs"
                 onClick={onAddTask}
               >
-                <PlusCircle className="h-4 w-4 mr-2" />
+                <PlusCircle className="h-3.5 w-3.5 mr-1.5" />
                 Add Another Task
               </Button>
             </div>
@@ -840,10 +817,23 @@ const Planner = () => {
     const endDay = format(endDate, 'd');
     const endYear = format(endDate, 'yyyy');
     
-    if (startMonth === endMonth) {
-      return `${startMonth} ${startDay} - ${endDay}, ${endYear}`;
+    // Check if we're on a small screen (using window.innerWidth for client-side detection)
+    const isSmallScreen = typeof window !== 'undefined' && window.innerWidth < 640; // sm breakpoint in Tailwind
+    
+    if (isSmallScreen) {
+      // More compact format for mobile: "May 12-18"
+      if (startMonth === endMonth) {
+        return `${startMonth} ${startDay}-${endDay}`;
+      } else {
+        return `${startMonth} ${startDay}-${endMonth} ${endDay}`;
+      }
     } else {
-      return `${startMonth} ${startDay} - ${endMonth} ${endDay}, ${endYear}`;
+      // Regular format for larger screens
+      if (startMonth === endMonth) {
+        return `${startMonth} ${startDay} - ${endDay}, ${endYear}`;
+      } else {
+        return `${startMonth} ${startDay} - ${endMonth} ${endDay}, ${endYear}`;
+      }
     }
   };
 
@@ -872,21 +862,21 @@ const Planner = () => {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-2 w-full px-0">
       {/* Date navigation header */}
-      <div className="bg-gray-900 py-4 px-6 rounded-lg flex justify-between items-center">
+      <div className="bg-gray-900 py-2 md:py-3 px-3 md:px-4 rounded-md flex justify-between items-center overflow-hidden">
         <button 
           onClick={() => navigateWeek('prev')}
-          className="h-8 w-8 flex items-center justify-center rounded bg-gray-800 text-gray-300"
+          className="h-7 w-7 md:h-8 md:w-8 flex items-center justify-center rounded bg-gray-800 text-gray-300"
         >
           <ChevronLeft className="h-4 w-4" />
         </button>
         
         <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
           <PopoverTrigger asChild>
-            <button className="flex items-center gap-2 text-2xl font-extrabold tracking-tight bg-gradient-to-r from-solo-primary to-solo-secondary bg-clip-text text-transparent drop-shadow-glow hover:scale-105 transition-transform">
-              {dateRangeFormatted()}
-              <CalendarIcon className="h-5 w-5 text-solo-primary drop-shadow-glow" />
+            <button className="flex items-center gap-1 md:gap-2 text-sm md:text-lg lg:text-2xl font-extrabold tracking-tight bg-gradient-to-r from-solo-primary to-solo-secondary bg-clip-text text-transparent drop-shadow-glow hover:scale-105 transition-transform">
+              <span className="text-xs sm:text-sm md:text-lg lg:text-2xl">{dateRangeFormatted()}</span>
+              <CalendarIcon className="h-3 w-3 md:h-4 md:w-4 lg:h-5 lg:w-5 text-solo-primary drop-shadow-glow" />
             </button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0 bg-gray-900 border border-gray-800" align="center">
@@ -898,58 +888,41 @@ const Planner = () => {
                 onSelect={handleCalendarSelect}
                 className="border border-gray-800 rounded-md"
               />
-        </div>
+              <div className="mt-4">
+                <Button
+                  onClick={() => {
+                    setIsTaskDialogOpen(true);
+                    setCalendarOpen(false);
+                  }}
+                  className="w-full"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add New Task
+                </Button>
+              </div>
+            </div>
           </PopoverContent>
         </Popover>
         
         <button 
           onClick={() => navigateWeek('next')}
-          className="h-8 w-8 flex items-center justify-center rounded bg-gray-800 text-gray-300"
+          className="h-7 w-7 md:h-8 md:w-8 flex items-center justify-center rounded bg-gray-800 text-gray-300"
         >
           <ChevronRight className="h-4 w-4" />
         </button>
       </div>
 
       {/* Weekly Overview */}
-      <div className="bg-gray-900 py-4 px-6 rounded-lg">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-2xl font-extrabold tracking-tight bg-gradient-to-r from-solo-primary to-solo-secondary bg-clip-text text-transparent drop-shadow-glow flex items-center gap-2">
-            <CalendarDays className="h-7 w-7 text-solo-primary drop-shadow-glow" />
-            Weekly Overview
+      <div className="bg-gray-900 py-3 px-3 md:px-4 rounded-md">
+        <div className="flex justify-between items-center mb-3">
+          <h3 className="text-xl md:text-2xl font-extrabold tracking-tight bg-gradient-to-r from-solo-primary to-solo-secondary bg-clip-text text-transparent drop-shadow-glow flex items-center gap-1 md:gap-2">
+            <CalendarDays className="h-5 w-5 md:h-7 md:w-7 text-solo-primary drop-shadow-glow" />
+            <span>Weekly Overview</span>
           </h3>
-          <p className="text-sm text-gray-400 font-medium italic">Your planned tasks for this week</p>
-          <Popover>
-            <PopoverTrigger asChild>
-              <button className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-500 hover:bg-blue-500/30 transition-colors">
-                <CalendarIcon className="h-5 w-5" />
-              </button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0 bg-gray-900 border border-gray-800" align="end">
-              <div className="p-3">
-                <div className="text-lg font-medium text-white mb-2">Select Date</div>
-                <p className="text-sm text-gray-400 mb-3">Choose a date to plan your tasks</p>
-                <PlannerCalendar
-                  selected={selectedDate}
-                  onSelect={handleCalendarSelect}
-                  className="border border-gray-800 rounded-md"
-                />
-                <div className="mt-4">
-                  <Button
-                    onClick={() => {
-                      setIsTaskDialogOpen(true);
-                    }}
-                    className="w-full"
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add New Task
-          </Button>
-                </div>
-              </div>
-            </PopoverContent>
-          </Popover>
+          <p className="hidden md:block text-sm text-gray-400 font-medium italic">Your planned tasks for this week</p>
         </div>
 
-        <div className="space-y-6 mt-4">
+        <div className="space-y-4 mt-3">
           {weekDates.map((date) => {
             const dateString = date.toISOString();
             const incompleteTasks = getIncompleteDayTasks(date);
@@ -960,43 +933,43 @@ const Planner = () => {
               
               return (
               <div key={dateString} className={cn(
-                "pb-3",
+                "pb-2",
                 isTodayDate && "relative before:absolute before:-left-2 before:top-0 before:bottom-0 before:w-1 before:bg-indigo-500 before:rounded-full"
               )}>
                 <div className={cn(
-                  "flex justify-between items-center mb-3 p-2 rounded-lg transition-colors",
+                  "flex justify-between items-center mb-2 p-1.5 rounded-md transition-colors",
                   isTodayDate ? "bg-indigo-500/10 border border-indigo-500/30" : "hover:bg-gray-800/50"
                 )}>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1 md:gap-2">
                     <div className={cn(
-                      "h-6 w-6 flex items-center justify-center rounded-full",
+                      "hidden md:flex h-5 w-5 md:h-6 md:w-6 items-center justify-center rounded-full",
                       isTodayDate ? "bg-indigo-500/30 text-indigo-400" : "bg-blue-500/20 text-blue-500"
                     )}>
-                      <CalendarIcon className="h-4 w-4" />
+                      <CalendarIcon className="h-3 w-3 md:h-4 md:w-4" />
                     </div>
                     <h4 className={cn(
-                      "text-xl font-bold capitalize tracking-tight flex items-center gap-2 bg-gradient-to-r from-solo-primary to-solo-secondary bg-clip-text text-transparent drop-shadow-glow",
+                      "text-lg md:text-xl font-bold capitalize tracking-tight flex items-center gap-1 md:gap-2 bg-gradient-to-r from-solo-primary to-solo-secondary bg-clip-text text-transparent drop-shadow-glow",
                       isTodayDate ? "text-indigo-300" : ""
                     )}>
                       {getDayName(date)}
-                      {isTodayDate && <span className="ml-2 text-xs bg-indigo-500/30 text-indigo-300 px-2 py-0.5 rounded-full font-semibold shadow">Today</span>}
+                      {isTodayDate && <span className="ml-1 text-xs bg-indigo-500/30 text-indigo-300 px-2 py-0.5 rounded-full font-semibold shadow">Today</span>}
                     </h4>
                   </div>
                   
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1">
                     {/* Add Task button for this day */}
                     <Button 
                       size="sm" 
                       variant="ghost" 
-                      className="h-8 text-blue-400 hover:text-blue-300 hover:bg-blue-500/10"
-                onClick={() => {
+                      className="h-7 text-blue-400 hover:text-blue-300 hover:bg-blue-500/10"
+                      onClick={() => {
                         setSelectedTask(null);
                         setSelectedDate(date);
                         setIsTaskDialogOpen(true);
-                }}
-                        >
-                      <Plus className="h-4 w-4 mr-1" />
-                      Add Task
+                      }}
+                    >
+                      <Plus className="h-4 w-4 mr-1 md:mr-1" />
+                      <span className="hidden md:inline">Add Task</span>
                     </Button>
                     
                     {/* Hide/Show button */}
@@ -1013,66 +986,72 @@ const Planner = () => {
                       </button>
                     )}
                   </div>
-          </div>
+                </div>
           
                 {!isHidden && (
                   <>
                     {allDayTasks.length === 0 ? (
-                      <div className="pl-8 py-3 text-sm text-gray-500">
+                      <div className="pl-3 py-2 text-sm text-gray-500">
                         No tasks planned for {getDayName(date)}
-                  </div>
+                      </div>
                     ) : (
-                      <div className="space-y-4">
+                      <div className="space-y-3 px-1">
                         {/* Pending Tasks Section */}
                         {incompleteTasks.length > 0 && (
                           <div>
-                            <h5 className="text-base font-semibold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent drop-shadow-glow mb-2 ml-1 flex items-center gap-1">
-                              <AlertCircle className="h-4 w-4 text-blue-400" /> Pending Tasks
+                            <h5 className="text-sm font-semibold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent drop-shadow-glow mb-1 ml-1 flex items-center gap-1">
+                              <AlertCircle className="h-3 w-3 text-blue-400" /> Pending Tasks
                             </h5>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div className="grid grid-cols-1 gap-1.5 md:gap-2">
                               {incompleteTasks.map(task => (
                                 <div 
                                   key={task.id}
-                                  className="relative rounded-xl border bg-gray-800/80 p-4 cursor-pointer hover:border-blue-500/30 transition-all shadow-md overflow-hidden group"
+                                  className="relative rounded-md border border-gray-700/50 bg-gradient-to-br from-gray-800/90 to-gray-900/80 overflow-hidden cursor-pointer hover:border-blue-400/50 hover:shadow-lg transition-all duration-200 shadow-md group"
                                   onClick={() => {
                                     setSelectedTask({...task});
                                     setSelectedDate(date);
                                     setIsTaskDialogOpen(true);
                                   }}
                                 >
-                                  {/* Colored left accent bar */}
-                                  <div className={`absolute left-0 top-0 h-full w-2 rounded-l-xl ${getDifficultyColor(task.difficulty)}`}></div>
-                                  <div className="flex flex-col gap-1">
-                                    <div className="flex items-center gap-2 mb-1">
-                                      {/* Difficulty badge */}
-                                      <span className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold uppercase ${getDifficultyColor(task.difficulty)} bg-opacity-20 bg-solo-primary/10`}> 
-                                        <span className="w-2 h-2 rounded-full mr-1" style={{ background: 'currentColor' }}></span>
-                                        {task.difficulty}
-                                      </span>
-                                      {/* Category badge */}
-                                      <span className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold capitalize ${getCategoryColor(task.category)} bg-opacity-20 bg-solo-primary/10 ml-1`}> 
+                                  {/* Colored left accent bar with gradient */}
+                                  <div className={`absolute left-0 top-0 h-full w-1.5 bg-gradient-to-b ${getCategoryColorGradient(task.category)}`}></div>
+                                  
+                                  <div className="flex flex-col p-3 pl-4 group-hover:translate-x-0.5 transition-transform duration-200">
+                                    {/* Header with category and due date */}
+                                    <div className="flex justify-between items-center mb-2">
+                                      <span className={`text-xs font-medium capitalize ${getCategoryColor(task.category)} bg-clip-text text-transparent`}>
                                         {task.category}
                                       </span>
+                                      
+                                      <div className="flex items-center gap-2">
+                                        {task.deadline && (
+                                          <span className="text-xs flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-300 font-semibold">
+                                            <span className="font-bold">Due:</span> {new Date(task.deadline).toLocaleString([], { 
+                                              day: 'numeric', 
+                                              hour: '2-digit', 
+                                              minute: '2-digit',
+                                              hour12: false
+                                            })}
+                                          </span>
+                                        )}
+                                        
+                                        <span className="flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-gradient-to-r from-yellow-400 to-amber-500 text-gray-900 shadow-sm">
+                                          +{task.expReward} EXP
+                                        </span>
+                                      </div>
                                     </div>
-                                    {/* Title with gradient and shadow */}
-                                    <div className="font-extrabold text-base bg-gradient-to-r from-solo-primary to-solo-secondary bg-clip-text text-transparent drop-shadow-glow truncate">
+                                    
+                                    {/* Task title with improved styling */}
+                                    <div className="font-bold text-lg bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent mb-1 group-hover:from-blue-300 group-hover:to-indigo-300 transition-colors duration-200">
                                       {task.title}
                                     </div>
-                                    {/* Description */}
+                                    
+                                    {/* Description with improved styling */}
                                     {task.description && (
-                                      <div className="text-xs text-gray-400 mt-1 line-clamp-1 italic">{task.description}</div>
+                                      <div className="text-sm text-gray-400 group-hover:text-gray-300 transition-colors duration-200">
+                                        {task.description}
+                                      </div>
                                     )}
-                                    {/* EXP, Deadline, and Details */}
-                                    <div className="flex flex-wrap items-center gap-2 mt-2 text-xs">
-                                      <span className="flex items-center gap-1 px-2 py-0.5 rounded-full font-bold bg-gradient-to-r from-yellow-400 to-yellow-500 text-white shadow-md">
-                                        +{task.expReward} EXP
-                                      </span>
-                                      {task.deadline && (
-                                        <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-300 font-semibold">
-                                          <span className="font-bold">Due:</span> {new Date(task.deadline).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                                        </span>
-                                      )}
-                                    </div>
                                   </div>
                                 </div>
                               ))}
@@ -1083,10 +1062,10 @@ const Planner = () => {
                         {/* Completed Tasks Section */}
                         {completedTasks.length > 0 && (
                           <div>
-                            <h5 className="text-base font-semibold bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent drop-shadow-glow mb-2 ml-1 flex items-center gap-1">
-                              <CheckCircle2 className="h-4 w-4 text-green-400" /> Completed Tasks
+                            <h5 className="text-sm font-semibold bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent drop-shadow-glow mb-1 ml-1 flex items-center gap-1">
+                              <CheckCircle2 className="h-3 w-3 text-green-400" /> Completed Tasks
                             </h5>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div className="grid grid-cols-1 gap-1.5 md:gap-2">
                               {completedTasks.map(task => {
                                 // Check task completion status
                                 const isMissed = task.missed === true;
@@ -1098,7 +1077,7 @@ const Planner = () => {
                                   <div 
                                     key={task.id}
                                     className={cn(
-                                      "bg-gray-800/30 rounded-lg px-4 py-3 transition-all",
+                                      "bg-gray-800/30 rounded-md px-2 py-1.5 md:px-3 md:py-2 transition-all",
                                       isMissed 
                                         ? "border border-red-500/30" 
                                         : isLate
@@ -1109,16 +1088,16 @@ const Planner = () => {
                                     <div className="flex justify-between items-start">
                                       <div className="flex items-center">
                                         {isMissed ? (
-                                          <XCircle className="h-4 w-4 text-red-500 mr-2" />
+                                          <XCircle className="h-3 w-3 md:h-3.5 md:w-3.5 text-red-500 mr-1.5" />
                                         ) : isLate ? (
-                                          <AlertTriangle className="h-4 w-4 text-orange-500 mr-2" />
+                                          <AlertTriangle className="h-3 w-3 md:h-3.5 md:w-3.5 text-orange-500 mr-1.5" />
                                         ) : (
-                                          <Check className="h-4 w-4 text-green-500 mr-2" />
+                                          <Check className="h-3 w-3 md:h-3.5 md:w-3.5 text-green-500 mr-1.5" />
                                         )}
-                                        <span className="font-medium text-gray-400 truncate line-through">{task.title}</span>
+                                        <span className="font-medium text-gray-400 truncate line-through text-sm md:text-base">{task.title}</span>
                                       </div>
                                       <span className={cn(
-                                        "ml-2 text-xs px-2 py-0.5 rounded-full",
+                                        "ml-1 text-xs px-1.5 py-0.5 rounded-full",
                                         isMissed 
                                           ? "bg-red-500/20 text-red-400" 
                                           : isLate
@@ -1129,12 +1108,12 @@ const Planner = () => {
                                       </span>
                                     </div>
                                     {task.description && (
-                                      <div className="text-xs text-gray-500 mt-1 truncate pl-6 line-through">{task.description}</div>
+                                      <div className="text-xs text-gray-500 truncate pl-5 line-through">{task.description}</div>
                                     )}
-                                    <div className="text-xs text-gray-500 mt-1 truncate pl-6">
+                                    <div className="text-xs text-gray-500 truncate pl-5">
                                       {task.category}
                                       {task.deadline && (
-                                        <span className="ml-2">
+                                        <span className="ml-1">
                                           {new Date(task.deadline).toLocaleString([], { 
                                             month: 'short', 
                                             day: 'numeric', 

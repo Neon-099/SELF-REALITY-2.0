@@ -183,79 +183,41 @@ export function TaskCard({ task }: TaskCardProps) {
     <>
       <div 
         className={cn(
-          `relative rounded-xl border bg-solo-dark p-5 transition-all cursor-pointer flex flex-col shadow-md overflow-hidden ${task.completed ? 'opacity-60' : 'hover:border-solo-primary hover:shadow-lg'}`
+          `relative rounded-xl border bg-solo-dark p-4 transition-all cursor-pointer flex flex-col shadow-md overflow-hidden ${task.completed ? 'opacity-60' : 'hover:border-solo-primary hover:shadow-lg'}`
         )}
         onClick={handleEditClick}
       >
         {/* Colored left accent bar */}
-        <div className={`absolute left-0 top-0 h-full w-2 rounded-l-xl ${getDifficultyColor(task.difficulty)}`}></div>
-        <div className="flex justify-between items-start gap-4">
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-2">
-              {/* Difficulty badge */}
-              <span className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold uppercase ${getDifficultyColor(task.difficulty)} bg-opacity-20 bg-solo-primary/10`}> 
-                <AlertCircle className="h-3 w-3 mr-1" />
-                {task.difficulty}
-              </span>
-              {/* Category badge */}
-              <span className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold capitalize ${getCategoryColor(task.category)} bg-opacity-20 bg-solo-primary/10 ml-1`}> 
-                <CheckCircle className="h-3 w-3 mr-1" />
-                {task.category}
-              </span>
+        <div className={`absolute left-0 top-0 h-full w-2.5 ${getDifficultyColor(task.difficulty)}`}></div>
+        
+        {/* Header row with title and controls */}
+        <div className="flex justify-between items-start">
+          {/* Title with gradient and shadow */}
+          <h3 className={cn(
+            "font-extrabold text-2xl bg-gradient-to-r from-solo-primary to-solo-secondary bg-clip-text text-transparent drop-shadow-glow pl-1",
+            task.completed ? "line-through text-gray-500 opacity-60" : ""
+          )}>
+            {task.title}
+          </h3>
+          
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1">
+              <CheckCircle className="h-4 w-4 text-gray-200" />
+              <span className="text-sm font-semibold text-gray-200">{task.category}</span>
             </div>
-            {/* Title with gradient and shadow */}
-            <h3 className={cn(
-              "font-extrabold text-lg mb-1 bg-gradient-to-r from-solo-primary to-solo-secondary bg-clip-text text-transparent drop-shadow-glow",
-              task.completed ? "line-through text-gray-500 opacity-60" : ""
-            )}>
-              {task.title}
-            </h3>
-            {/* Description */}
-            {task.description && (
-              <p className="text-sm text-gray-400 mb-3 italic">{task.description}</p>
-            )}
-            {/* EXP and Deadline */}
-            <div className="flex justify-between items-center mt-2">
-              <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold bg-gradient-to-r from-yellow-400 to-yellow-500 text-white shadow-md">
-                <span className="text-yellow-900 drop-shadow-glow">+{task.expReward} EXP</span>
-              </span>
-              {deadlineInfo && !task.completed && (
-                <span className={cn(
-                  "flex items-center text-xs px-2 py-1 rounded-full font-semibold shadow-sm",
-                  deadlineInfo.isPast 
-                    ? "bg-red-500/20 text-red-400 animate-pulse" 
-                    : deadlineInfo.urgencyLevel === "critical"
-                      ? "bg-red-500/20 text-red-400 animate-pulse"
-                    : deadlineInfo.urgencyLevel === "urgent"
-                      ? "bg-amber-500/20 text-amber-400"
-                    : deadlineInfo.urgencyLevel === "warning"
-                      ? "bg-yellow-500/20 text-yellow-400"
-                    : "bg-indigo-500/20 text-indigo-300"
-                )}>
-                  <Clock className="h-4 w-4 mr-1" />
-                  {deadlineInfo.text}
-                </span>
-              )}
-            </div>
-          </div>
-          {/* Edit/Delete Buttons */}
-          <div className="flex flex-col space-y-2 items-end ml-4">
+            
+            <span className="flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-gradient-to-r from-yellow-400 to-yellow-500 text-gray-900 shadow-md">
+              +{task.expReward} EXP
+            </span>
+            
             <button 
               onClick={(e) => {
-                e.stopPropagation(); // Prevent card click from triggering
-                handleEditClick(e);
+                e.stopPropagation();
+                if (window.confirm('Are you sure you want to delete this task?')) {
+                  deleteTask(task.id);
+                }
               }}
-              className="p-2 rounded-full hover:bg-blue-500/20 text-blue-500 transition-colors"
-              aria-label="Edit task"
-            >
-              <Edit size={20} />
-            </button>
-            <button 
-              onClick={(e) => {
-                e.stopPropagation(); // Prevent card click from triggering
-                deleteTask(task.id);
-              }}
-              className="p-2 rounded-full hover:bg-red-500/20 text-red-500 transition-colors"
+              className="p-1 rounded-full hover:bg-red-500/20 text-red-500 transition-colors"
               aria-label="Delete task"
             >
               <Trash2 size={20} />
@@ -263,13 +225,30 @@ export function TaskCard({ task }: TaskCardProps) {
           </div>
         </div>
         
+        {/* Description */}
+        {task.description && (
+          <p className="text-base text-gray-400 mt-1 mb-2 italic pl-1">{task.description}</p>
+        )}
+        
+        {/* Deadline display at bottom right */}
+        <div className="flex justify-end mt-auto">
+          {deadlineInfo && !task.completed && (
+            <span className={cn(
+              "flex items-center text-xs px-2 py-0.5 rounded-full font-medium bg-yellow-600/20 text-yellow-400",
+            )}>
+              <Clock className="h-3 w-3 mr-1" />
+              {deadlineInfo.text}
+            </span>
+          )}
+        </div>
+        
         {/* Mark as Complete Button */}
         {!task.completed && (
-          <div className="mt-4 border-t border-gray-800 pt-3">
+          <div className="mt-4 border-t border-gray-800 pt-2">
             <div className="flex justify-center">
               <button 
                 onClick={handleCompleteTask}
-                className="flex-1 flex items-center justify-center gap-2 py-2 rounded bg-green-500/10 hover:bg-green-500/20 text-green-500 transition-colors"
+                className="flex-1 flex items-center justify-center gap-2 py-1.5 rounded bg-green-600/20 hover:bg-green-600/30 text-green-500 transition-colors text-sm"
               >
                 <CheckCircle size={16} />
                 <span>Mark as Complete</span>

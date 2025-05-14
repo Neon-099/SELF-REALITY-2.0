@@ -30,9 +30,22 @@ const AddQuestDialog = ({ onClose }: { onClose: () => void }) => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [questType, setQuestType] = useState<QuestType>('side');
-  const [difficulty, setDifficulty] = useState<Difficulty>('easy');
+  const [expPoints, setExpPoints] = useState<number>(15);
   const [deadline, setDeadline] = useState('');
   const [category, setCategory] = useState<DailyWinCategory | ''>('mental');
+  const [taskCount, setTaskCount] = useState<number>(1);
+  const [tasks, setTasks] = useState<Array<{title: string, completed: boolean}>>([]);
+  
+  // Generate empty tasks when taskCount changes
+  useEffect(() => {
+    if (questType === 'main') {
+      const newTasks = Array(taskCount).fill(null).map((_, index) => ({
+        title: `Task ${index + 1}`,
+        completed: false
+      }));
+      setTasks(newTasks);
+    }
+  }, [taskCount, questType]);
 
   const handleAddQuest = () => {
     if (!title.trim()) {
@@ -43,16 +56,14 @@ const AddQuestDialog = ({ onClose }: { onClose: () => void }) => {
       });
       return;
     }
-
-    // Get exp reward based on difficulty
-    const expPoints = expRewards[difficulty];
     
-    // For now, daily quests are treated as side quests in terms of storage
+    // Set quest type flags
     const isMainQuest = questType === 'main';
+    const isDaily = questType === 'daily';
     
     let deadlineDate: Date | undefined;
     
-    if (questType === 'daily') {
+    if (isDaily) {
       // For daily quests, set deadline to end of current day (11:59:59 PM)
       const today = new Date();
       deadlineDate = new Date(
@@ -66,33 +77,67 @@ const AddQuestDialog = ({ onClose }: { onClose: () => void }) => {
       deadlineDate = deadline ? new Date(deadline) : undefined;
     }
     
-    // Use quest DailyWinCategory or 'mental' as default if empty string
-    const questCategory = (category || 'mental') as DailyWinCategory;
+    // Use quest DailyWinCategory or default value based on quest type
+    const questCategory = isDaily ? (category || 'mental') as DailyWinCategory : category as DailyWinCategory;
     
-    // Add the quest
-    addQuest(title, description, isMainQuest, expPoints, deadlineDate, difficulty, questCategory, questType === 'daily');
+    // Use a default difficulty since the API still requires it, but we're using custom EXP
+    const defaultDifficulty: Difficulty = 'normal';
     
-    // After quest is added, if it's a daily quest, find and update it
-    if (questType === 'daily') {
+    // Add the quest with proper isDaily flag
+    addQuest(title, description, isMainQuest, expPoints, deadlineDate, defaultDifficulty, questCategory, isDaily);
+    
+    // For daily quests, make sure the category is set
+    if (isDaily) {
       setTimeout(() => {
         // Find the quest we just added by matching title, description and deadline
         const quests = useSoloLevelingStore.getState().quests;
         const newQuest = quests.find(q => 
           q.title === title && 
           q.description === description && 
-          q.deadline?.getTime() === deadlineDate?.getTime()
+          q.deadline?.getTime() === deadlineDate?.getTime() && 
+          q.isDaily === true
         );
         
         if (newQuest) {
-          // Update with daily quest properties
-          const updates: Partial<Quest> = { isDaily: true, category: questCategory };
-          
-          updateQuest(newQuest.id, updates);
+          // Update with daily quest properties if category was provided
+          if (category) {
+            updateQuest(newQuest.id, { category: questCategory });
+          }
           
           toast({
             title: "Daily Quest Added",
             description: "Complete this quest by the end of today to avoid Shadow Penalty.",
             variant: "default"
+          });
+        }
+      }, 100);
+    } else if (questType === 'main' && tasks.length > 0) {
+      // For main quests with tasks, find the newly added quest and add tasks
+      setTimeout(() => {
+        const quests = useSoloLevelingStore.getState().quests;
+        const newQuest = quests.find(q => 
+          q.title === title && 
+          q.description === description && 
+          q.isMainQuest === true
+        );
+        
+        if (newQuest) {
+          // Add empty tasks for the main quest
+          const addQuestTask = useSoloLevelingStore.getState().addQuestTask;
+          
+          tasks.forEach((task, index) => {
+            addQuestTask(
+              newQuest.id, 
+              task.title, 
+              '', // No description for pre-generated tasks
+              'mental', // Default category
+              'normal' // Default difficulty
+            );
+          });
+          
+          toast({
+            title: "Main Quest Added",
+            description: `Your new main quest has been added with ${tasks.length} tasks!`,
           });
         }
       }, 100);
@@ -107,10 +152,26 @@ const AddQuestDialog = ({ onClose }: { onClose: () => void }) => {
     setTitle('');
     setDescription('');
     setQuestType('side');
-    setDifficulty('easy');
+    setExpPoints(15);
     setDeadline('');
     setCategory('mental');
+    setTaskCount(1);
+    setTasks([]);
     onClose();
+  };
+
+  const handleTaskTitleChange = (index: number, value: string) => {
+    const updatedTasks = [...tasks];
+    updatedTasks[index].title = value;
+    setTasks(updatedTasks);
+  };
+
+  // Function to handle exp point changes with validation
+  const handleExpChange = (value: string) => {
+    const numValue = parseInt(value);
+    if (!isNaN(numValue) && numValue >= 1) {
+      setExpPoints(numValue);
+    }
   };
 
   return (
@@ -173,19 +234,83 @@ const AddQuestDialog = ({ onClose }: { onClose: () => void }) => {
       </div>
       
       <div className="space-y-2">
-        <label className="text-sm font-medium">Difficulty</label>
-        <select
-          value={difficulty}
-          onChange={(e) => setDifficulty(e.target.value as Difficulty)}
-          className="w-full px-3 py-2 rounded-md border border-gray-800 bg-solo-dark"
-        >
-          <option value="easy">Easy (15 XP)</option>
-          <option value="medium">Medium (30 XP)</option>
-          <option value="hard">Hard (60 XP)</option>
-          <option value="boss">Boss (100 XP)</option>
-          <option value="normal">Normal (20 XP)</option>
-        </select>
+        <label className="text-sm font-medium">Experience Points (XP)</label>
+        <div className="flex items-center gap-2">
+          <input
+            type="number"
+            min="1"
+            value={expPoints}
+            onChange={(e) => handleExpChange(e.target.value)}
+            className="w-24 px-3 py-2 rounded-md border border-gray-800 bg-solo-dark"
+          />
+          <div className="flex gap-2">
+            <Button 
+              type="button" 
+              size="sm" 
+              variant="outline"
+              onClick={() => setExpPoints(15)}
+              className={expPoints === 15 ? "bg-blue-500/20" : ""}
+            >
+              15 XP
+            </Button>
+            <Button 
+              type="button" 
+              size="sm" 
+              variant="outline"
+              onClick={() => setExpPoints(30)}
+              className={expPoints === 30 ? "bg-blue-500/20" : ""}
+            >
+              30 XP
+            </Button>
+            <Button 
+              type="button" 
+              size="sm" 
+              variant="outline"
+              onClick={() => setExpPoints(60)}
+              className={expPoints === 60 ? "bg-blue-500/20" : ""}
+            >
+              60 XP
+            </Button>
+          </div>
+        </div>
+        <p className="text-xs text-gray-400">Set the experience reward for completing this quest</p>
       </div>
+      
+      {questType === 'main' && (
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Number of Tasks</label>
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                min="1"
+                max="10"
+                value={taskCount}
+                onChange={(e) => setTaskCount(parseInt(e.target.value) || 1)}
+                className="w-24 px-3 py-2 rounded-md border border-gray-800 bg-solo-dark"
+              />
+              <span className="text-sm text-gray-400">Tasks to complete this quest</span>
+            </div>
+          </div>
+          
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Task Names</label>
+            <div className="space-y-2 max-h-[200px] overflow-y-auto pr-2">
+              {tasks.map((task, index) => (
+                <div key={index} className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={task.title}
+                    onChange={(e) => handleTaskTitleChange(index, e.target.value)}
+                    className="w-full px-3 py-2 rounded-md border border-gray-800 bg-solo-dark"
+                    placeholder={`Task ${index + 1}`}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
       
       {questType === 'daily' && (
         <div className="space-y-2">
@@ -415,6 +540,16 @@ const Quests = () => {
   const [dbContents, setDbContents] = useState<any>(null);
   const [questsData, setQuestsData] = useState<Quest[]>([]);
 
+  // Add useEffect to update questsData when quests from the store change
+  useEffect(() => {
+    setQuestsData(quests);
+  }, [quests]);
+
+  // Load data from database on component mount
+  useEffect(() => {
+    loadDbData();
+  }, []);
+
   // Function to load and display IndexedDB data
   const loadDbData = async () => {
     try {
@@ -476,7 +611,7 @@ const Quests = () => {
         }));
       }
 
-      setQuestsData(questsToSet);
+      setQuestsData(questsToSet.length > 0 ? questsToSet : quests);
 
       setDbContents({
         zustandStore: storeData ? JSON.parse(storeData) : null,
@@ -503,6 +638,8 @@ const Quests = () => {
           variant: "destructive",
         });
       }
+      // If there's an error, at least use the quests from the store
+      setQuestsData(quests);
     } finally {
       setIsLoadingDb(false);
     }
@@ -518,6 +655,9 @@ const Quests = () => {
   const activeQuests = questsData.filter(quest => {
     // Skip completed quests
     if (quest.completed) return false;
+    
+    // Skip daily quests (they're handled separately)
+    if (quest.isDaily === true) return false;
     
     // For side quests, only show if they're scheduled for today or have no deadline
     if (!quest.isMainQuest) {
@@ -535,8 +675,8 @@ const Quests = () => {
   // Get daily quests (if any have the isDaily flag)
   const dailyQuests = questsData.filter(quest => 
     quest.isDaily === true && 
-    (!quest.completedAt || isSameDay(new Date(quest.completedAt), new Date())) &&
-    !quest.completed // ensure it's not completed if activeQuests doesn't already filter this
+    !quest.completed && // Skip completed daily quests 
+    (!quest.completedAt || isSameDay(new Date(quest.completedAt), new Date()))
   );
 
   // Filter completed quests for today only
@@ -884,7 +1024,7 @@ const Quests = () => {
       {/* Completed Quests */}
       <div>
         <div className="mb-4 flex justify-between items-center">
-          <h2 className="text-xl font-bold text-solo-text">Today's Completed Quests</h2>
+          <h2 className="text-xl font-bold text-solo-text">Completed Quests</h2>
           <Button
             variant="ghost"
             size="sm"

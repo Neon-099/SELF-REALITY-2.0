@@ -179,47 +179,47 @@ export const AddTaskDialog = ({ children }: AddTaskDialogProps) => {
       <DialogContent
         className="
           glassmorphism
-          text-solo-text sm:max-w-[425px] w-[90%] p-4 sm:p-6 max-h-[90vh] overflow-y-auto rounded-xl
+          text-solo-text sm:max-w-[380px] w-[90%] p-3 sm:p-4 max-h-[80vh] overflow-y-auto rounded-xl
           before:!absolute before:!inset-0 before:!rounded-xl 
           before:!bg-gradient-to-br before:!from-indigo-500/10 before:!to-purple-500/5 
           before:!backdrop-blur-xl before:!-z-10
         "
       >
         <DialogHeader>
-          <DialogTitle className="font-semibold text-white/90 tracking-wide">Add New Task</DialogTitle>
+          <DialogTitle className="font-semibold text-white/90 tracking-wide text-base">Add New Task</DialogTitle>
         </DialogHeader>
         
-        <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4 pt-3 sm:pt-4 relative z-10">
-          <div className="space-y-1.5 sm:space-y-2">
-            <Label htmlFor="title" className="text-white/80 font-medium">Title</Label>
+        <form onSubmit={handleSubmit} className="space-y-2.5 sm:space-y-3 pt-2 sm:pt-3 relative z-10">
+          <div className="space-y-1 sm:space-y-1.5">
+            <Label htmlFor="title" className="text-white/80 font-medium text-sm">Title</Label>
             <Input
               id="title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Enter task title"
-              className="border-indigo-500/20 bg-gray-800/90 h-9 sm:h-10 focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all"
+              className="border-indigo-500/20 bg-gray-800/90 h-8 sm:h-9 focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all"
             />
           </div>
           
-          <div className="space-y-1.5 sm:space-y-2">
-            <Label htmlFor="description" className="text-white/80 font-medium">Description (optional)</Label>
+          <div className="space-y-1 sm:space-y-1.5">
+            <Label htmlFor="description" className="text-white/80 font-medium text-sm">Description (optional)</Label>
             <Textarea
               id="description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Enter task description"
-              className="border-indigo-500/20 bg-gray-800/90 min-h-[80px] focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all"
+              className="border-indigo-500/20 bg-gray-800/90 min-h-[60px] focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all"
             />
           </div>
           
-          <div className="space-y-1.5 sm:space-y-2">
-            <Label className="text-white/80 font-medium">Category</Label>
+          <div className="space-y-1 sm:space-y-1.5">
+            <Label className="text-white/80 font-medium text-sm">Category</Label>
             <div className="grid grid-cols-2 gap-0 rounded-md overflow-hidden border border-indigo-500/20 bg-gray-800/80">
               <button
                 type="button"
                 onClick={() => setCategoryType('attribute')}
                 className={cn(
-                  "py-2 px-4 text-center transition-all duration-200",
+                  "py-1.5 px-3 text-center transition-all duration-200 text-sm",
                   categoryType === 'attribute' 
                     ? "bg-indigo-500/10 border-b-2 border-indigo-500 font-medium text-indigo-300" 
                     : "text-gray-400 hover:bg-gray-800/50 border-b-2 border-transparent"
@@ -232,7 +232,7 @@ export const AddTaskDialog = ({ children }: AddTaskDialogProps) => {
                 onClick={() => !allDailyWinsCompleted && setCategoryType('dailyWin')}
                 disabled={allDailyWinsCompleted && categoryType !== 'dailyWin'}
                 className={cn(
-                  "py-2 px-4 text-center transition-all duration-200",
+                  "py-1.5 px-3 text-center transition-all duration-200 text-sm",
                   categoryType === 'dailyWin' 
                     ? "bg-indigo-500/10 border-b-2 border-indigo-500 font-medium text-indigo-300" 
                     : "text-gray-400 hover:bg-gray-800/50 border-b-2 border-transparent",
@@ -243,14 +243,14 @@ export const AddTaskDialog = ({ children }: AddTaskDialogProps) => {
               </button>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1.5 sm:space-y-2">
-              <Label htmlFor="difficulty" className="text-white/80 font-medium">Difficulty</Label>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1 sm:space-y-1.5">
+              <Label htmlFor="difficulty" className="text-white/80 font-medium text-sm">Difficulty</Label>
               <Select 
                 value={difficulty} 
                 onValueChange={(value: Difficulty) => setDifficulty(value)}
               >
-                <SelectTrigger id="difficulty" className="border-indigo-500/20 bg-gray-800/90 h-9 focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all">
+                <SelectTrigger id="difficulty" className="border-indigo-500/20 bg-gray-800/90 h-8 focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all">
                   <SelectValue placeholder="Select difficulty" />
                 </SelectTrigger>
                 <SelectContent className="border-indigo-500/20 bg-gray-800/90">
@@ -261,8 +261,8 @@ export const AddTaskDialog = ({ children }: AddTaskDialogProps) => {
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-1.5 sm:space-y-2">
-              <Label htmlFor="category" className="text-white/80 font-medium">Type</Label>
+            <div className="space-y-1 sm:space-y-1.5">
+              <Label htmlFor="category" className="text-white/80 font-medium text-sm">Type</Label>
               <Select 
                 value={category} 
                 onValueChange={(value) => setCategory(value)}
@@ -270,7 +270,7 @@ export const AddTaskDialog = ({ children }: AddTaskDialogProps) => {
                 <SelectTrigger 
                   id="category" 
                   className={cn(
-                    "border-indigo-500/20 bg-gray-800/90 h-9 focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all",
+                    "border-indigo-500/20 bg-gray-800/90 h-8 focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all",
                     isSelectedCategoryCompleted && "border-orange-500/30 text-orange-400"
                   )}
                 >
@@ -313,9 +313,9 @@ export const AddTaskDialog = ({ children }: AddTaskDialogProps) => {
               </Select>
             </div>
           </div>
-          <div className="space-y-1.5 sm:space-y-2">
-            <Label className="text-white/80 font-medium">Deadline</Label>
-            <div className="flex items-center justify-between mb-2">
+          <div className="space-y-1 sm:space-y-1.5">
+            <Label className="text-white/80 font-medium text-sm">Deadline</Label>
+            <div className="flex items-center justify-between mb-1">
               <div className="text-xs text-indigo-300 flex items-center">
                 <CalendarClock className="h-3 w-3 mr-1" /> Automatic deadline enforcement
               </div>
@@ -323,15 +323,15 @@ export const AddTaskDialog = ({ children }: AddTaskDialogProps) => {
             <DateTimePicker 
               date={deadline || new Date(Date.now() + 24 * 60 * 60 * 1000)} // Default to tomorrow
               setDate={setDeadline}
-              className="mt-2"
+              className="mt-1"
             />
-            <p className="text-xs text-gray-400 mt-1">
+            <p className="text-xs text-gray-400 mt-0.5">
               Missing a deadline will automatically apply Shadow Penalty, reducing EXP reward by 50%.
             </p>
           </div>
           
-          <div className="pt-2">
-            <Button type="submit" className="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-medium">
+          <div className="pt-1.5">
+            <Button type="submit" className="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-medium h-8 text-sm">
               Create Task
             </Button>
           </div>
