@@ -50,6 +50,7 @@ export interface Mission {
   title: string;
   description: string;
   completed: boolean;
+  started?: boolean; // Whether the mission has been started
   expReward: number;
   createdAt: Date;
   completedAt?: Date;
@@ -59,6 +60,9 @@ export interface Mission {
   missed?: boolean; // To track if the deadline was missed
   difficulty?: 'normal' | 'boss'; // Difficulty level of the mission
   expEarned?: number; // Added to track actual EXP earned (for compatibility with MissionBoard.tsx)
+  count?: number; // Number of tasks to complete for this mission
+  taskNames?: string[]; // Names of individual tasks to complete
+  completedTaskIndices?: number[]; // Indices of completed tasks
 }
 
 export type Stat = 'physical' | 'cognitive' | 'emotional' | 'spiritual' | 'social';

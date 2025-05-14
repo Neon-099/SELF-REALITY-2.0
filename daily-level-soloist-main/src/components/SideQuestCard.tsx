@@ -24,7 +24,7 @@ const SideQuestCard: React.FC<SideQuestCardProps> = ({ quest, onComplete }) => {
       {/* Header */}
       <div className="flex justify-between items-start mb-2">
         <div className="flex flex-col gap-1">
-          <h3 className={`font-bold text-lg tracking-tight ${quest.completed ? 'line-through text-gray-400' : 'text-white drop-shadow-sm'}`}>{quest.title}</h3>
+          <h3 className={`font-bold text-lg tracking-tight ${quest.completed ? 'line-through text-gray-400' : 'text-transparent bg-clip-text bg-gradient-to-r from-solo-primary to-purple-400 drop-shadow-sm'}`}>{quest.title}</h3>
         </div>
         <div className="flex flex-col items-end gap-2">
           <div className="flex items-center gap-1">

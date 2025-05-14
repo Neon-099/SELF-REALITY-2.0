@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Star, CheckCircle, Lock, Trophy, Calendar } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Star, CheckCircle, Lock, Trophy, Calendar, Activity, Play } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useSoloLevelingStore } from '@/lib/store';
@@ -10,6 +10,15 @@ import { Badge } from '@/components/ui/badge';
 import { Rank, Mission } from '@/lib/types';
 import { PredefinedMission } from '@/data/predefined-missions';
 import { motion } from 'framer-motion';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogFooter 
+} from '@/components/ui/dialog';
+import { Progress } from '@/components/ui/progress';
+import { Checkbox } from '@/components/ui/checkbox';
 
 interface RankMissionProgressProps {
   missions: PredefinedMission[];
@@ -23,9 +32,14 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
   const { toast } = useToast();
   const [currentDay, setCurrentDay] = useState(1);
   const completeMission = useSoloLevelingStore(state => state.completeMission);
+  const startMission = useSoloLevelingStore(state => state.startMission);
+  const updateMissionTasks = useSoloLevelingStore(state => state.updateMissionTasks);
   const completedMissionHistory = useSoloLevelingStore(state => state.completedMissionHistory);
   const [isLoading, setIsLoading] = useState(false);
   const [showAll, setShowAll] = useState(false);
+  const [taskDialogOpen, setTaskDialogOpen] = useState(false);
+  const [currentMission, setCurrentMission] = useState<PredefinedMission | null>(null);
+  const [completedTaskIndices, setCompletedTaskIndices] = useState<number[]>([]);
   
   // Ensure missions is always an array
   const safeMissions = Array.isArray(missions) ? missions : [];
@@ -45,12 +59,12 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
     }
   };
   
-  const handleCompleteMission = async (mission: PredefinedMission) => {
+  const handleStartMission = async (mission: PredefinedMission) => {
     if (!mission.id) {
       console.error("Mission ID is undefined!", mission);
       toast({
         title: "Error",
-        description: "This mission cannot be completed (missing ID).",
+        description: "This mission cannot be started (missing ID).",
         variant: "destructive",
       });
       return;
@@ -60,25 +74,89 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
     if (completedMissionHistory.some(m => m.id === mission.id)) {
       toast({
         title: "Mission Already Completed",
-        description: `You have already claimed the reward for "${mission.title}"`,
+        description: `You have already completed "${mission.title}"`,
         variant: "destructive",
       });
       return;
     }
     
-    // Complete the mission in the store and persist in IndexedDB
+    // Check if mission is already started
+    if (mission.started) {
+      openTaskTrackingDialog(mission);
+      return;
+    }
+    
+    // Start the mission
     try {
-      await completeMission(mission.id);
-      toast({
-        title: "Mission Completed!",
-        description: `You've completed: ${mission.title}`,
-        variant: "default",
-      });
+      await startMission(mission.id);
+      // Open task tracking dialog
+      openTaskTrackingDialog(mission);
     } catch (error) {
-      console.error("Error completing mission:", error);
+      console.error("Error starting mission:", error);
       toast({
         title: "Error",
-        description: "Failed to complete mission",
+        description: "Failed to start mission",
+        variant: "destructive",
+      });
+    }
+  };
+  
+  const openTaskTrackingDialog = (mission: PredefinedMission) => {
+    setCurrentMission(mission);
+    // Initialize with any already completed tasks
+    setCompletedTaskIndices(mission.completedTaskIndices || []);
+    setTaskDialogOpen(true);
+  };
+  
+  const handleTaskToggle = (index: number) => {
+    setCompletedTaskIndices(prev => {
+      const isCompleted = prev.includes(index);
+      let updated: number[];
+      
+      if (isCompleted) {
+        // Remove from completed tasks
+        updated = prev.filter(i => i !== index);
+      } else {
+        // Add to completed tasks
+        updated = [...prev, index];
+      }
+      
+      // Sort the indices for better display
+      updated.sort((a, b) => a - b);
+      
+      // If all tasks are completed, automatically save progress
+      if (currentMission && currentMission.count && updated.length >= currentMission.count) {
+        saveTaskProgress(updated);
+      }
+      
+      return updated;
+    });
+  };
+  
+  const saveTaskProgress = async (indices: number[] = completedTaskIndices) => {
+    if (!currentMission) return;
+    
+    try {
+      await updateMissionTasks(currentMission.id, indices);
+      
+      // If all tasks are completed, close the dialog
+      if (currentMission.count && indices.length >= currentMission.count) {
+        setTaskDialogOpen(false);
+        toast({
+          title: "Mission Completed!",
+          description: `Great job completing "${currentMission.title}"!`,
+        });
+      } else {
+        toast({
+          title: "Progress Saved",
+          description: `Your progress on "${currentMission.title}" has been saved.`,
+        });
+      }
+    } catch (error) {
+      console.error("Error updating mission tasks:", error);
+      toast({
+        title: "Error",
+        description: "Failed to save task progress",
         variant: "destructive",
       });
     }
@@ -208,9 +286,15 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
     
     return dayMissions.map((mission, index) => {
       const isCompleted = mission.completed || completedMissionHistory.some(cm => cm.id === mission.id);
+      const isStarted = mission.started && !isCompleted;
       // Try to find the completed mission in history to get actual EXP earned
       const completedMission = completedMissionHistory.find(cm => cm.id === mission.id);
       const isBoss = mission.difficulty === 'boss';
+      
+      // Get task completion progress
+      const completedTaskCount = mission.completedTaskIndices?.length || 0;
+      const totalTaskCount = mission.count || 1;
+      const taskProgress = isStarted ? Math.round((completedTaskCount / totalTaskCount) * 100) : 0;
       
       // Get the rank colors
       const rankGradient = getRankColor(mission.rank as Rank);
@@ -272,6 +356,15 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
               </div>
             )}
 
+            {/* Started indicator */}
+            {isStarted && (
+              <div className="absolute top-2 right-2">
+                <Badge variant="outline" className="bg-blue-500/20 border-blue-400 text-blue-400">
+                  In Progress
+                </Badge>
+              </div>
+            )}
+
             <CardContent className="p-0">
               {/* Mission header with rank-colored background */}
               <div className={`p-5 border-b ${rankBg} relative overflow-hidden`}>
@@ -330,6 +423,54 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
                 <p className={`font-medium ${isCompleted ? 'text-gray-400' : 'text-muted-foreground'} relative z-10 leading-relaxed`}>
                   {mission.description}
                 </p>
+
+                {/* Task Count */}
+                {mission.count && mission.count > 1 && (
+                  <div className={`mt-4 flex items-center gap-2 ${isCompleted ? 'text-gray-400' : 'text-muted-foreground'}`}>
+                    <Badge variant="outline" className={`px-2 py-1 ${isCompleted ? 'opacity-60' : ''}`}>
+                      {mission.count} Tasks
+                    </Badge>
+                    <span className="text-xs">Complete all tasks to finish this mission</span>
+                  </div>
+                )}
+
+                {/* Task Progress for started missions */}
+                {isStarted && mission.count && mission.count > 1 && (
+                  <div className="mt-4 space-y-2">
+                    <div className="flex justify-between items-center text-xs">
+                      <span>Progress: {completedTaskCount}/{totalTaskCount} tasks</span>
+                      <span>{taskProgress}%</span>
+                    </div>
+                    <Progress value={taskProgress} className="h-2" />
+                  </div>
+                )}
+
+                {/* Task Names */}
+                {mission.taskNames && mission.taskNames.length > 1 && (
+                  <div className={`mt-3 rounded-md border p-2 ${isCompleted ? 'opacity-60' : ''}`}>
+                    <div className="text-xs mb-1 font-medium">Task List:</div>
+                    <div className="space-y-1 max-h-24 overflow-y-auto">
+                      {mission.taskNames.map((task, idx) => (
+                        <div key={idx} className="flex items-start gap-1.5 text-sm">
+                          {isStarted && (
+                            <Checkbox 
+                              checked={mission.completedTaskIndices?.includes(idx)} 
+                              className="mt-0.5"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleTaskToggle(idx);
+                              }}
+                            />
+                          )}
+                          <span className="text-xs mt-0.5">{!isStarted && `${idx + 1}.`}</span>
+                          <span className={`flex-1 ${isStarted && mission.completedTaskIndices?.includes(idx) ? 'line-through text-muted-foreground' : ''}`}>
+                            {task}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 
                 {/* Completed mission experience earned */}
                 {isCompleted && (
@@ -345,24 +486,37 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
               </div>
               
               {/* Mission action button */}
-              {!isCompleted && !isLocked && (
+              {!isCompleted && !isLocked && !isStarted && (
                 <Button
                   className={`w-full rounded-none h-16 text-lg font-medium ${isBoss 
                     ? 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-gray-900' 
                     : `${rankSolid} hover:brightness-110`}`}
-                  onClick={() => handleCompleteMission(mission)}
+                  onClick={() => handleStartMission(mission)}
                 >
                   {isBoss ? (
                     <div className="flex items-center gap-2">
                       <div className="animate-bounce">⚔️</div> 
-                      <span>Defeat Boss</span>
+                      <span>Start Boss Battle</span>
                     </div>
                   ) : (
                     <div className="flex items-center gap-2">
-                      <Trophy className="h-5 w-5 animate-pulse" /> 
-                      <span>Complete Mission</span>
+                      <Play className="h-5 w-5" /> 
+                      <span>Start Mission</span>
                     </div>
                   )}
+                </Button>
+              )}
+              
+              {/* Continue Mission button */}
+              {isStarted && (
+                <Button
+                  className={`w-full rounded-none h-16 text-lg font-medium bg-blue-600 hover:bg-blue-700 text-white`}
+                  onClick={() => handleStartMission(mission)}
+                >
+                  <div className="flex items-center gap-2">
+                    <Activity className="h-5 w-5" /> 
+                    <span>Continue Mission</span>
+                  </div>
                 </Button>
               )}
               
@@ -444,6 +598,87 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {renderMissionCards()}
       </div>
+
+      {/* Task completion dialog */}
+      <Dialog open={taskDialogOpen} onOpenChange={setTaskDialogOpen}>
+        <DialogContent variant="compact">
+          <DialogHeader>
+            <DialogTitle className="text-xl">
+              {currentMission ? currentMission.title : 'Mission Tasks'}
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="py-4 space-y-6">
+            {currentMission && (
+              <>
+                <div className="text-center">
+                  <div className="font-semibold mb-2">Task Progress</div>
+                  <div className="flex items-center justify-center gap-2 mb-4">
+                    <Activity className="h-5 w-5 text-blue-500" />
+                    <span className="text-xl font-bold">{completedTaskIndices.length} / {currentMission.count || 1}</span>
+                  </div>
+                  <Progress 
+                    value={(completedTaskIndices.length / (currentMission.count || 1)) * 100} 
+                    className="h-2 w-full" 
+                  />
+                </div>
+                
+                {/* Task list with checkboxes */}
+                {currentMission.taskNames && currentMission.taskNames.length > 0 && (
+                  <div className="space-y-2 mt-4">
+                    <div className="font-semibold text-sm">Check off completed tasks:</div>
+                    <div className="max-h-48 overflow-y-auto space-y-3 border rounded-md p-3">
+                      {currentMission.taskNames.map((task, idx) => (
+                        <div 
+                          key={idx} 
+                          className={`flex items-center gap-3 p-2 rounded hover:bg-accent/20 transition-colors ${
+                            completedTaskIndices.includes(idx) ? 'bg-green-100/10 border-green-500/30' : ''
+                          }`}
+                          onClick={() => handleTaskToggle(idx)}
+                        >
+                          <Checkbox 
+                            id={`task-${idx}`}
+                            checked={completedTaskIndices.includes(idx)}
+                            onCheckedChange={() => handleTaskToggle(idx)}
+                            className="h-5 w-5"
+                          />
+                          <label 
+                            htmlFor={`task-${idx}`}
+                            className={`flex-1 cursor-pointer ${completedTaskIndices.includes(idx) ? 'line-through text-muted-foreground' : ''}`}
+                          >
+                            {task}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                <div className="text-center text-sm text-muted-foreground">
+                  <p>Check off tasks as you complete them.</p>
+                  <p className="mt-1">Your progress is saved automatically.</p>
+                </div>
+              </>
+            )}
+          </div>
+          
+          <DialogFooter className="flex items-center justify-between pt-2">
+            <Button
+              variant="outline"
+              onClick={() => setTaskDialogOpen(false)}
+            >
+              Close
+            </Button>
+            <Button
+              onClick={() => saveTaskProgress()}
+              className="gap-2"
+            >
+              <CheckCircle className="h-4 w-4" />
+              Save Progress
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 } 

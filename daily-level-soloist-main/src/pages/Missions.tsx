@@ -130,11 +130,40 @@ const Missions = () => {
     day: 1,
     rank: 'F' as Rank,
     difficulty: 'normal' as Difficulty,
-    expReward: '30' // Default XP value
+    expReward: '30', // Default XP value
+    count: 1, // Default task count
+    taskNames: [''] // Default task names
   });
 
   const handleNewMissionChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    setNewMission({ ...newMission, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    
+    if (name === 'count') {
+      const count = parseInt(value) || 1;
+      // Update task names array length based on new count
+      const taskNames = [...newMission.taskNames];
+      
+      // If increasing count, add empty task names
+      if (count > taskNames.length) {
+        while (taskNames.length < count) {
+          taskNames.push(`Task ${taskNames.length + 1}`);
+        }
+      } 
+      // If decreasing count, truncate the array
+      else if (count < taskNames.length) {
+        taskNames.length = count;
+      }
+      
+      setNewMission(prev => ({ ...prev, count, taskNames }));
+    } else {
+      setNewMission(prev => ({ ...prev, [name]: value }));
+    }
+  };
+  
+  const handleTaskNameChange = (index: number, value: string) => {
+    const taskNames = [...newMission.taskNames];
+    taskNames[index] = value;
+    setNewMission(prev => ({ ...prev, taskNames }));
   };
 
   const handleCreateMission = async (e: React.FormEvent) => {
@@ -142,6 +171,9 @@ const Missions = () => {
     
     // Get XP reward from input
     const expReward = parseInt(newMission.expReward) || 30; // Default to 30 if invalid
+    
+    // Get task count
+    const count = parseInt(String(newMission.count)) || 1; // Default to 1 if invalid
     
     // Validate day number against rank requirements
     const rankLevel = rankLevels.find(r => r.id === newMission.rank);
@@ -154,14 +186,20 @@ const Missions = () => {
       return;
     }
     
-    // Use the updated addMission function that now accepts rank and day
+    // Clean up task names - replace empty strings with default names
+    const taskNames = newMission.taskNames
+      .map((name, index) => name.trim() || `Task ${index + 1}`);
+    
+    // Use the updated addMission function that now accepts taskNames
     addMission(
       newMission.title,
       newMission.description,
       expReward,
       newMission.rank as Rank,
       Number(newMission.day),
-      newMission.difficulty === 'boss' ? 'boss' : 'normal'
+      newMission.difficulty === 'boss' ? 'boss' : 'normal',
+      count,
+      taskNames
     );
     
     setShowModal(false);
@@ -171,7 +209,9 @@ const Missions = () => {
       day: 1, 
       rank: 'F', 
       difficulty: 'normal', 
-      expReward: '30'
+      expReward: '30',
+      count: 1,
+      taskNames: ['']
     });
     
     toast({ 
@@ -384,12 +424,12 @@ const Missions = () => {
               <Button onClick={() => setShowModal(true)} className="flex items-center gap-2">
                 <Plus className="w-5 h-5" /> New Mission
               </Button>
-              <DialogContent>
+              <DialogContent variant="compact">
                 <DialogHeader>
                   <DialogTitle>Create New Mission</DialogTitle>
                 </DialogHeader>
-                <form className="space-y-4" onSubmit={handleCreateMission}>
-                  <div className="space-y-2">
+                <form className="space-y-3" onSubmit={handleCreateMission}>
+                  <div className="space-y-1">
                     <Label htmlFor="mission-title">Title</Label>
                     <Input
                       id="mission-title"
@@ -400,7 +440,7 @@ const Missions = () => {
                       required
                     />
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-1">
                     <Label htmlFor="mission-description">Description</Label>
                     <Textarea
                       id="mission-description"
@@ -409,47 +449,69 @@ const Missions = () => {
                       value={newMission.description}
                       onChange={handleNewMissionChange}
                       required
+                      className="h-20"
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="mission-day">Day</Label>
-                    <Input
-                      id="mission-day"
-                      name="day"
-                      type="number"
-                      min="1"
-                      placeholder="Day"
-                      value={newMission.day}
-                      onChange={handleNewMissionChange}
-                      required
-                    />
+                  
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="space-y-1">
+                      <Label htmlFor="mission-day">Day</Label>
+                      <Input
+                        id="mission-day"
+                        name="day"
+                        type="number"
+                        min="1"
+                        placeholder="Day"
+                        value={newMission.day}
+                        onChange={handleNewMissionChange}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label htmlFor="mission-exp">XP Reward</Label>
+                      <Input
+                        id="mission-exp"
+                        name="expReward"
+                        type="number"
+                        min="1"
+                        placeholder="Enter XP amount"
+                        value={newMission.expReward}
+                        onChange={handleNewMissionChange}
+                        required
+                      />
+                    </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="mission-difficulty">Difficulty</Label>
-                    <Select name="difficulty" value={newMission.difficulty} onValueChange={val => setNewMission(n => ({ ...n, difficulty: val as Difficulty }))}>
-                      <SelectTrigger id="mission-difficulty">
-                        <SelectValue placeholder="Select difficulty" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="normal">Normal</SelectItem>
-                        <SelectItem value="boss">Boss</SelectItem>
-                      </SelectContent>
-                    </Select>
+                  
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="space-y-1">
+                      <Label htmlFor="mission-count">Task Count</Label>
+                      <Input
+                        id="mission-count"
+                        name="count"
+                        type="number"
+                        min="1"
+                        max="100"
+                        placeholder="Number of tasks"
+                        value={newMission.count}
+                        onChange={handleNewMissionChange}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label htmlFor="mission-difficulty">Difficulty</Label>
+                      <Select name="difficulty" value={newMission.difficulty} onValueChange={val => setNewMission(n => ({ ...n, difficulty: val as Difficulty }))}>
+                        <SelectTrigger id="mission-difficulty">
+                          <SelectValue placeholder="Select difficulty" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="normal">Normal</SelectItem>
+                          <SelectItem value="boss">Boss</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="mission-exp">XP Reward</Label>
-                    <Input
-                      id="mission-exp"
-                      name="expReward"
-                      type="number"
-                      min="1"
-                      placeholder="Enter XP amount"
-                      value={newMission.expReward}
-                      onChange={handleNewMissionChange}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
+                  
+                  <div className="space-y-1">
                     <Label htmlFor="mission-rank">Rank</Label>
                     <Select name="rank" value={newMission.rank} onValueChange={val => setNewMission(n => ({ ...n, rank: val as Rank }))}>
                       <SelectTrigger id="mission-rank">
@@ -468,7 +530,27 @@ const Missions = () => {
                       </SelectContent>
                     </Select>
                   </div>
-                  <DialogFooter>
+                  
+                  {/* Task Names */}
+                  {parseInt(String(newMission.count)) > 1 && (
+                    <div className="space-y-2">
+                      <Label>Task Names</Label>
+                      <div className="space-y-2 max-h-40 overflow-y-auto pr-2">
+                        {newMission.taskNames.map((taskName, index) => (
+                          <div key={index} className="flex items-center gap-2">
+                            <Input
+                              placeholder={`Task ${index + 1}`}
+                              value={taskName}
+                              onChange={(e) => handleTaskNameChange(index, e.target.value)}
+                              className="flex-1"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  <DialogFooter className="pt-2">
                     <Button type="button" variant="outline" onClick={() => setShowModal(false)}>
                       Cancel
                     </Button>

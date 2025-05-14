@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Task } from '@/lib/types';
 import { getDifficultyColor, getCategoryColor } from '@/lib/utils';
-import { Edit, Trash2, CheckCircle, AlertCircle, Clock } from 'lucide-react';
+import { Edit, Trash2, CheckCircle, AlertCircle, Clock, CalendarClock } from 'lucide-react';
 import { useSoloLevelingStore } from '@/lib/store';
 import { cn } from '@/lib/utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -201,15 +201,6 @@ export function TaskCard({ task }: TaskCardProps) {
           </h3>
           
           <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1">
-              <CheckCircle className="h-4 w-4 text-gray-200" />
-              <span className="text-sm font-semibold text-gray-200">{task.category}</span>
-            </div>
-            
-            <span className="flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-gradient-to-r from-yellow-400 to-yellow-500 text-gray-900 shadow-md">
-              +{task.expReward} EXP
-            </span>
-            
             <button 
               onClick={(e) => {
                 e.stopPropagation();
@@ -260,9 +251,17 @@ export function TaskCard({ task }: TaskCardProps) {
       
       {/* Edit Task Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="bg-solo-dark border-gray-800 text-solo-text sm:max-w-[425px]">
+        <DialogContent
+          className="
+            glassmorphism
+            text-solo-text sm:max-w-[380px] w-[90%] p-3 sm:p-4 max-h-[80vh] overflow-y-auto rounded-xl
+            before:!absolute before:!inset-0 before:!rounded-xl 
+            before:!bg-gradient-to-br before:!from-indigo-500/10 before:!to-purple-500/5 
+            before:!backdrop-blur-xl before:!-z-10
+          "
+        >
           <DialogHeader>
-            <DialogTitle>Edit Task</DialogTitle>
+            <DialogTitle className="font-semibold text-white/90 tracking-wide text-base">Edit Task</DialogTitle>
           </DialogHeader>
           
           {allDailyWinsCompleted && categoryType === 'dailyWin' && (
@@ -275,39 +274,39 @@ export function TaskCard({ task }: TaskCardProps) {
             </Alert>
           )}
           
-          <div className="space-y-4 pt-4">
-            <div className="space-y-2">
-              <Label htmlFor="edit-title">Title</Label>
+          <div className="space-y-2.5 sm:space-y-3 pt-2 sm:pt-3 relative z-10">
+            <div className="space-y-1 sm:space-y-1.5">
+              <Label htmlFor="edit-title" className="text-white/80 font-medium text-sm">Title</Label>
               <Input
                 id="edit-title"
                 value={editTitle}
                 onChange={(e) => setEditTitle(e.target.value)}
                 placeholder="Enter task title"
-                className="border-gray-700 bg-gray-900"
+                className="border-indigo-500/20 bg-gray-800/90 h-8 sm:h-9 focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all"
               />
             </div>
             
-            <div className="space-y-2">
-              <Label htmlFor="edit-description">Description (optional)</Label>
+            <div className="space-y-1 sm:space-y-1.5">
+              <Label htmlFor="edit-description" className="text-white/80 font-medium text-sm">Description (optional)</Label>
               <Textarea
                 id="edit-description"
                 value={editDescription}
                 onChange={(e) => setEditDescription(e.target.value)}
                 placeholder="Enter task description"
-                className="border-gray-700 bg-gray-900"
+                className="border-indigo-500/20 bg-gray-800/90 min-h-[60px] focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all"
               />
             </div>
             
-            <div className="space-y-2">
-              <Label>Category</Label>
-              <div className="grid grid-cols-2 gap-0 rounded-md overflow-hidden border border-gray-800">
+            <div className="space-y-1 sm:space-y-1.5">
+              <Label className="text-white/80 font-medium text-sm">Category</Label>
+              <div className="grid grid-cols-2 gap-0 rounded-md overflow-hidden border border-indigo-500/20 bg-gray-800/80">
                 <button
                   type="button"
                   onClick={() => setCategoryType('attribute')}
                   className={cn(
-                    "py-2 px-4 text-center transition-all duration-200",
+                    "py-1.5 px-3 text-center transition-all duration-200 text-sm",
                     categoryType === 'attribute' 
-                      ? "bg-solo-primary/10 border-b-2 border-solo-primary font-medium text-solo-primary" 
+                      ? "bg-indigo-500/10 border-b-2 border-indigo-500 font-medium text-indigo-300" 
                       : "text-gray-400 hover:bg-gray-800/50 border-b-2 border-transparent"
                   )}
                 >
@@ -318,11 +317,11 @@ export function TaskCard({ task }: TaskCardProps) {
                   onClick={() => !allDailyWinsCompleted && setCategoryType('dailyWin')}
                   disabled={allDailyWinsCompleted && categoryType !== 'dailyWin'}
                   className={cn(
-                    "py-2 px-4 text-center transition-all duration-200",
+                    "py-1.5 px-3 text-center transition-all duration-200 text-sm",
                     categoryType === 'dailyWin' 
-                      ? "bg-solo-primary/10 border-b-2 border-solo-primary font-medium text-solo-primary" 
+                      ? "bg-indigo-500/10 border-b-2 border-indigo-500 font-medium text-indigo-300" 
                       : "text-gray-400 hover:bg-gray-800/50 border-b-2 border-transparent",
-                    allDailyWinsCompleted && categoryType !== 'dailyWin' && "opacity-50 cursor-not-allowed"
+                    allDailyWinsCompleted && categoryType !== 'dailyWin' && "opacity-50 cursor-not-allowed hover:bg-transparent"
                   )}
                 >
                   Daily Win
@@ -330,33 +329,35 @@ export function TaskCard({ task }: TaskCardProps) {
               </div>
             </div>
             
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="edit-difficulty">Difficulty</Label>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1 sm:space-y-1.5">
+                <Label htmlFor="edit-difficulty" className="text-white/80 font-medium text-sm">Difficulty</Label>
                 <Select 
                   value={editDifficulty} 
                   onValueChange={(value) => setEditDifficulty(value as Difficulty)}
                 >
-                  <SelectTrigger id="edit-difficulty" className="border-gray-700 bg-gray-900">
+                  <SelectTrigger id="edit-difficulty" className="border-indigo-500/20 bg-gray-800/90 h-8 focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all">
                     <SelectValue placeholder="Select difficulty" />
                   </SelectTrigger>
-                  <SelectContent className="border-gray-700 bg-gray-900">
+                  <SelectContent className="border-indigo-500/20 bg-gray-800/90">
                     <SelectItem value="easy">Easy</SelectItem>
                     <SelectItem value="medium">Medium</SelectItem>
+                    <SelectItem value="hard">Hard</SelectItem>
+                    <SelectItem value="boss">Boss</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               
-              <div className="space-y-2">
-                <Label htmlFor="edit-category">Type</Label>
+              <div className="space-y-1 sm:space-y-1.5">
+                <Label htmlFor="edit-category" className="text-white/80 font-medium text-sm">Type</Label>
                 <Select 
                   value={editCategory} 
                   onValueChange={(value) => setEditCategory(value)}
                 >
-                  <SelectTrigger id="edit-category" className="border-gray-700 bg-gray-900">
+                  <SelectTrigger id="edit-category" className="border-indigo-500/20 bg-gray-800/90 h-8 focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all">
                     <SelectValue placeholder="Select category" />
                   </SelectTrigger>
-                  <SelectContent className="border-gray-700 bg-gray-900">
+                  <SelectContent className="border-indigo-500/20 bg-gray-800/90">
                     {categoryType === 'dailyWin' ? (
                       // Daily Win Categories
                       <>
@@ -380,30 +381,39 @@ export function TaskCard({ task }: TaskCardProps) {
               </div>
             </div>
             
-            <div className="space-y-2 mt-4">
-              <Label className="text-white/80 font-medium">Deadline</Label>
-              <div className="flex items-center justify-between mb-2">
+            <div className="space-y-1 sm:space-y-1.5">
+              <Label className="text-white/80 font-medium text-sm">Deadline</Label>
+              <div className="flex items-center justify-between mb-1">
                 <div className="text-xs text-indigo-300 flex items-center">
-                  <Clock className="h-3 w-3 mr-1" /> Automatic deadline enforcement
+                  <CalendarClock className="h-3 w-3 mr-1" /> Automatic deadline enforcement
                 </div>
               </div>
               <DateTimePicker 
                 date={editDeadline || new Date(Date.now() + 24 * 60 * 60 * 1000)} // Default to tomorrow
                 setDate={setEditDeadline}
-                className="mt-2"
+                className="mt-1"
               />
-              <p className="text-xs text-gray-400 mt-1">
+              <p className="text-xs text-gray-400 mt-0.5">
                 Missing a deadline will automatically apply Shadow Penalty, reducing EXP reward by 50%.
               </p>
             </div>
             
-            <div className="flex justify-end gap-2 pt-2">
-              <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-                Cancel
-              </Button>
-              <Button onClick={handleSaveEdit} className="bg-solo-primary hover:bg-solo-primary/80">
-                Save Changes
-              </Button>
+            <div className="pt-1.5">
+              <div className="flex justify-end gap-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setIsEditDialogOpen(false)}
+                  className="border-indigo-500/20 hover:bg-indigo-500/10 text-indigo-300 text-sm h-8"
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={handleSaveEdit} 
+                  className="bg-indigo-500 hover:bg-indigo-600 text-white font-medium h-8 text-sm"
+                >
+                  Save Changes
+                </Button>
+              </div>
             </div>
           </div>
         </DialogContent>

@@ -131,20 +131,6 @@ const Index = () => {
                 Welcome, <span className="bg-clip-text text-transparent bg-gradient-to-r from-solo-primary to-solo-secondary glow-text">{user.name || "Hunter"}</span>
               </h1>
               <p className="text-gray-400">{formatDate(currentDate)}</p>
-              <div className="flex items-center gap-2 mt-2">
-                <div className="bg-solo-dark/70 border border-gray-800/50 backdrop-blur-sm px-3 py-1 rounded-full flex items-center gap-1">
-                  <Target size={14} className="text-solo-primary" />
-                  <span className="text-xs">Level {user.level}</span>
-                </div>
-                <div className="bg-solo-dark/70 border border-gray-800/50 backdrop-blur-sm px-3 py-1 rounded-full flex items-center gap-1">
-                  <Award size={14} className="text-yellow-500" />
-                  <span className="text-xs">{user.rank} Rank</span>
-                </div>
-                <div className="bg-solo-dark/70 border border-gray-800/50 backdrop-blur-sm px-3 py-1 rounded-full flex items-center gap-1">
-                  <TrendingUp size={14} className="text-green-500" />
-                  <span className="text-xs">{user.streakDays} Day Streak</span>
-                </div>
-              </div>
             </div>
             
             <div className="flex flex-wrap gap-2 md:gap-4">
@@ -204,7 +190,7 @@ const Index = () => {
           <div className="flex justify-between items-center">
             <CardTitle className="flex items-center gap-2 text-2xl font-extrabold tracking-tight bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent drop-shadow-glow">
               <Zap className="h-7 w-7 text-blue-400 drop-shadow-glow" />
-              Today's <span className="text-blue-400">Tasks</span>
+              <span className="text-blue-400">Tasks</span>
             </CardTitle>
             <div className="flex gap-2">
               <Link to="/planner">

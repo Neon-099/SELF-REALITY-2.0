@@ -72,7 +72,7 @@ export default function RankBadgesTimeline({
         size="icon" 
         onClick={onPrevRank}
         disabled={currentRankIndex === 0}
-        className="text-gray-400 hover:text-white rounded-full w-12 h-12 md:w-14 md:h-14 p-0 flex items-center justify-center touch-manipulation"
+        className="hidden md:flex text-gray-400 hover:text-white rounded-full w-12 h-12 md:w-14 md:h-14 p-0 items-center justify-center touch-manipulation"
       >
         <ChevronLeft className="h-8 w-8 md:h-10 md:w-10" />
       </Button>
@@ -127,7 +127,7 @@ export default function RankBadgesTimeline({
         size="icon"
         onClick={onNextRank}
         disabled={currentRankIndex >= rankBadges.length - 1}
-        className="text-gray-400 hover:text-white rounded-full w-12 h-12 md:w-14 md:h-14 p-0 flex items-center justify-center border-2 hover:border-solo-primary hover:bg-solo-dark/50 transition-all duration-200 shadow-lg touch-manipulation"
+        className="hidden md:flex text-gray-400 hover:text-white rounded-full w-12 h-12 md:w-14 md:h-14 p-0 items-center justify-center border-2 hover:border-solo-primary hover:bg-solo-dark/50 transition-all duration-200 shadow-lg touch-manipulation"
       >
         <ChevronRight className="h-8 w-8 md:h-10 md:w-10" />
       </Button>

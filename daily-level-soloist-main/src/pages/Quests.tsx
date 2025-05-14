@@ -11,6 +11,7 @@ import { DateTimePicker } from '@/components/ui/date-time-picker';
 import SideQuestCard from '../components/SideQuestCard';
 import DailyQuestCard from '../components/DailyQuestCard';
 import MainQuestCard from '../components/MainQuestCard';
+import { CustomDialogContent } from '@/components/ui/custom-dialog';
 
 // Define experience reward values by difficulty
 const expRewards: { [key in Difficulty]: number } = {
@@ -968,12 +969,30 @@ const Quests = () => {
                 Add Quest
               </Button>
             </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Add New Quest</DialogTitle>
+            <CustomDialogContent 
+              className="w-[85vw] max-w-[380px] p-3 sm:p-4 max-h-[85vh] overflow-hidden flex flex-col"
+            >
+              <DialogHeader className="border-b border-indigo-500/20 pb-2 mb-2 relative">
+                <DialogTitle className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 to-violet-400 drop-shadow-sm text-base">
+                  Add New Quest
+                </DialogTitle>
+                <button 
+                  type="button"
+                  className="absolute right-0 top-0 h-5 w-5 rounded-full bg-gradient-to-r from-indigo-600/30 to-violet-700/30 hover:from-indigo-600/50 hover:to-violet-700/50 transition-all p-0.5 border border-indigo-500/20 flex items-center justify-center cursor-pointer z-10"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    setIsAddQuestDialogOpen(false);
+                  }}
+                  aria-label="Close dialog"
+                >
+                  <X className="h-3 w-3 text-indigo-300" />
+                </button>
               </DialogHeader>
-              <AddQuestDialog onClose={() => setIsAddQuestDialogOpen(false)} />
-            </DialogContent>
+              <div className="py-2 flex-1 overflow-y-auto pr-2 custom-scrollbar">
+                <AddQuestDialog onClose={() => setIsAddQuestDialogOpen(false)} />
+              </div>
+            </CustomDialogContent>
           </Dialog>
         </div>
       </div>

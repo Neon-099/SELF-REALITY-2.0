@@ -8,8 +8,10 @@ import { getDB } from '../../db';
 export interface MissionSlice {
   missions: Mission[];
   completedMissionHistory: Mission[];
-  addMission: (title: string, description: string, expReward: number, rank?: Rank, day?: number, difficulty?: 'normal' | 'boss') => void;
+  addMission: (title: string, description: string, expReward: number, rank?: Rank, day?: number, difficulty?: 'normal' | 'boss', count?: number, taskNames?: string[]) => void;
   completeMission: (id: string) => Promise<void>;
+  startMission: (id: string) => Promise<void>;
+  updateMissionTasks: (id: string, completedTaskIndices: number[]) => Promise<void>;
   hasCompletedMissionToday: () => boolean;
   hasCompletedMissionRecently: (hours: number) => boolean;
   getAvailableMissions: () => Mission[];
@@ -22,17 +24,21 @@ export const createMissionSlice: StateCreator<MissionSlice & any> = (set, get) =
   missions: [],
   completedMissionHistory: [],
   
-  addMission: (title: string, description: string, expReward: number, rank: Rank = 'F', day: number = 1, difficulty: 'normal' | 'boss' = 'normal') => {
+  addMission: (title: string, description: string, expReward: number, rank: Rank = 'F', day: number = 1, difficulty: 'normal' | 'boss' = 'normal', count: number = 1, taskNames: string[] = []) => {
     const mission: Mission = {
       id: uuidv4(),
       title,
       description,
       completed: false,
+      started: false,
       expReward,
       createdAt: new Date(),
       rank,
       day,
-      difficulty
+      difficulty,
+      count,
+      taskNames,
+      completedTaskIndices: []
     };
     
     set((state: MissionSlice) => ({
@@ -40,6 +46,91 @@ export const createMissionSlice: StateCreator<MissionSlice & any> = (set, get) =
     }));
     
     return mission;
+  },
+  
+  startMission: async (id: string) => {
+    const { missions } = get();
+    const mission = missions.find((m: Mission) => m.id === id);
+    
+    if (!mission || mission.completed || mission.started) return;
+    
+    const updatedMissions = missions.map((m: Mission) => 
+      m.id === id ? { ...m, started: true } : m
+    );
+    
+    set((state: MissionSlice) => ({
+      missions: updatedMissions
+    }));
+    
+    toast({
+      title: "Mission Started!",
+      description: `You've started the mission "${mission.title}"`,
+    });
+    
+    // Try to also save to IndexedDB for extra persistence
+    try {
+      const db = await getDB();
+      await db.put('store', { ...mission, started: true }, `mission_${mission.id}`);
+    } catch (error) {
+      console.error('Error saving started mission to IndexedDB:', error);
+    }
+  },
+  
+  updateMissionTasks: async (id: string, completedTaskIndices: number[]) => {
+    const { missions } = get();
+    const mission = missions.find((m: Mission) => m.id === id);
+    
+    if (!mission || mission.completed) return;
+    
+    const isAllTasksCompleted = mission.count && completedTaskIndices.length >= mission.count;
+    
+    const updatedMissions = missions.map((m: Mission) => 
+      m.id === id ? { 
+        ...m, 
+        completedTaskIndices,
+        completed: isAllTasksCompleted,
+        completedAt: isAllTasksCompleted ? new Date() : undefined
+      } : m
+    );
+    
+    set((state: MissionSlice) => ({
+      missions: updatedMissions
+    }));
+    
+    // If all tasks are completed, add to completed history and award exp
+    if (isAllTasksCompleted) {
+      const { addExp } = get();
+      const completedMission = { ...mission, completed: true, completedAt: new Date(), completedTaskIndices };
+      
+      set((state: MissionSlice) => ({
+        completedMissionHistory: [...state.completedMissionHistory, completedMission]
+      }));
+      
+      // Award EXP for mission completion
+      addExp(mission.expReward);
+      
+      // Show toast
+      toast({
+        title: "Mission Completed!",
+        description: `You earned ${mission.expReward} EXP for completing "${mission.title}"`,
+      });
+      
+      // Try to also save to IndexedDB for extra persistence
+      try {
+        const db = await getDB();
+        await db.put('store', completedMission, `mission_${completedMission.id}`);
+      } catch (error) {
+        console.error('Error saving completed mission to IndexedDB:', error);
+      }
+    } else {
+      // Try to also save to IndexedDB for extra persistence
+      try {
+        const db = await getDB();
+        await db.put('store', { ...mission, completedTaskIndices }, `mission_${mission.id}`);
+      } catch (error) {
+        console.error('Error saving mission task updates to IndexedDB:', error);
+      }
+    }
   },
   
   completeMission: async (id: string) => {
