@@ -449,7 +449,7 @@ const Missions = () => {
                       value={newMission.description}
                       onChange={handleNewMissionChange}
                       required
-                      className="h-20"
+                      className="h-16"
                     />
                   </div>
                   
@@ -465,43 +465,46 @@ const Missions = () => {
                         value={newMission.day}
                         onChange={handleNewMissionChange}
                         required
+                        className="h-8"
                       />
                     </div>
                     <div className="space-y-1">
-                      <Label htmlFor="mission-exp">XP Reward</Label>
+                      <Label htmlFor="mission-exp">XP</Label>
                       <Input
                         id="mission-exp"
                         name="expReward"
                         type="number"
                         min="1"
-                        placeholder="Enter XP amount"
+                        placeholder="XP"
                         value={newMission.expReward}
                         onChange={handleNewMissionChange}
                         required
+                        className="h-8"
                       />
                     </div>
                   </div>
                   
                   <div className="grid grid-cols-2 gap-2">
                     <div className="space-y-1">
-                      <Label htmlFor="mission-count">Task Count</Label>
+                      <Label htmlFor="mission-count">Tasks</Label>
                       <Input
                         id="mission-count"
                         name="count"
                         type="number"
                         min="1"
                         max="100"
-                        placeholder="Number of tasks"
+                        placeholder="# of tasks"
                         value={newMission.count}
                         onChange={handleNewMissionChange}
                         required
+                        className="h-8"
                       />
                     </div>
                     <div className="space-y-1">
                       <Label htmlFor="mission-difficulty">Difficulty</Label>
                       <Select name="difficulty" value={newMission.difficulty} onValueChange={val => setNewMission(n => ({ ...n, difficulty: val as Difficulty }))}>
-                        <SelectTrigger id="mission-difficulty">
-                          <SelectValue placeholder="Select difficulty" />
+                        <SelectTrigger id="mission-difficulty" className="h-8">
+                          <SelectValue placeholder="Difficulty" />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="normal">Normal</SelectItem>
@@ -514,8 +517,8 @@ const Missions = () => {
                   <div className="space-y-1">
                     <Label htmlFor="mission-rank">Rank</Label>
                     <Select name="rank" value={newMission.rank} onValueChange={val => setNewMission(n => ({ ...n, rank: val as Rank }))}>
-                      <SelectTrigger id="mission-rank">
-                        <SelectValue placeholder="Select rank" />
+                      <SelectTrigger id="mission-rank" className="h-8">
+                        <SelectValue placeholder="Rank" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="F">F</SelectItem>
@@ -533,16 +536,16 @@ const Missions = () => {
                   
                   {/* Task Names */}
                   {parseInt(String(newMission.count)) > 1 && (
-                    <div className="space-y-2">
+                    <div className="space-y-1">
                       <Label>Task Names</Label>
-                      <div className="space-y-2 max-h-40 overflow-y-auto pr-2">
+                      <div className="space-y-1 max-h-32 overflow-y-auto pr-1">
                         {newMission.taskNames.map((taskName, index) => (
-                          <div key={index} className="flex items-center gap-2">
+                          <div key={index} className="flex items-center gap-1">
                             <Input
                               placeholder={`Task ${index + 1}`}
                               value={taskName}
                               onChange={(e) => handleTaskNameChange(index, e.target.value)}
-                              className="flex-1"
+                              className="flex-1 h-7 text-sm"
                             />
                           </div>
                         ))}
@@ -551,10 +554,10 @@ const Missions = () => {
                   )}
                   
                   <DialogFooter className="pt-2">
-                    <Button type="button" variant="outline" onClick={() => setShowModal(false)}>
+                    <Button type="button" variant="outline" onClick={() => setShowModal(false)} className="h-8">
                       Cancel
                     </Button>
-                    <Button type="submit">Create</Button>
+                    <Button type="submit" className="h-8">Create</Button>
                   </DialogFooter>
                 </form>
               </DialogContent>

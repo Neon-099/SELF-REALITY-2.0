@@ -260,3 +260,19 @@
 .animate-progress-bar {
   animation: progress-bar 1.5s ease-in-out infinite;
 }
+
+/* Animation for task completion checkmarks */
+@keyframes scale-in-center {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.scale-in-center {
+  animation: scale-in-center 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+}

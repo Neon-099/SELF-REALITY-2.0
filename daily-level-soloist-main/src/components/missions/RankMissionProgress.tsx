@@ -38,8 +38,10 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
   const [isLoading, setIsLoading] = useState(false);
   const [showAll, setShowAll] = useState(false);
   const [taskDialogOpen, setTaskDialogOpen] = useState(false);
+  const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
   const [currentMission, setCurrentMission] = useState<PredefinedMission | null>(null);
   const [completedTaskIndices, setCompletedTaskIndices] = useState<number[]>([]);
+  const [isSaving, setIsSaving] = useState(false);
   
   // Ensure missions is always an array
   const safeMissions = Array.isArray(missions) ? missions : [];
@@ -59,12 +61,12 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
     }
   };
   
-  const handleStartMission = async (mission: PredefinedMission) => {
+  const handleViewMission = (mission: PredefinedMission) => {
     if (!mission.id) {
       console.error("Mission ID is undefined!", mission);
       toast({
         title: "Error",
-        description: "This mission cannot be started (missing ID).",
+        description: "This mission cannot be viewed (missing ID).",
         variant: "destructive",
       });
       return;
@@ -86,11 +88,20 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
       return;
     }
     
-    // Start the mission
+    // Open the preview dialog
+    setCurrentMission(mission);
+    setPreviewDialogOpen(true);
+  };
+
+  const handleStartMission = async () => {
+    if (!currentMission || !currentMission.id) return;
+    
     try {
-      await startMission(mission.id);
+      await startMission(currentMission.id);
+      setPreviewDialogOpen(false);
+      
       // Open task tracking dialog
-      openTaskTrackingDialog(mission);
+      openTaskTrackingDialog(currentMission);
     } catch (error) {
       console.error("Error starting mission:", error);
       toast({
@@ -124,8 +135,8 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
       // Sort the indices for better display
       updated.sort((a, b) => a - b);
       
-      // If all tasks are completed, automatically save progress
-      if (currentMission && currentMission.count && updated.length >= currentMission.count) {
+      // Always save progress automatically
+      if (currentMission) {
         saveTaskProgress(updated);
       }
       
@@ -135,6 +146,8 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
   
   const saveTaskProgress = async (indices: number[] = completedTaskIndices) => {
     if (!currentMission) return;
+    
+    setIsSaving(true);
     
     try {
       await updateMissionTasks(currentMission.id, indices);
@@ -146,11 +159,6 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
           title: "Mission Completed!",
           description: `Great job completing "${currentMission.title}"!`,
         });
-      } else {
-        toast({
-          title: "Progress Saved",
-          description: `Your progress on "${currentMission.title}" has been saved.`,
-        });
       }
     } catch (error) {
       console.error("Error updating mission tasks:", error);
@@ -159,6 +167,8 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
         description: "Failed to save task progress",
         variant: "destructive",
       });
+    } finally {
+      setIsSaving(false);
     }
   };
   
@@ -374,19 +384,13 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
                     <div className="absolute inset-0 bg-repeat bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMTAiIGN5PSIxMCIgcj0iMiIgZmlsbD0iI2ZmZmZmZiIgZmlsbC1vcGFjaXR5PSIwLjQiLz48L3N2Zz4=')] animate-pulse"></div>
                   </div>
                 )}
-              
+                
                 {/* Rank badge */}
                 <div className="flex justify-between items-center mb-3 relative z-10">
                   <Badge 
                     className={`px-3 py-1.5 ${isBoss ? 'border-amber-400 text-amber-500 font-bold' : rankBadge} bg-transparent font-semibold backdrop-blur-sm border-2 dark:shadow-inner`}
                   >
                     {mission.rank} Rank {isBoss && '• BOSS'}
-                  </Badge>
-                  <Badge 
-                    className="flex items-center gap-1 bg-transparent border-amber-500 text-amber-500 py-1.5 px-3 border-2 backdrop-blur-sm dark:shadow-inner group-hover:scale-110 transition-transform duration-300"
-                  >
-                    <Star className={`h-3.5 w-3.5 ${isBoss ? 'fill-amber-500 animate-pulse' : 'fill-amber-500'} group-hover:scale-110 transition-transform duration-300`} />
-                    +{mission.expReward} EXP
                   </Badge>
                 </div>
                 
@@ -412,7 +416,7 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
               </div>
               
               {/* Mission description */}
-              <div className="p-5 relative">
+              <div className={`p-5 relative ${rankBg} border-t border-white/10`}>
                 {/* Subtle background pattern for boss missions */}
                 {isBoss && (
                   <div className="absolute inset-0 opacity-5">
@@ -420,18 +424,10 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
                   </div>
                 )}
                 
-                <p className={`font-medium ${isCompleted ? 'text-gray-400' : 'text-muted-foreground'} relative z-10 leading-relaxed`}>
-                  {mission.description}
-                </p>
-
-                {/* Task Count */}
-                {mission.count && mission.count > 1 && (
-                  <div className={`mt-4 flex items-center gap-2 ${isCompleted ? 'text-gray-400' : 'text-muted-foreground'}`}>
-                    <Badge variant="outline" className={`px-2 py-1 ${isCompleted ? 'opacity-60' : ''}`}>
-                      {mission.count} Tasks
-                    </Badge>
-                    <span className="text-xs">Complete all tasks to finish this mission</span>
-                  </div>
+                {!isStarted && (
+                  <p className={`font-medium ${isCompleted ? 'text-gray-400' : 'text-muted-foreground'} relative z-10 leading-relaxed`}>
+                    {mission.description}
+                  </p>
                 )}
 
                 {/* Task Progress for started missions */}
@@ -442,45 +438,10 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
                       <span>{taskProgress}%</span>
                     </div>
                     <Progress value={taskProgress} className="h-2" />
-                  </div>
-                )}
-
-                {/* Task Names */}
-                {mission.taskNames && mission.taskNames.length > 1 && (
-                  <div className={`mt-3 rounded-md border p-2 ${isCompleted ? 'opacity-60' : ''}`}>
-                    <div className="text-xs mb-1 font-medium">Task List:</div>
-                    <div className="space-y-1 max-h-24 overflow-y-auto">
-                      {mission.taskNames.map((task, idx) => (
-                        <div key={idx} className="flex items-start gap-1.5 text-sm">
-                          {isStarted && (
-                            <Checkbox 
-                              checked={mission.completedTaskIndices?.includes(idx)} 
-                              className="mt-0.5"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleTaskToggle(idx);
-                              }}
-                            />
-                          )}
-                          <span className="text-xs mt-0.5">{!isStarted && `${idx + 1}.`}</span>
-                          <span className={`flex-1 ${isStarted && mission.completedTaskIndices?.includes(idx) ? 'line-through text-muted-foreground' : ''}`}>
-                            {task}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                
-                {/* Completed mission experience earned */}
-                {isCompleted && (
-                  <div className="text-blue-500 text-sm font-semibold mt-4 flex items-center bg-blue-500/10 p-2 rounded-lg relative z-10">
-                    <Star className="h-4 w-4 mr-2 fill-blue-500" />
-                    {completedMission ? (
-                      <>+{completedMission.expEarned} EXP (earned)</>
-                    ) : (
-                      <>+{mission.expReward} EXP (earned)</>
-                    )}
+                    <p className="text-xs text-blue-400 mt-2 flex items-center gap-1">
+                      <Activity className="h-3 w-3" />
+                      <span>Mission in progress</span>
+                    </p>
                   </div>
                 )}
               </div>
@@ -491,17 +452,17 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
                   className={`w-full rounded-none h-16 text-lg font-medium ${isBoss 
                     ? 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-gray-900' 
                     : `${rankSolid} hover:brightness-110`}`}
-                  onClick={() => handleStartMission(mission)}
+                  onClick={() => handleViewMission(mission)}
                 >
                   {isBoss ? (
                     <div className="flex items-center gap-2">
                       <div className="animate-bounce">⚔️</div> 
-                      <span>Start Boss Battle</span>
+                      <span>View Boss Battle</span>
                     </div>
                   ) : (
                     <div className="flex items-center gap-2">
                       <Play className="h-5 w-5" /> 
-                      <span>Start Mission</span>
+                      <span>View Mission</span>
                     </div>
                   )}
                 </Button>
@@ -511,7 +472,7 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
               {isStarted && (
                 <Button
                   className={`w-full rounded-none h-16 text-lg font-medium bg-blue-600 hover:bg-blue-700 text-white`}
-                  onClick={() => handleStartMission(mission)}
+                  onClick={() => handleViewMission(mission)}
                 >
                   <div className="flex items-center gap-2">
                     <Activity className="h-5 w-5" /> 
@@ -563,7 +524,7 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
           size="icon"
           onClick={handlePrevDay}
           disabled={currentDay <= 1}
-          className={dayNavButtonClass}
+          className={`${dayNavButtonClass} flex`}
         >
           <ChevronLeft className="h-8 w-8" />
         </Button>
@@ -588,7 +549,7 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
           size="icon"
           onClick={handleNextDay}
           disabled={currentDay >= totalDays}
-          className={dayNavButtonClass}
+          className={`${dayNavButtonClass} flex`}
         >
           <ChevronRight className="h-8 w-8" />
         </Button>
@@ -623,6 +584,14 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
                   />
                 </div>
                 
+                {/* Saving indicator */}
+                {isSaving && (
+                  <div className="flex items-center justify-center gap-2 text-sm text-blue-400 animate-pulse">
+                    <div className="animate-spin h-4 w-4 border-2 border-blue-400 border-t-transparent rounded-full"></div>
+                    <span>Saving progress...</span>
+                  </div>
+                )}
+                
                 {/* Task list with checkboxes */}
                 {currentMission.taskNames && currentMission.taskNames.length > 0 && (
                   <div className="space-y-2 mt-4">
@@ -631,8 +600,10 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
                       {currentMission.taskNames.map((task, idx) => (
                         <div 
                           key={idx} 
-                          className={`flex items-center gap-3 p-2 rounded hover:bg-accent/20 transition-colors ${
-                            completedTaskIndices.includes(idx) ? 'bg-green-100/10 border-green-500/30' : ''
+                          className={`flex items-center gap-3 p-2 rounded hover:bg-accent/20 transition-all duration-300 ${
+                            completedTaskIndices.includes(idx) 
+                              ? 'bg-green-100/10 border border-green-500/30 shadow-[0_0_8px_rgba(34,197,94,0.2)]' 
+                              : 'border border-transparent'
                           }`}
                           onClick={() => handleTaskToggle(idx)}
                         >
@@ -640,14 +611,23 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
                             id={`task-${idx}`}
                             checked={completedTaskIndices.includes(idx)}
                             onCheckedChange={() => handleTaskToggle(idx)}
-                            className="h-5 w-5"
+                            className="h-5 w-5 transition-transform duration-200 data-[state=checked]:scale-110"
                           />
                           <label 
                             htmlFor={`task-${idx}`}
-                            className={`flex-1 cursor-pointer ${completedTaskIndices.includes(idx) ? 'line-through text-muted-foreground' : ''}`}
+                            className={`flex-1 cursor-pointer transition-all duration-300 ${
+                              completedTaskIndices.includes(idx) 
+                                ? 'line-through text-muted-foreground opacity-70' 
+                                : ''
+                            }`}
                           >
                             {task}
                           </label>
+                          {completedTaskIndices.includes(idx) && (
+                            <span className="text-green-500 scale-in-center">
+                              <CheckCircle className="h-4 w-4" />
+                            </span>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -666,15 +646,164 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
             <Button
               variant="outline"
               onClick={() => setTaskDialogOpen(false)}
+              className="w-full"
+            >
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Mission Preview Dialog */}
+      <Dialog open={previewDialogOpen} onOpenChange={setPreviewDialogOpen}>
+        <DialogContent variant="compact">
+          <DialogHeader>
+            <DialogTitle className={`text-xl font-bold ${
+              currentMission?.difficulty === 'boss'
+                ? 'bg-gradient-to-r from-amber-400 to-amber-600 bg-clip-text text-transparent drop-shadow-glow'
+                : `bg-gradient-to-r from-${currentMission?.rank?.toLowerCase() || 'gray'}-400 to-${currentMission?.rank?.toLowerCase() || 'gray'}-600 bg-clip-text text-transparent drop-shadow-sm`
+            }`}>
+              {currentMission ? currentMission.title : 'Mission Details'}
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="py-4 space-y-6">
+            {currentMission && (
+              <>
+                {/* Mission description with styled background */}
+                <div className={`p-4 rounded-md border ${
+                  currentMission.difficulty === 'boss'
+                    ? 'bg-gradient-to-br from-amber-500/10 to-amber-800/10 border-amber-500/40'
+                    : `bg-gradient-to-br from-${currentMission.rank.toLowerCase()}-400/10 via-${currentMission.rank.toLowerCase()}-500/10 to-${currentMission.rank.toLowerCase()}-600/10 border-${currentMission.rank.toLowerCase()}-400/40 shadow-inner`
+                }`}>
+                  <p className="text-sm text-foreground leading-relaxed">
+                    {currentMission.description}
+                  </p>
+                </div>
+                
+                {/* Rank badge */}
+                <div className={`p-2 rounded-md flex items-center gap-2 text-xs ${
+                  currentMission.difficulty === 'boss'
+                    ? 'bg-amber-950/40 border border-amber-600/30'
+                    : `bg-${currentMission.rank.toLowerCase()}-900/30 border border-${currentMission.rank.toLowerCase()}-600/30`
+                }`}>
+                  <div className={`h-5 w-5 rounded-full flex items-center justify-center ${
+                    currentMission.difficulty === 'boss'
+                      ? 'bg-amber-700'
+                      : `bg-${currentMission.rank.toLowerCase()}-700`
+                  }`}>
+                    <Star className={`h-3 w-3 ${
+                      currentMission.difficulty === 'boss'
+                        ? 'text-amber-400'
+                        : `text-${currentMission.rank.toLowerCase()}-400`
+                    }`} />
+                  </div>
+                  <span className={currentMission.difficulty === 'boss' ? 'text-amber-200' : `text-${currentMission.rank.toLowerCase()}-200`}>
+                    <span className="font-semibold">{
+                      currentMission.rank === 'F' 
+                        ? 'New Hunter:' 
+                        : currentMission.difficulty === 'boss'
+                          ? 'Boss Mission:'
+                          : `${currentMission.rank}-Rank Hunter:`
+                    }</span> {
+                      currentMission.rank === 'F'
+                        ? 'These F-rank missions are perfect for beginners. Complete them to gain experience and rank up!'
+                        : currentMission.difficulty === 'boss'
+                          ? 'Boss missions offer challenging tasks with higher rewards. Prove your skills!'
+                          : `These ${currentMission.rank}-rank missions will test your growing abilities. Complete them to continue your journey!`
+                    }
+                  </span>
+                </div>
+                
+                {/* Mission tasks preview */}
+                {currentMission.count && currentMission.count > 1 && (
+                  <div className="space-y-2">
+                    <h4 className={`font-semibold text-sm ${
+                      currentMission.difficulty === 'boss'
+                        ? 'text-amber-500'
+                        : `text-${currentMission.rank.toLowerCase()}-500`
+                    }`}>
+                      <span className="flex items-center gap-1.5">
+                        <Activity className="h-4 w-4" />
+                        This mission contains {currentMission.count} tasks:
+                      </span>
+                    </h4>
+                    <div className={`max-h-48 overflow-y-auto border rounded-md p-3 space-y-2 ${
+                      currentMission.difficulty === 'boss'
+                        ? 'border-amber-500/20 bg-amber-500/5'
+                        : `border-${currentMission.rank.toLowerCase()}-500/20 bg-gradient-to-br from-${currentMission.rank.toLowerCase()}-400/5 to-${currentMission.rank.toLowerCase()}-600/10 backdrop-blur-sm`
+                    }`}>
+                      {currentMission.taskNames && currentMission.taskNames.map((task, idx) => (
+                        <div 
+                          key={idx} 
+                          className={`flex items-center gap-2 p-2 text-sm border-b ${
+                            currentMission.difficulty === 'boss'
+                              ? 'border-amber-500/20 last:border-0'
+                              : `border-${currentMission.rank.toLowerCase()}-500/20 last:border-0 hover:bg-${currentMission.rank.toLowerCase()}-700/20`
+                          } hover:bg-background/50 transition-colors duration-200 rounded`}
+                        >
+                          <span className={`inline-flex items-center justify-center h-5 w-5 rounded-full text-xs ${
+                            currentMission.difficulty === 'boss'
+                              ? 'bg-amber-500/20 text-amber-500'
+                              : `bg-gradient-to-br from-${currentMission.rank.toLowerCase()}-500/20 to-${currentMission.rank.toLowerCase()}-700/20 text-${currentMission.rank.toLowerCase()}-400 shadow-inner`
+                          } font-bold`}>
+                            {idx + 1}
+                          </span>
+                          <span>{task}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                {/* Mission instructions */}
+                <div className={`p-4 rounded-md text-sm border ${
+                  currentMission.difficulty === 'boss'
+                    ? 'bg-gradient-to-br from-amber-500/5 to-amber-800/5 border-amber-500/20'
+                    : `bg-gradient-to-br from-${currentMission.rank.toLowerCase()}-400/5 to-${currentMission.rank.toLowerCase()}-600/5 border-${currentMission.rank.toLowerCase()}-500/20 backdrop-blur-sm`
+                }`}>
+                  <h4 className={`font-semibold mb-2 ${
+                    currentMission.difficulty === 'boss'
+                      ? 'text-amber-400'
+                      : `text-${currentMission.rank.toLowerCase()}-400`
+                  }`}>Instructions:</h4>
+                  <p className="text-muted-foreground">
+                    {currentMission.count && currentMission.count > 1 
+                      ? `Complete all ${currentMission.count} tasks to finish this mission and earn ${currentMission.expReward} EXP.` 
+                      : `Complete this mission to earn ${currentMission.expReward} EXP.`
+                    }
+                  </p>
+                  <div className={`mt-4 rounded p-2 ${
+                    currentMission.difficulty === 'boss'
+                      ? 'bg-amber-500/10 border border-amber-500/30 text-amber-300/90'
+                      : `bg-${currentMission.rank.toLowerCase()}-500/10 border border-${currentMission.rank.toLowerCase()}-500/30 text-${currentMission.rank.toLowerCase()}-300`
+                  } flex items-center gap-2 text-xs`}>
+                    <Trophy className="h-4 w-4" />
+                    <span>Reward: <span className="font-bold">{currentMission.expReward} EXP</span></span>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+          
+          <DialogFooter className="flex items-center justify-between gap-2 pt-2">
+            <Button
+              variant="outline"
+              onClick={() => setPreviewDialogOpen(false)}
+              className="flex-1"
             >
               Close
             </Button>
             <Button
-              onClick={() => saveTaskProgress()}
-              className="gap-2"
+              onClick={handleStartMission}
+              className={`flex-1 gap-2 font-semibold ${
+                currentMission?.difficulty === 'boss'
+                  ? 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-gray-900'
+                  : `bg-gradient-to-r from-${currentMission?.rank?.toLowerCase() || 'gray'}-500 to-${currentMission?.rank?.toLowerCase() || 'gray'}-600 hover:from-${currentMission?.rank?.toLowerCase() || 'gray'}-600 hover:to-${currentMission?.rank?.toLowerCase() || 'gray'}-700 text-white`
+              }`}
             >
-              <CheckCircle className="h-4 w-4" />
-              Save Progress
+              <Play className="h-4 w-4" />
+              Start Mission
             </Button>
           </DialogFooter>
         </DialogContent>
