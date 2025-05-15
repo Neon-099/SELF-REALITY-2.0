@@ -94,3 +94,14 @@
     max-width: 1280px;
   }
 }
+
+/* Daily win container - mobile optimization */
+.daily-win-container {
+  transition: all 0.3s ease;
+}
+
+@media (max-width: 640px) {
+  .daily-win-container {
+    min-width: 0;
+  }
+}

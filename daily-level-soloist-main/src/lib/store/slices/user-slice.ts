@@ -17,6 +17,7 @@ export interface UserSlice {
   updateDailyWin: (category: DailyWinCategory, taskId: string) => void;
   checkResetDailyWins: () => void;
   getExpModifier: () => number;
+  updateUserName: (name: string) => void;
 }
 
 const createEmptyDailyWins = (): Record<DailyWinCategory, DailyWinProgress> => ({
@@ -307,5 +308,20 @@ export const createUserSlice: StateCreator<UserSlice> = (set, get) => ({
     // Implementation of getExpModifier
     // This is a placeholder and should be implemented based on your specific requirements
     return 1; // Placeholder return, actual implementation needed
+  },
+  updateUserName: (name: string) => {
+    set((state: any) => ({
+      user: {
+        ...state.user,
+        name: name
+      }
+    }));
+    
+    // Optional: Show toast notification for name update
+    toast({
+      title: "Name Updated",
+      description: `Your character is now known as ${name}!`,
+      variant: "default"
+    });
   }
 });

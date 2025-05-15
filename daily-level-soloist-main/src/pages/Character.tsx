@@ -506,184 +506,186 @@ const Character = () => {
   const currentRankInfo = rankDetails.find(r => r.rank === user.rank);
 
   return (
-    <div className="container mx-auto px-4 py-8 space-y-8">
-      <div>
-        <h1 className="text-4xl font-bold bg-gradient-to-r from-solo-primary to-blue-500 bg-clip-text text-transparent mb-2">Character Stats</h1>
-        <p className="text-gray-400">Increase your stats to become stronger.</p>
+    <div className="container mx-auto px-2 py-4 sm:px-4 sm:py-8 space-y-4 sm:space-y-8">
+      <div className="text-center sm:text-left">
+        <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-solo-primary to-blue-500 bg-clip-text text-transparent mb-2">Character Stats</h1>
+        <p className="text-gray-400 text-sm sm:text-base">Increase your stats to become stronger.</p>
       </div>
       
-      {/* Character Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="bg-solo-dark border-gray-800 hover:shadow-lg hover:shadow-solo-primary/5 transition-all duration-300 overflow-hidden">
-          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-solo-primary to-blue-500"></div>
-          <CardContent className="pt-6">
-            <div className="text-center space-y-4">
-              <div className="relative inline-block">
-                <div className="w-24 h-24 rounded-full bg-gradient-to-br from-solo-primary/20 to-blue-500/20 flex items-center justify-center mx-auto backdrop-blur-sm p-1 shadow-inner">
-                  <div className="w-full h-full rounded-full bg-gray-900 flex items-center justify-center">
-                    <span className="text-3xl font-extrabold bg-gradient-to-r from-solo-primary to-blue-500 bg-clip-text text-transparent">{user.level}</span>
+      {/* Character Overview - Optimized for mobile */}
+      <div className="grid grid-cols-1 gap-4 sm:gap-6">
+        <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
+          <Card className="bg-solo-dark border-gray-800 hover:shadow-lg hover:shadow-solo-primary/5 transition-all duration-300 overflow-hidden flex-1">
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-solo-primary to-blue-500"></div>
+            <CardContent className="pt-6">
+              <div className="text-center space-y-4">
+                <div className="relative inline-block">
+                  <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-br from-solo-primary/20 to-blue-500/20 flex items-center justify-center mx-auto backdrop-blur-sm p-1 shadow-inner">
+                    <div className="w-full h-full rounded-full bg-gray-900 flex items-center justify-center">
+                      <span className="text-2xl sm:text-3xl font-extrabold bg-gradient-to-r from-solo-primary to-blue-500 bg-clip-text text-transparent">{user.level}</span>
+                    </div>
                   </div>
-                </div>
-                <div className="absolute -top-2 -right-2 bg-gradient-to-r from-solo-primary to-blue-500 text-white text-xs font-bold rounded-full px-2.5 py-1 animate-pulse shadow-lg shadow-solo-primary/20">
-                  {user.rank} Rank
-                </div>
-              </div>
-              
-              <div className="text-center">
-                <div className="bg-gray-800/80 rounded-xl p-4 backdrop-blur-sm shadow-inner">
-                  <p className="text-xs text-gray-400 flex items-center justify-center gap-1 mb-2">
-                    <Star size={14} className="text-yellow-400 stroke-2" />
-                    <span className="uppercase tracking-wider font-medium">Experience</span>
-                  </p>
-                  <div className="font-bold flex items-center justify-center gap-1 text-lg">
-                    <Star size={16} className="text-yellow-400 stroke-2" />
-                    <span className="bg-gradient-to-r from-yellow-400 to-amber-500 bg-clip-text text-transparent">{formatExp(user.exp)}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card className="bg-solo-dark border-gray-800 md:col-span-2 hover:shadow-lg hover:shadow-solo-primary/5 transition-all duration-300 overflow-hidden">
-          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-solo-primary to-blue-500"></div>
-          <CardHeader>
-            <CardTitle className="text-xl font-bold bg-gradient-to-r from-solo-primary to-blue-500 bg-clip-text text-transparent">Status</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex justify-between p-3 bg-gray-850/30 rounded-lg backdrop-blur-sm">
-                <div>
-                  <p className="text-sm text-gray-400 mb-1">Next Level</p>
-                  <p className="font-bold text-lg">Level {user.level + 1}</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm text-gray-400 mb-1">Required EXP</p>
-                  <p className="font-bold text-lg">
-                    <span className="text-solo-primary">{user.exp}</span> 
-                    <span className="text-gray-500"> / </span>
-                    <span>{user.expToNextLevel}</span>
-                  </p>
-                </div>
-              </div>
-              
-              <div className="w-full bg-gray-800/50 h-3 rounded-full overflow-hidden backdrop-blur-sm shadow-inner">
-                <div 
-                  className="bg-gradient-to-r from-solo-primary to-blue-500 h-full rounded-full transition-all duration-700 ease-out" 
-                  style={{ width: `${expPercentage}%` }} 
-                />
-              </div>
-              
-              {/* Shadow Chance Counter */}
-              <div className="mt-4 p-4 bg-gray-850/30 rounded-lg backdrop-blur-sm">
-                <div className="flex justify-between items-center mb-2">
-                  <div className="flex items-center gap-2">
-                    <p className="text-sm font-medium text-gray-300">Shadow Chances</p>
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <button className="text-gray-500 hover:text-gray-300 transition-colors">
-                          <Info size={14} />
-                        </button>
-                      </DialogTrigger>
-                      <DialogContent className="bg-gray-900 text-white max-w-md border-gray-700">
-                        <DialogHeader>
-                          <DialogTitle className="text-xl font-bold bg-gradient-to-r from-solo-primary to-blue-500 bg-clip-text text-transparent">Shadow Chance System</DialogTitle>
-                        </DialogHeader>
-                        <div className="space-y-4 text-sm">
-                          <p className="leading-relaxed">You have 5 chances per week before becoming cursed. Each missed deadline uses one chance.</p>
-                          <div className="space-y-2 p-3 bg-gray-800/50 rounded-lg">
-                            <div className="flex justify-between">
-                              <span>0-1 chance used:</span>
-                              <span className="text-green-400 font-semibold">Safe</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span>2-3 chances used:</span>
-                              <span className="text-yellow-400 font-semibold">Warning</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span>4-5 chances used:</span>
-                              <span className="text-red-400 font-semibold">Danger</span>
-                            </div>
-                          </div>
-                          <p className="mt-2 text-red-400 font-medium">Once all 5 chances are used, you'll be cursed until the end of the week, receiving only 50% EXP from all activities.</p>
-                          <p className="text-gray-400 text-xs mt-2">Chances reset every Sunday.</p>
-                        </div>
-                      </DialogContent>
-                    </Dialog>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <p className={cn(
-                      "text-xs font-semibold px-2 py-1 rounded-full",
-                      chanceCounter === 0 ? "bg-green-500/20 text-green-400" :
-                      chanceCounter <= 2 ? "bg-green-500/20 text-green-400" :
-                      chanceCounter <= 3 ? "bg-yellow-500/20 text-yellow-400" :
-                      "bg-red-500/20 text-red-400"
-                    )}>
-                      {chanceCounter}/5 used
-                    </p>
-                    {isCursed && (
-                      <span className="bg-red-500/20 text-red-400 text-xs font-semibold px-2.5 py-1 rounded-full animate-pulse">
-                        CURSED
-                      </span>
-                    )}
+                  <div className="absolute -top-2 -right-2 bg-gradient-to-r from-solo-primary to-blue-500 text-white text-xs font-bold rounded-full px-2 py-0.5 sm:px-2.5 sm:py-1 animate-pulse shadow-lg shadow-solo-primary/20">
+                    {user.rank} Rank
                   </div>
                 </div>
                 
-                <div className="w-full bg-gray-800/70 h-2 rounded-full overflow-hidden shadow-inner">
-                  {isCursed ? (
-                    <div className="h-full bg-red-500 w-full animate-pulse" />
-                  ) : (
-                    <div 
-                      className={cn(
-                        "h-full transition-all duration-500",
-                        chanceCounter === 0 ? "bg-gradient-to-r from-green-400 to-green-500" :
-                        chanceCounter <= 2 ? "bg-gradient-to-r from-green-400 to-green-500" :
-                        chanceCounter <= 3 ? "bg-gradient-to-r from-yellow-400 to-yellow-500" :
-                        "bg-gradient-to-r from-red-400 to-red-500"
+                <div className="text-center">
+                  <div className="bg-gray-800/80 rounded-xl p-3 sm:p-4 backdrop-blur-sm shadow-inner">
+                    <p className="text-xs text-gray-400 flex items-center justify-center gap-1 mb-1 sm:mb-2">
+                      <Star size={14} className="text-yellow-400 stroke-2" />
+                      <span className="uppercase tracking-wider font-medium">Experience</span>
+                    </p>
+                    <div className="font-bold flex items-center justify-center gap-1 text-base sm:text-lg">
+                      <Star size={16} className="text-yellow-400 stroke-2" />
+                      <span className="bg-gradient-to-r from-yellow-400 to-amber-500 bg-clip-text text-transparent">{formatExp(user.exp)}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card className="bg-solo-dark border-gray-800 flex-[2] hover:shadow-lg hover:shadow-solo-primary/5 transition-all duration-300 overflow-hidden">
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-solo-primary to-blue-500"></div>
+            <CardHeader className="py-3 px-4 sm:py-4 sm:px-6">
+              <CardTitle className="text-lg sm:text-xl font-bold bg-gradient-to-r from-solo-primary to-blue-500 bg-clip-text text-transparent">Status</CardTitle>
+            </CardHeader>
+            <CardContent className="py-2 px-3 sm:py-4 sm:px-6">
+              <div className="space-y-3 sm:space-y-4">
+                <div className="flex justify-between p-2 sm:p-3 bg-gray-850/30 rounded-lg backdrop-blur-sm">
+                  <div>
+                    <p className="text-xs sm:text-sm text-gray-400 mb-0.5 sm:mb-1">Next Level</p>
+                    <p className="font-bold text-base sm:text-lg">Level {user.level + 1}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs sm:text-sm text-gray-400 mb-0.5 sm:mb-1">Required EXP</p>
+                    <p className="font-bold text-base sm:text-lg">
+                      <span className="text-solo-primary">{user.exp}</span> 
+                      <span className="text-gray-500"> / </span>
+                      <span>{user.expToNextLevel}</span>
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="w-full bg-gray-800/50 h-2 sm:h-3 rounded-full overflow-hidden backdrop-blur-sm shadow-inner">
+                  <div 
+                    className="bg-gradient-to-r from-solo-primary to-blue-500 h-full rounded-full transition-all duration-700 ease-out" 
+                    style={{ width: `${expPercentage}%` }} 
+                  />
+                </div>
+                
+                {/* Shadow Chance Counter - Simplified for mobile */}
+                <div className="mt-2 sm:mt-4 p-3 sm:p-4 bg-gray-850/30 rounded-lg backdrop-blur-sm">
+                  <div className="flex justify-between items-center mb-2">
+                    <div className="flex items-center gap-1 sm:gap-2">
+                      <p className="text-xs sm:text-sm font-medium text-gray-300">Shadow Chances</p>
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <button className="text-gray-500 hover:text-gray-300 transition-colors">
+                            <Info size={12} className="sm:size-14" />
+                          </button>
+                        </DialogTrigger>
+                        <DialogContent className="bg-gray-900 text-white max-w-xs sm:max-w-md border-gray-700">
+                          <DialogHeader>
+                            <DialogTitle className="text-base sm:text-xl font-bold bg-gradient-to-r from-solo-primary to-blue-500 bg-clip-text text-transparent">Shadow Chance System</DialogTitle>
+                          </DialogHeader>
+                          <div className="space-y-3 sm:space-y-4 text-xs sm:text-sm">
+                            <p className="leading-relaxed">You have 5 chances per week before becoming cursed. Each missed deadline uses one chance.</p>
+                            <div className="space-y-1 sm:space-y-2 p-2 sm:p-3 bg-gray-800/50 rounded-lg">
+                              <div className="flex justify-between">
+                                <span>0-1 chance used:</span>
+                                <span className="text-green-400 font-semibold">Safe</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span>2-3 chances used:</span>
+                                <span className="text-yellow-400 font-semibold">Warning</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span>4-5 chances used:</span>
+                                <span className="text-red-400 font-semibold">Danger</span>
+                              </div>
+                            </div>
+                            <p className="mt-2 text-red-400 font-medium">Once all 5 chances are used, you'll be cursed until the end of the week, receiving only 50% EXP from all activities.</p>
+                            <p className="text-gray-400 text-xs mt-2">Chances reset every Sunday.</p>
+                          </div>
+                        </DialogContent>
+                      </Dialog>
+                    </div>
+                    <div className="flex items-center gap-1 sm:gap-2">
+                      <p className={cn(
+                        "text-[10px] sm:text-xs font-semibold px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-full",
+                        chanceCounter === 0 ? "bg-green-500/20 text-green-400" :
+                        chanceCounter <= 2 ? "bg-green-500/20 text-green-400" :
+                        chanceCounter <= 3 ? "bg-yellow-500/20 text-yellow-400" :
+                        "bg-red-500/20 text-red-400"
+                      )}>
+                        {chanceCounter}/5 used
+                      </p>
+                      {isCursed && (
+                        <span className="bg-red-500/20 text-red-400 text-[10px] sm:text-xs font-semibold px-1.5 py-0.5 sm:px-2.5 sm:py-1 rounded-full animate-pulse">
+                          CURSED
+                        </span>
                       )}
-                      style={{ width: `${(chanceCounter / 5) * 100}%` }} 
-                    />
+                    </div>
+                  </div>
+                  
+                  <div className="w-full bg-gray-800/70 h-1.5 sm:h-2 rounded-full overflow-hidden shadow-inner">
+                    {isCursed ? (
+                      <div className="h-full bg-red-500 w-full animate-pulse" />
+                    ) : (
+                      <div 
+                        className={cn(
+                          "h-full transition-all duration-500",
+                          chanceCounter === 0 ? "bg-gradient-to-r from-green-400 to-green-500" :
+                          chanceCounter <= 2 ? "bg-gradient-to-r from-green-400 to-green-500" :
+                          chanceCounter <= 3 ? "bg-gradient-to-r from-yellow-400 to-yellow-500" :
+                          "bg-gradient-to-r from-red-400 to-red-500"
+                        )}
+                        style={{ width: `${(chanceCounter / 5) * 100}%` }} 
+                      />
+                    )}
+                  </div>
+                  
+                  {hasShadowFatigue && (
+                    <div className="mt-2 text-[10px] sm:text-xs text-amber-400 flex items-center gap-1 p-1.5 sm:p-2 bg-amber-500/10 rounded-md">
+                      <AlertCircle size={12} className="sm:size-14" />
+                      <span className="font-medium">Shadow Fatigue active: 75% EXP from tasks</span>
+                    </div>
                   )}
                 </div>
                 
-                {hasShadowFatigue && (
-                  <div className="mt-2 text-xs text-amber-400 flex items-center gap-1 p-2 bg-amber-500/10 rounded-md">
-                    <AlertCircle size={14} />
-                    <span className="font-medium">Shadow Fatigue active: 75% EXP from tasks</span>
+                <div className="grid grid-cols-2 gap-2 sm:gap-4 mt-2 sm:mt-4">
+                  <div className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 bg-gray-850/30 rounded-lg backdrop-blur-sm hover:bg-gray-800/50 transition-colors duration-300">
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-solo-primary/20 to-blue-500/20 flex items-center justify-center text-solo-primary shadow-lg shadow-solo-primary/5">
+                      <Clock3Icon size={16} className="sm:size-18" />
+                    </div>
+                    <div>
+                      <p className="text-xs sm:text-sm text-gray-400">Current Streak</p>
+                      <p className="font-bold text-base sm:text-lg">{user.streakDays} days</p>
+                    </div>
                   </div>
-                )}
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4 mt-4">
-                <div className="flex items-center gap-3 p-3 bg-gray-850/30 rounded-lg backdrop-blur-sm hover:bg-gray-800/50 transition-colors duration-300">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-solo-primary/20 to-blue-500/20 flex items-center justify-center text-solo-primary shadow-lg shadow-solo-primary/5">
-                    <Clock3Icon size={18} />
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-400">Current Streak</p>
-                    <p className="font-bold text-lg">{user.streakDays} days</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-center gap-3 p-3 bg-gray-850/30 rounded-lg backdrop-blur-sm hover:bg-gray-800/50 transition-colors duration-300">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-solo-primary/20 to-blue-500/20 flex items-center justify-center text-solo-primary shadow-lg shadow-solo-primary/5">
-                    <HeartIcon size={18} />
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-400">Longest Streak</p>
-                    <p className="font-bold text-lg">{user.longestStreak} days</p>
+                  
+                  <div className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 bg-gray-850/30 rounded-lg backdrop-blur-sm hover:bg-gray-800/50 transition-colors duration-300">
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-solo-primary/20 to-blue-500/20 flex items-center justify-center text-solo-primary shadow-lg shadow-solo-primary/5">
+                      <HeartIcon size={16} className="sm:size-18" />
+                    </div>
+                    <div>
+                      <p className="text-xs sm:text-sm text-gray-400">Longest Streak</p>
+                      <p className="font-bold text-base sm:text-lg">{user.longestStreak} days</p>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </div>
       </div>
       
-      {/* Stats Grid */}
-      <div>
-        <h2 className="text-2xl font-bold bg-gradient-to-r from-solo-primary to-blue-500 bg-clip-text text-transparent mb-4">Attributes</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
+      {/* Stats Grid - Mobile optimized with dialog view on mobile and regular view on desktop */}
+      <div className="hidden sm:block">
+        <h2 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-solo-primary to-blue-500 bg-clip-text text-transparent mb-3 sm:mb-4 text-center sm:text-left">Attributes</h2>
+        <div className="grid grid-cols-3 md:grid-cols-5 gap-3 sm:gap-5">
           <StatCard 
             name="physical" 
             value={user.stats.physical}
@@ -711,31 +713,146 @@ const Character = () => {
           />
         </div>
       </div>
-      
-      {/* Rank System */}
+
+      {/* Mobile attributes dialog button */}
+      <div className="sm:hidden flex justify-center">
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button 
+              className="bg-gradient-to-r from-solo-primary to-blue-500 text-white font-medium rounded-lg shadow-md hover:shadow-lg transition-all duration-300 px-4 py-2.5"
+            >
+              <SparklesIcon className="mr-2 h-4 w-4" />
+              View Attributes
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="bg-solo-dark border-gray-800 p-4 max-w-[90vw] mx-auto rounded-xl">
+            <DialogHeader className="pb-2 border-b border-gray-800">
+              <DialogTitle className="text-lg font-bold bg-gradient-to-r from-solo-primary to-blue-500 bg-clip-text text-transparent flex items-center">
+                <SparklesIcon className="mr-2 h-5 w-5 text-solo-primary" />
+                Your Attributes
+              </DialogTitle>
+            </DialogHeader>
+            
+            <div className="pt-3">
+              <div className="grid grid-cols-1 gap-2.5">
+                {/* Physical Stat - Enhanced mobile version */}
+                <div className="flex items-center p-2.5 bg-gray-800/40 rounded-lg border border-gray-800/80 hover:bg-gray-800/60 transition-all duration-300 hover:border-gray-700">
+                  <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-red-500/20 to-red-700/20 flex items-center justify-center shadow-inner mr-3">
+                    <DumbbellIcon size={18} className="text-red-400" />
+                  </div>
+                  <div className="flex-grow">
+                    <div className="flex justify-between items-center">
+                      <h3 className="capitalize font-medium text-gray-200">Physical</h3>
+                      <span className="text-lg font-bold text-red-400">{user.stats.physical}</span>
+                    </div>
+                    <div className="w-full bg-gray-900/70 h-1.5 rounded-full mt-1 overflow-hidden">
+                      <div className="bg-gradient-to-r from-red-500 to-red-700 h-full rounded-full" 
+                          style={{ width: `${Math.min(100, user.stats.physical)}%` }} />
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Cognitive Stat - Enhanced mobile version */}
+                <div className="flex items-center p-2.5 bg-gray-800/40 rounded-lg border border-gray-800/80 hover:bg-gray-800/60 transition-all duration-300 hover:border-gray-700">
+                  <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-blue-500/20 to-blue-700/20 flex items-center justify-center shadow-inner mr-3">
+                    <BrainIcon size={18} className="text-blue-400" />
+                  </div>
+                  <div className="flex-grow">
+                    <div className="flex justify-between items-center">
+                      <h3 className="capitalize font-medium text-gray-200">Cognitive</h3>
+                      <span className="text-lg font-bold text-blue-400">{user.stats.cognitive}</span>
+                    </div>
+                    <div className="w-full bg-gray-900/70 h-1.5 rounded-full mt-1 overflow-hidden">
+                      <div className="bg-gradient-to-r from-blue-500 to-blue-700 h-full rounded-full" 
+                          style={{ width: `${Math.min(100, user.stats.cognitive)}%` }} />
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Emotional Stat - Enhanced mobile version */}
+                <div className="flex items-center p-2.5 bg-gray-800/40 rounded-lg border border-gray-800/80 hover:bg-gray-800/60 transition-all duration-300 hover:border-gray-700">
+                  <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-pink-500/20 to-pink-700/20 flex items-center justify-center shadow-inner mr-3">
+                    <HeartIcon size={18} className="text-pink-400" />
+                  </div>
+                  <div className="flex-grow">
+                    <div className="flex justify-between items-center">
+                      <h3 className="capitalize font-medium text-gray-200">Emotional</h3>
+                      <span className="text-lg font-bold text-pink-400">{user.stats.emotional}</span>
+                    </div>
+                    <div className="w-full bg-gray-900/70 h-1.5 rounded-full mt-1 overflow-hidden">
+                      <div className="bg-gradient-to-r from-pink-500 to-pink-700 h-full rounded-full" 
+                          style={{ width: `${Math.min(100, user.stats.emotional)}%` }} />
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Spiritual Stat - Enhanced mobile version */}
+                <div className="flex items-center p-2.5 bg-gray-800/40 rounded-lg border border-gray-800/80 hover:bg-gray-800/60 transition-all duration-300 hover:border-gray-700">
+                  <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-purple-500/20 to-purple-700/20 flex items-center justify-center shadow-inner mr-3">
+                    <SparklesIcon size={18} className="text-purple-400" />
+                  </div>
+                  <div className="flex-grow">
+                    <div className="flex justify-between items-center">
+                      <h3 className="capitalize font-medium text-gray-200">Spiritual</h3>
+                      <span className="text-lg font-bold text-purple-400">{user.stats.spiritual}</span>
+                    </div>
+                    <div className="w-full bg-gray-900/70 h-1.5 rounded-full mt-1 overflow-hidden">
+                      <div className="bg-gradient-to-r from-purple-500 to-purple-700 h-full rounded-full" 
+                          style={{ width: `${Math.min(100, user.stats.spiritual)}%` }} />
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Social Stat - Enhanced mobile version */}
+                <div className="flex items-center p-2.5 bg-gray-800/40 rounded-lg border border-gray-800/80 hover:bg-gray-800/60 transition-all duration-300 hover:border-gray-700">
+                  <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-green-500/20 to-green-700/20 flex items-center justify-center shadow-inner mr-3">
+                    <SmileIcon size={18} className="text-green-400" />
+                  </div>
+                  <div className="flex-grow">
+                    <div className="flex justify-between items-center">
+                      <h3 className="capitalize font-medium text-gray-200">Social</h3>
+                      <span className="text-lg font-bold text-green-400">{user.stats.social}</span>
+                    </div>
+                    <div className="w-full bg-gray-900/70 h-1.5 rounded-full mt-1 overflow-hidden">
+                      <div className="bg-gradient-to-r from-green-500 to-green-700 h-full rounded-full" 
+                          style={{ width: `${Math.min(100, user.stats.social)}%` }} />
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="mt-4 pt-3 border-t border-gray-800 text-center">
+                <p className="text-xs text-gray-400">Increase attributes by completing quests and missions</p>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      {/* Rank System - Stacked on mobile, side-by-side on desktop */}
       <div>
-        <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-          <Crown className="text-yellow-400" size={24} />
+        <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 flex items-center justify-center sm:justify-start gap-2">
+          <Crown className="text-yellow-400 h-5 w-5 sm:h-6 sm:w-6" />
           <span className="bg-gradient-to-r from-yellow-400 to-amber-500 bg-clip-text text-transparent">Rank System</span>
         </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
           <Card className="bg-solo-dark border-gray-800 hover:shadow-lg hover:shadow-solo-primary/5 transition-all duration-300 overflow-hidden">
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-solo-primary to-blue-500"></div>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-xl">
+            <CardHeader className="py-3 px-4 sm:py-4 sm:px-6">
+              <CardTitle className="flex items-center gap-2 text-base sm:text-xl">
                 <div className="text-solo-primary animate-pulse-slow">
-                  <Crown size={20} />
+                  <Crown size={18} className="sm:size-20" />
                 </div>
                 <span className="bg-gradient-to-r from-solo-primary to-blue-500 bg-clip-text text-transparent">Current Progress</span>
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4 p-4 bg-gray-850/30 rounded-lg border border-gray-800/50 backdrop-blur-sm">
-                  <div className="space-y-2">
-                    <p className="text-sm text-gray-400">Current Rank</p>
+            <CardContent className="py-2 px-3 sm:py-4 sm:px-6">
+              <div className="space-y-3 sm:space-y-4">
+                <div className="grid grid-cols-2 gap-3 sm:gap-4 p-3 sm:p-4 bg-gray-850/30 rounded-lg border border-gray-800/50 backdrop-blur-sm">
+                  <div className="space-y-1 sm:space-y-2">
+                    <p className="text-xs sm:text-sm text-gray-400">Current Rank</p>
                     <div className="flex items-center gap-2">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-solo-primary/20 to-blue-500/20 flex items-center justify-center text-solo-primary shadow-lg shadow-solo-primary/10">
+                      <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-solo-primary/20 to-blue-500/20 flex items-center justify-center text-solo-primary shadow-lg shadow-solo-primary/10">
                         {typeof rankDetails.find(r => r.rank === user.rank)?.icon === 'string' ? (
                           <span className="font-bold">
                             {rankDetails.find(r => r.rank === user.rank)?.icon}
@@ -744,16 +861,16 @@ const Character = () => {
                           rankDetails.find(r => r.rank === user.rank)?.icon || 'F'
                         )}
                       </div>
-                      <span className="text-3xl font-bold bg-gradient-to-r from-solo-primary to-blue-500 bg-clip-text text-transparent">
+                      <span className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-solo-primary to-blue-500 bg-clip-text text-transparent">
                         {user.rank}
                       </span>
                     </div>
                   </div>
-                  <div className="space-y-2 text-right">
-                    <p className="text-sm text-gray-400">Current Level</p>
-                    <div className="text-3xl font-bold flex items-center justify-end">
+                  <div className="space-y-1 sm:space-y-2 text-right">
+                    <p className="text-xs sm:text-sm text-gray-400">Current Level</p>
+                    <div className="text-2xl sm:text-3xl font-bold flex items-center justify-end">
                       <span className="bg-gradient-to-r from-gray-200 to-gray-400 bg-clip-text text-transparent">{user.level}</span>
-                      <div className="w-2 h-2 bg-solo-primary rounded-full ml-2 animate-pulse"></div>
+                      <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-solo-primary rounded-full ml-1.5 sm:ml-2 animate-pulse"></div>
                     </div>
                   </div>
                 </div>
@@ -777,62 +894,28 @@ const Character = () => {
               </div>
             </CardContent>
           </Card>
-          
-          <Card className="bg-solo-dark border-gray-800 hover:shadow-lg hover:shadow-solo-primary/5 transition-all duration-300 overflow-hidden">
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-yellow-400 to-amber-500"></div>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-xl">
-                <div className="text-yellow-400">
-                  <Trophy size={20} />
-                </div>
-                <span className="bg-gradient-to-r from-yellow-400 to-amber-500 bg-clip-text text-transparent">Current Rank Benefits</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="p-4 bg-gray-850/30 rounded-lg border border-gray-800/50 backdrop-blur-sm mb-4">
-                  <p className="text-sm text-gray-400 mb-2 uppercase tracking-wider">Rank {user.rank} Benefits</p>
-                  <div className="text-sm text-gray-300 italic leading-relaxed">
-                    {rankDetails.find(r => r.rank === user.rank)?.description || "Beginning hunter with standard rewards."}
-                  </div>
-                </div>
-                
-                {rankDetails.find(r => r.rank === user.rank)?.benefits.map((benefit, index) => (
-                  <div 
-                    key={index} 
-                    className="flex items-center gap-3 p-3 hover:bg-gray-800/50 rounded-md transition-all duration-300 hover:translate-x-1 group"
-                  >
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-solo-primary/20 to-blue-500/20 flex items-center justify-center text-solo-primary shadow-lg shadow-solo-primary/10 group-hover:shadow-solo-primary/20 transition-all duration-300">
-                      <Star size={16} className="transition-transform duration-300 group-hover:scale-110" />
-                    </div>
-                    <span className="text-sm text-gray-300 group-hover:text-white transition-colors duration-300">{benefit}</span>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
         </div>
       </div>
 
       {/* Database Debug Button */}
-      <div className="mt-8 flex justify-end">
+      <div className="mt-6 sm:mt-8 flex justify-end">
         <Button 
           variant="outline" 
           size="sm"
           className="flex items-center gap-1"
           onClick={() => setShowDbDebug(!showDbDebug)}
         >
-          <Database className="h-4 w-4" />
+          <Database className="h-3 w-3 sm:h-4 sm:w-4" />
           {showDbDebug ? 'Hide DB' : 'Show DB'}
         </Button>
       </div>
 
       {/* IndexedDB Debug Panel */}
       {showDbDebug && (
-        <div className="bg-gray-900 border border-gray-700 rounded-lg p-4 relative mt-4">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-bold flex items-center gap-2">
-              <Database className="h-5 w-5 text-blue-400" />
+        <div className="bg-gray-900 border border-gray-700 rounded-lg p-3 sm:p-4 relative mt-3 sm:mt-4 text-xs sm:text-sm">
+          <div className="flex justify-between items-center mb-3 sm:mb-4">
+            <h2 className="text-base sm:text-lg font-bold flex items-center gap-1 sm:gap-2">
+              <Database className="h-4 w-4 sm:h-5 sm:w-5 text-blue-400" />
               IndexedDB Contents
             </h2>
             <div className="flex gap-2">
@@ -841,6 +924,7 @@ const Character = () => {
                 size="sm" 
                 onClick={loadDbData} 
                 disabled={isLoadingDb}
+                className="text-xs sm:text-sm py-1 px-2 sm:py-2 sm:px-3"
               >
                 Refresh Data
               </Button>
@@ -848,54 +932,55 @@ const Character = () => {
                 variant="ghost"
                 size="sm"
                 onClick={() => setShowDbDebug(false)}
+                className="text-xs sm:text-sm py-1 px-2 sm:py-2 sm:px-3"
               >
-                <X className="h-4 w-4" />
+                <X className="h-3 w-3 sm:h-4 sm:w-4" />
               </Button>
             </div>
           </div>
           
           {isLoadingDb ? (
-            <div className="text-center py-4">
+            <div className="text-center py-3 sm:py-4">
               <p>Loading database contents...</p>
             </div>
           ) : dbContents ? (
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4 max-h-[50vh] overflow-y-auto custom-scrollbar pr-2">
               <div>
-                <h3 className="text-md font-semibold mb-2">Zustand Store (from IndexedDB)</h3>
-                <div className="bg-gray-800 p-3 rounded max-h-60 overflow-auto">
+                <h3 className="text-sm sm:text-md font-semibold mb-1 sm:mb-2">Zustand Store (from IndexedDB)</h3>
+                <div className="bg-gray-800 p-2 sm:p-3 rounded max-h-48 sm:max-h-60 overflow-auto">
                   {dbContents.zustandStore ? (
                     <>
-                      <p className="text-green-400 mb-2">✓ IndexedDB is working correctly</p>
+                      <p className="text-green-400 mb-1 sm:mb-2 text-xs sm:text-sm">✓ IndexedDB is working correctly</p>
                       <details>
-                        <summary className="cursor-pointer text-blue-400 hover:text-blue-300">
+                        <summary className="cursor-pointer text-blue-400 hover:text-blue-300 text-xs sm:text-sm">
                           View Quests in Store (Total: {dbContents.zustandStore.state?.quests?.length || 0})
                         </summary>
-                        <div className="mt-2 space-y-2 text-xs p-2 bg-gray-900 rounded">
+                        <div className="mt-2 space-y-2 text-[10px] sm:text-xs p-2 bg-gray-900 rounded">
                           {dbContents.zustandStore.state?.quests?.length > 0 ? (
                             dbContents.zustandStore.state.quests.map((quest: any, index: number) => (
                               <div key={index} className="p-2 border border-gray-700 rounded bg-gray-800/50">
                                 <div className="flex justify-between items-start mb-1">
-                                  <h4 className="text-sm text-white font-medium truncate max-w-[80%]">{quest.title}</h4>
+                                  <h4 className="text-xs sm:text-sm text-white font-medium truncate max-w-[80%]">{quest.title}</h4>
                                   <Button
                                     variant="destructive"
                                     size="sm"
-                                    className="h-6 px-2 text-xs"
+                                    className="h-5 sm:h-6 px-1.5 sm:px-2 text-[10px] sm:text-xs"
                                     onClick={() => handleDeleteQuest(quest.id)}
                                   >
                                     Delete
                                   </Button>
                                 </div>
-                                <p className="text-xs text-gray-400">ID: {quest.id}</p>
+                                <p className="text-[10px] sm:text-xs text-gray-400">ID: {quest.id}</p>
                               </div>
                             ))
                           ) : (
-                            <p className="text-sm text-gray-400">No quests available in store.</p>
+                            <p className="text-xs sm:text-sm text-gray-400">No quests available in store.</p>
                           )}
                         </div>
                       </details>
                       
                       <details className="mt-2">
-                        <summary className="cursor-pointer text-blue-400 hover:text-blue-300">
+                        <summary className="cursor-pointer text-blue-400 hover:text-blue-300 text-xs sm:text-sm">
                           View Missions in Store (Total: {dbContents.zustandStore.state?.missions?.length || 0})
                         </summary>
                         <div className="mt-2 space-y-2 text-xs p-2 bg-gray-900 rounded">
@@ -903,27 +988,27 @@ const Character = () => {
                             dbContents.zustandStore.state.missions.map((mission: any, index: number) => (
                               <div key={index} className="p-2 border border-gray-700 rounded bg-gray-800/50">
                                 <div className="flex justify-between items-start mb-1">
-                                  <h4 className="text-sm text-white font-medium truncate max-w-[80%]">{mission.title}</h4>
+                                  <h4 className="text-xs sm:text-sm text-white font-medium truncate max-w-[80%]">{mission.title}</h4>
                                   <Button
                                     variant="destructive"
                                     size="sm"
-                                    className="h-6 px-2 text-xs"
+                                    className="h-5 sm:h-6 px-1.5 sm:px-2 text-xs sm:text-sm"
                                     onClick={() => handleDeleteMission(mission.id)}
                                   >
                                     Delete
                                   </Button>
                                 </div>
-                                <p className="text-xs text-gray-400">ID: {mission.id}</p>
+                                <p className="text-xs sm:text-sm text-gray-400">ID: {mission.id}</p>
                               </div>
                             ))
                           ) : (
-                            <p className="text-sm text-gray-400">No missions available in store.</p>
+                            <p className="text-xs sm:text-sm text-gray-400">No missions available in store.</p>
                           )}
                         </div>
                       </details>
                       
                       <details className="mt-2">
-                        <summary className="cursor-pointer text-blue-400 hover:text-blue-300">
+                        <summary className="cursor-pointer text-blue-400 hover:text-blue-300 text-xs sm:text-sm">
                           View Completed Missions in Store (Total: {dbContents.zustandStore.state?.completedMissionHistory?.length || 0})
                         </summary>
                         <pre className="text-xs mt-2 p-2 bg-gray-900 rounded overflow-x-auto">
@@ -932,7 +1017,7 @@ const Character = () => {
                       </details>
 
                       <details className="mt-2">
-                        <summary className="cursor-pointer text-blue-400 hover:text-blue-300">
+                        <summary className="cursor-pointer text-blue-400 hover:text-blue-300 text-xs sm:text-sm">
                           View Shop Items in Store (Total: {dbContents.zustandStore.state?.shopItems?.length || 0})
                         </summary>
                         <div className="mt-2 space-y-2 text-xs p-2 bg-gray-900 rounded">
@@ -940,27 +1025,27 @@ const Character = () => {
                             dbContents.zustandStore.state.shopItems.map((item: any, index: number) => (
                               <div key={index} className="p-2 border border-gray-700 rounded bg-gray-800/50">
                                 <div className="flex justify-between items-start mb-1">
-                                  <h4 className="text-sm text-white font-medium truncate max-w-[80%]">{item.name}</h4>
+                                  <h4 className="text-xs sm:text-sm text-white font-medium truncate max-w-[80%]">{item.name}</h4>
                                   <Button
                                     variant="destructive"
                                     size="sm"
-                                    className="h-6 px-2 text-xs"
+                                    className="h-5 sm:h-6 px-1.5 sm:px-2 text-xs sm:text-sm"
                                     onClick={() => handleDeleteShopItem(item.id)}
                                   >
                                     Delete
                                   </Button>
                                 </div>
-                                <p className="text-xs text-gray-400">ID: {item.id} | Cost: {item.cost}</p>
+                                <p className="text-xs sm:text-sm text-gray-400">ID: {item.id} | Cost: {item.cost}</p>
                               </div>
                             ))
                           ) : (
-                            <p className="text-sm text-gray-400">No shop items available in store.</p>
+                            <p className="text-xs sm:text-sm text-gray-400">No shop items available in store.</p>
                           )}
                         </div>
                       </details>
                     </>
                   ) : (
-                    <p className="text-red-400">No Zustand store data found in IndexedDB</p>
+                    <p className="text-red-400 text-xs sm:text-sm">No Zustand store data found in IndexedDB</p>
                   )}
                 </div>
               </div>
@@ -1071,7 +1156,7 @@ const Character = () => {
               </div>
             </div>
           ) : (
-            <p className="text-center py-4 text-gray-400">
+            <p className="text-center py-3 sm:py-4 text-gray-400 text-xs sm:text-sm">
               Click "Refresh Data" to load IndexedDB contents
             </p>
           )}

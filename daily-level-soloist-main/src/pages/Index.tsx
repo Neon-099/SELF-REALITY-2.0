@@ -147,38 +147,46 @@ const Index = () => {
       <Card className="border-gray-800/50 bg-solo-dark/90 shadow-md overflow-hidden">
         <CardHeader className="pb-3 relative">
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-solo-primary to-solo-secondary"></div>
-          <CardTitle className="flex items-center gap-2 text-2xl font-extrabold tracking-tight bg-gradient-to-r from-solo-primary to-solo-secondary bg-clip-text text-transparent drop-shadow-glow">
-            <Star className="h-7 w-7 text-yellow-400 drop-shadow-glow" />
+          <CardTitle className="flex items-center gap-2 text-xl sm:text-2xl font-extrabold tracking-tight bg-gradient-to-r from-solo-primary to-solo-secondary bg-clip-text text-transparent drop-shadow-glow">
+            <Star className="h-5 w-5 sm:h-7 sm:w-7 text-yellow-400 drop-shadow-glow" />
             Daily <span className="text-solo-primary">Wins</span>
             {allDailyWinsCompleted && (
-              <div className="ml-auto px-3 py-1 bg-gradient-to-r from-solo-primary to-solo-secondary rounded-full text-white text-xs animate-pulse-glow shadow-md">
-                All daily wins completed!
+              <div className="ml-auto px-2 sm:px-3 py-0.5 sm:py-1 bg-gradient-to-r from-solo-primary to-solo-secondary rounded-full text-white text-[10px] sm:text-xs animate-pulse-glow shadow-md">
+                All completed!
               </div>
             )}
           </CardTitle>
         </CardHeader>
-        <CardContent className="pt-0">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <DailyWinCard 
-              category="mental" 
-              completed={currentDailyWins.mental}
-              icon={<Brain size={24} />}
-            />
-            <DailyWinCard 
-              category="physical" 
-              completed={currentDailyWins.physical}
-              icon={<Dumbbell size={24} />}
-            />
-            <DailyWinCard 
-              category="spiritual" 
-              completed={currentDailyWins.spiritual}
-              icon={<Heart size={24} />}
-            />
-            <DailyWinCard 
-              category="intelligence" 
-              completed={currentDailyWins.intelligence}
-              icon={<BookOpen size={24} />}
-            />
+        <CardContent className="pt-0 pb-3 px-3 sm:px-6">
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
+            <div className="daily-win-container">
+              <DailyWinCard 
+                category="mental" 
+                completed={currentDailyWins.mental}
+                icon={<Brain size={isMobile ? 18 : 24} />}
+              />
+            </div>
+            <div className="daily-win-container">
+              <DailyWinCard 
+                category="physical" 
+                completed={currentDailyWins.physical}
+                icon={<Dumbbell size={isMobile ? 18 : 24} />}
+              />
+            </div>
+            <div className="daily-win-container">
+              <DailyWinCard 
+                category="spiritual" 
+                completed={currentDailyWins.spiritual}
+                icon={<Heart size={isMobile ? 18 : 24} />}
+              />
+            </div>
+            <div className="daily-win-container">
+              <DailyWinCard 
+                category="intelligence" 
+                completed={currentDailyWins.intelligence}
+                icon={<BookOpen size={isMobile ? 18 : 24} />}
+              />
+            </div>
           </div>
         </CardContent>
       </Card>
