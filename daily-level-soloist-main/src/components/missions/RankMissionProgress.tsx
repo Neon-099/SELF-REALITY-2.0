@@ -453,11 +453,21 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
             {/* X pattern overlay for completed missions */}
             {isCompleted && (
               <div className="absolute inset-0 z-10 pointer-events-none">
-                <div className={`absolute inset-0 ${isBoss ? 'bg-amber-500/5' : `bg-${mission.rank.toLowerCase()}-500/5`}`}>
-                  <div className="absolute inset-0 opacity-20 overflow-hidden">
-                    {/* Diagonal lines in both directions */}
-                    <div className={`absolute top-0 left-0 w-full h-full border-b-2 ${isBoss ? 'border-amber-600/40' : `border-${mission.rank.toLowerCase()}-600/40`} border-dashed transform -rotate-45 origin-top-left`}></div>
-                    <div className={`absolute top-0 right-0 w-full h-full border-b-2 ${isBoss ? 'border-amber-600/40' : `border-${mission.rank.toLowerCase()}-600/40`} border-dashed transform rotate-45 origin-top-right`}></div>
+                <div className={`absolute inset-0 ${isBoss ? 'bg-amber-500/10' : `bg-${mission.rank.toLowerCase()}-500/10`}`}>
+                </div>
+              </div>
+            )}
+            
+            {/* Completed corner banner - unified for all mission types */}
+            {isCompleted && (
+              <div className="absolute top-0 left-0 z-20">
+                <div className="w-20 h-20 overflow-hidden">
+                  <div className={`absolute transform -rotate-45 bg-gradient-to-r ${
+                    isBoss 
+                      ? 'from-amber-400 to-amber-600' 
+                      : `from-${mission.rank.toLowerCase()}-400 to-${mission.rank.toLowerCase()}-600`
+                  } text-xs font-bold py-1 left-[-40px] top-[15px] w-[140px] text-center text-gray-900 shadow-md`}>
+                    COMPLETED
                   </div>
                 </div>
               </div>
@@ -465,28 +475,6 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
             
             {/* Rank indicator strip */}
             <div className={`absolute top-0 left-0 w-2 h-full ${isBoss ? 'bg-amber-500/80' : rankSolid.split(' ')[0]} group-hover:w-3 transition-all duration-300`}></div>
-
-            {/* Completed corner banner */}
-            {isCompleted && !isBoss && (
-              <div className="absolute top-0 right-0 z-20">
-                <div className="w-20 h-20 overflow-hidden">
-                  <div className={`absolute transform rotate-45 bg-gradient-to-r from-${mission.rank.toLowerCase()}-400 to-${mission.rank.toLowerCase()}-600 text-xs font-bold py-1 right-[-40px] top-[15px] w-[140px] text-center text-gray-900 shadow-md`}>
-                    COMPLETED
-                  </div>
-                </div>
-              </div>
-            )}
-            
-            {/* Completed banner for boss missions */}
-            {isCompleted && isBoss && (
-              <div className="absolute top-0 left-0 z-20">
-                <div className="w-20 h-20 overflow-hidden">
-                  <div className="absolute transform -rotate-45 bg-gradient-to-r from-amber-400 to-amber-600 text-xs font-bold py-1 left-[-40px] top-[15px] w-[140px] text-center text-gray-900 shadow-md">
-                    COMPLETED
-                  </div>
-                </div>
-              </div>
-            )}
 
             {/* Boss indicator - show only if not completed */}
             {isBoss && !isCompleted && (
