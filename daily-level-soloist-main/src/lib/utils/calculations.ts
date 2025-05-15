@@ -1,6 +1,16 @@
 import { Difficulty, Rank } from '../types';
 
-export const calculateExpToNextLevel = (level: number) => Math.floor(100 * Math.pow(1.15, level - 1));
+/**
+ * Calculates experience required to reach the next level using the formula:
+ * XP_n = BaseXP × n^GrowthRate
+ * Where:
+ * - n = current level
+ * - BaseXP = 100 (starting XP per level)
+ * - GrowthRate = 1.5 (how fast difficulty increases)
+ * @param level The current level
+ * @returns The XP required to reach the next level
+ */
+export const calculateExpToNextLevel = (level: number) => Math.floor(100 * Math.pow(1.5, level - 1));
 
 export const getExpForDifficulty = (difficulty: Difficulty): number => {
   const rewards = {

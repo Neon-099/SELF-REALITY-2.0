@@ -82,14 +82,12 @@ export const createMissionSlice: StateCreator<MissionSlice & any> = (set, get) =
     
     if (!mission || mission.completed) return;
     
-    const isAllTasksCompleted = mission.count && completedTaskIndices.length >= mission.count;
-    
+    // Remove the automatic mission completion logic
+    // Just update the completedTaskIndices
     const updatedMissions = missions.map((m: Mission) => 
       m.id === id ? { 
         ...m, 
-        completedTaskIndices,
-        completed: isAllTasksCompleted,
-        completedAt: isAllTasksCompleted ? new Date() : undefined
+        completedTaskIndices
       } : m
     );
     
@@ -97,39 +95,12 @@ export const createMissionSlice: StateCreator<MissionSlice & any> = (set, get) =
       missions: updatedMissions
     }));
     
-    // If all tasks are completed, add to completed history and award exp
-    if (isAllTasksCompleted) {
-      const { addExp } = get();
-      const completedMission = { ...mission, completed: true, completedAt: new Date(), completedTaskIndices };
-      
-      set((state: MissionSlice) => ({
-        completedMissionHistory: [...state.completedMissionHistory, completedMission]
-      }));
-      
-      // Award EXP for mission completion
-      addExp(mission.expReward);
-      
-      // Show toast
-      toast({
-        title: "Mission Completed!",
-        description: `You earned ${mission.expReward} EXP for completing "${mission.title}"`,
-      });
-      
-      // Try to also save to IndexedDB for extra persistence
-      try {
-        const db = await getDB();
-        await db.put('store', completedMission, `mission_${completedMission.id}`);
-      } catch (error) {
-        console.error('Error saving completed mission to IndexedDB:', error);
-      }
-    } else {
-      // Try to also save to IndexedDB for extra persistence
-      try {
-        const db = await getDB();
-        await db.put('store', { ...mission, completedTaskIndices }, `mission_${mission.id}`);
-      } catch (error) {
-        console.error('Error saving mission task updates to IndexedDB:', error);
-      }
+    // Try to save to IndexedDB for extra persistence
+    try {
+      const db = await getDB();
+      await db.put('store', { ...mission, completedTaskIndices }, `mission_${mission.id}`);
+    } catch (error) {
+      console.error('Error saving mission task updates to IndexedDB:', error);
     }
   },
   

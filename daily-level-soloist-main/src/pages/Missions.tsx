@@ -455,16 +455,16 @@ const Missions = () => {
                   
                   <div className="grid grid-cols-2 gap-2">
                     <div className="space-y-1">
-                      <Label htmlFor="mission-day">Day</Label>
-                      <Input
-                        id="mission-day"
-                        name="day"
-                        type="number"
-                        min="1"
-                        placeholder="Day"
-                        value={newMission.day}
-                        onChange={handleNewMissionChange}
-                        required
+                    <Label htmlFor="mission-day">Day</Label>
+                    <Input
+                      id="mission-day"
+                      name="day"
+                      type="number"
+                      min="1"
+                      placeholder="Day"
+                      value={newMission.day}
+                      onChange={handleNewMissionChange}
+                      required
                         className="h-8"
                       />
                     </div>
@@ -480,7 +480,7 @@ const Missions = () => {
                         onChange={handleNewMissionChange}
                         required
                         className="h-8"
-                      />
+                    />
                     </div>
                   </div>
                   
@@ -501,17 +501,17 @@ const Missions = () => {
                       />
                     </div>
                     <div className="space-y-1">
-                      <Label htmlFor="mission-difficulty">Difficulty</Label>
-                      <Select name="difficulty" value={newMission.difficulty} onValueChange={val => setNewMission(n => ({ ...n, difficulty: val as Difficulty }))}>
+                    <Label htmlFor="mission-difficulty">Difficulty</Label>
+                    <Select name="difficulty" value={newMission.difficulty} onValueChange={val => setNewMission(n => ({ ...n, difficulty: val as Difficulty }))}>
                         <SelectTrigger id="mission-difficulty" className="h-8">
                           <SelectValue placeholder="Difficulty" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="normal">Normal</SelectItem>
-                          <SelectItem value="boss">Boss</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="normal">Normal</SelectItem>
+                        <SelectItem value="boss">Boss</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                   </div>
                   
                   <div className="space-y-1">

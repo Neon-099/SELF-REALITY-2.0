@@ -65,9 +65,6 @@ export function Header() {
                   </>
                 )}
               </div>
-              <div className="flex items-center gap-1 text-xs text-gray-300 ml-2">
-                <span>{isMobile ? `${user?.exp || 0}/${user?.expToNextLevel || 100}` : `${user?.exp || 0} / ${user?.expToNextLevel || 100} XP`}</span>
-              </div>
             </div>
             <div className="exp-bar-bg h-1.5 rounded-full bg-gray-800 overflow-hidden">
               <div 
