@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Stat } from '@/lib/types';
 import { Brain, Dumbbell, MessagesSquare, HeartPulse, Target, BookOpen, Clock } from 'lucide-react';
+import AuthDialog from './auth/AuthDialog';
 
 type Category = {
   id: string;
@@ -30,8 +31,6 @@ const categories: Category[] = [
       'I can stay focused for long periods without getting distracted.',
       'I find it easy to clear my mind and concentrate when needed.',
       'I rarely feel mentally foggy or overwhelmed.',
-      'I can make clear decisions even under pressure.',
-      'I feel mentally sharp most days.'
     ]
   },
   {
@@ -44,8 +43,6 @@ const categories: Category[] = [
       'I stick to habits even when I don\'t feel motivated.',
       'I can delay short-term pleasures for long-term goals.',
       'I follow through on plans I make.',
-      'I can wake up and sleep on a consistent schedule.',
-      'I don\'t give up easily once I start something.'
     ]
   },
   {
@@ -58,8 +55,6 @@ const categories: Category[] = [
       'I can sense how others are feeling even when they don\'t say it.',
       'I listen actively and make people feel heard.',
       'I know how to express myself clearly in conversations.',
-      'I adapt my tone and words depending on who I talk to.',
-      'I feel comfortable resolving misunderstandings or conflicts.'
     ]
   },
   {
@@ -72,8 +67,6 @@ const categories: Category[] = [
       'I bounce back quickly after failure or disappointment.',
       'I don\'t let negative emotions control my actions.',
       'I can stay calm even during chaos or arguments.',
-      'I reflect on what went wrong instead of blaming others.',
-      'I can stay hopeful even when things aren\'t going well.'
     ]
   },
   {
@@ -86,8 +79,6 @@ const categories: Category[] = [
       'I set clear goals and work toward them regularly.',
       'I know what I want to achieve in the next 6–12 months.',
       'I break large goals into smaller, manageable steps.',
-      'I track my progress toward personal or professional goals.',
-      'I feel motivated to improve myself consistently.'
     ]
   },
   {
@@ -100,8 +91,6 @@ const categories: Category[] = [
       'I enjoy learning new skills or topics regularly.',
       'I read, watch, or listen to educational content often.',
       'I seek feedback to improve myself.',
-      'I reflect on mistakes and try to learn from them.',
-      'I enjoy stepping outside my comfort zone to grow.'
     ]
   },
   {
@@ -114,8 +103,6 @@ const categories: Category[] = [
       'I usually finish my tasks on time.',
       'I plan my days or weeks in advance.',
       'I minimize time spent on unimportant things.',
-      'I prioritize tasks based on urgency and importance.',
-      'I make time for rest without feeling guilty.'
     ]
   }
 ];
@@ -133,6 +120,7 @@ const CharacterCreationDialog: React.FC<CharacterCreationDialogProps> = ({ open,
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<Record<string, number[]>>({});
   const [results, setResults] = useState<Record<string, number>>({});
+  const [showAuthDialog, setShowAuthDialog] = useState(false);
   
   // Get the store functions
   const { user, increaseStatFree, updateUserName } = useSoloLevelingStore();
@@ -276,7 +264,22 @@ const CharacterCreationDialog: React.FC<CharacterCreationDialogProps> = ({ open,
       }
     });
     
-    // Close the dialog and navigate to home
+    // Show auth dialog instead of navigating directly
+    setShowAuthDialog(true);
+  };
+  
+  // Handle auth completion
+  const handleAuthComplete = () => {
+    // Close dialogs and navigate to home
+    setShowAuthDialog(false);
+    onOpenChange(false);
+    navigate('/home');
+  };
+  
+  // Handle skipping auth
+  const handleSkipAuth = () => {
+    // Close dialogs and navigate to home
+    setShowAuthDialog(false);
     onOpenChange(false);
     navigate('/home');
   };
@@ -296,164 +299,175 @@ const CharacterCreationDialog: React.FC<CharacterCreationDialogProps> = ({ open,
   };
   
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="text-center text-xl md:text-2xl font-bold text-white">
-            DISCOVER YOUR INNER HERO
-          </DialogTitle>
-          <DialogDescription className="text-center text-gray-300 mt-2">
-            Before you begin your quest, you must know your strengths and face your weaknesses. Answer these questions to shape your path and awaken your true potential.
-          </DialogDescription>
-        </DialogHeader>
-        
-        <div className="py-4">
-          {step === 'name' && (
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">What is your name, hero?</Label>
-                <Input
-                  id="name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Enter your name"
-                  className="bg-gray-800/50 border-gray-700"
-                />
-              </div>
-              <Button 
-                className="w-full mt-4" 
-                onClick={() => setStep('survey')}
-                disabled={!name.trim()}
-              >
-                Continue
-              </Button>
-            </div>
-          )}
+    <>
+      <Dialog open={open && !showAuthDialog} onOpenChange={onOpenChange}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-center text-xl md:text-2xl font-bold text-white">
+              DISCOVER YOUR INNER HERO
+            </DialogTitle>
+            <DialogDescription className="text-center text-gray-300 mt-2">
+              Before you begin your quest, you must know your strengths and face your weaknesses. Answer these questions to shape your path and awaken your true potential.
+            </DialogDescription>
+          </DialogHeader>
           
-          {step === 'survey' && (
-            <div className="space-y-4">
-              <div className="mb-6">
-                <div className="flex justify-between text-sm text-gray-400 mb-1">
-                  <div className="flex items-center gap-2">
-                    {categories[currentCategory].icon}
-                    <span>{categories[currentCategory].title}</span>
-                  </div>
-                  <span>Question {getCurrentQuestionNumber()} of {totalQuestions}</span>
-                </div>
-                <p className="text-sm text-gray-500 mb-2">{categories[currentCategory].description}</p>
-                <div className="w-full bg-gray-800 h-2 rounded-full">
-                  <div 
-                    className="bg-solo-primary h-2 rounded-full transition-all duration-300"
-                    style={{ width: `${(getCurrentQuestionNumber() / totalQuestions) * 100}%` }}
-                  ></div>
-                </div>
-              </div>
-              
-              <h3 className="text-lg font-medium mb-4">{categories[currentCategory].questions[currentQuestion]}</h3>
-              
+          <div className="py-4">
+            {step === 'name' && (
               <div className="space-y-4">
-                <div className="flex justify-between text-xs text-gray-400 mb-1">
-                  <span>Strongly Disagree</span>
-                  <span>Strongly Agree</span>
+                <div className="space-y-2">
+                  <Label htmlFor="name">What is your name, hero?</Label>
+                  <Input
+                    id="name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Enter your name"
+                    className="bg-gray-800/50 border-gray-700"
+                  />
                 </div>
-                <div className="flex justify-between gap-2">
-                  {[1, 2, 3, 4, 5].map((value) => (
-                    <Button
-                      key={value}
-                      variant={answers[categories[currentCategory].id][currentQuestion] === value ? "default" : "outline"}
-                      className={`flex-1 h-12 ${answers[categories[currentCategory].id][currentQuestion] === value ? "bg-solo-primary" : "bg-gray-800/30"}`}
-                      onClick={() => handleSelectAnswer(value)}
-                    >
-                      {value}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-              
-              <div className="flex justify-between mt-6">
-                <Button variant="outline" onClick={handlePrevious}>
-                  Back
-                </Button>
                 <Button 
-                  onClick={handleNext}
-                  disabled={answers[categories[currentCategory].id][currentQuestion] === 0}
+                  className="w-full mt-4" 
+                  onClick={() => setStep('survey')}
+                  disabled={!name.trim()}
                 >
-                  {getCurrentQuestionNumber() < totalQuestions ? 'Next' : 'Complete'}
+                  Continue
                 </Button>
               </div>
-            </div>
-          )}
-          
-          {step === 'summary' && (
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium mb-4">Your Character Profile</h3>
-              
-              <div className="bg-gray-800/50 p-4 rounded-lg border border-gray-700 space-y-4">
-                <div className="space-y-1">
-                  <p className="text-lg font-bold">{name}</p>
-                  <p className="text-sm text-gray-300">Level 1 {getRecommendedClass()}</p>
+            )}
+            
+            {step === 'survey' && (
+              <div className="space-y-4">
+                <div className="mb-6">
+                  <div className="flex justify-between text-sm text-gray-400 mb-1">
+                    <div className="flex items-center gap-2">
+                      {categories[currentCategory].icon}
+                      <span>{categories[currentCategory].title}</span>
+                    </div>
+                    <span>Question {getCurrentQuestionNumber()} of {totalQuestions}</span>
+                  </div>
+                  <p className="text-sm text-gray-500 mb-2">{categories[currentCategory].description}</p>
+                  <div className="w-full bg-gray-800 h-2 rounded-full">
+                    <div 
+                      className="bg-solo-primary h-2 rounded-full transition-all duration-300"
+                      style={{ width: `${(getCurrentQuestionNumber() / totalQuestions) * 100}%` }}
+                    ></div>
+                  </div>
                 </div>
                 
-                <div className="space-y-3">
-                  <h4 className="text-sm font-medium">Your Attribute Scores:</h4>
-                  <div className="grid grid-cols-2 gap-2">
-                    {categories.map((category) => (
-                      <div key={category.id} className="flex items-center justify-between bg-gray-900/50 rounded p-2">
-                        <div className="flex items-center gap-2">
-                          {category.icon}
-                          <span className="text-sm">{category.title}</span>
-                        </div>
-                        <span className={`text-sm font-medium ${results[category.id] >= 4 ? 'text-green-400' : results[category.id] <= 2 ? 'text-red-400' : 'text-gray-300'}`}>
-                          {results[category.id]}
-                        </span>
-                      </div>
+                <h3 className="text-lg font-medium mb-4">{categories[currentCategory].questions[currentQuestion]}</h3>
+                
+                <div className="space-y-4">
+                  <div className="flex justify-between text-xs text-gray-400 mb-1">
+                    <span>Strongly Disagree</span>
+                    <span>Strongly Agree</span>
+                  </div>
+                  <div className="flex justify-between gap-2">
+                    {[1, 2, 3, 4, 5].map((value) => (
+                      <Button
+                        key={value}
+                        variant={answers[categories[currentCategory].id][currentQuestion] === value ? "default" : "outline"}
+                        className={`flex-1 h-12 ${answers[categories[currentCategory].id][currentQuestion] === value ? "bg-solo-primary" : "bg-gray-800/30"}`}
+                        onClick={() => handleSelectAnswer(value)}
+                      >
+                        {value}
+                      </Button>
                     ))}
                   </div>
                 </div>
                 
-                <div className="space-y-2">
+                <div className="flex justify-between mt-6">
+                  <Button variant="outline" onClick={handlePrevious}>
+                    Back
+                  </Button>
+                  <Button 
+                    onClick={handleNext}
+                    disabled={answers[categories[currentCategory].id][currentQuestion] === 0}
+                  >
+                    {getCurrentQuestionNumber() < totalQuestions ? 'Next' : 'Complete'}
+                  </Button>
+                </div>
+              </div>
+            )}
+            
+            {step === 'summary' && (
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium mb-4">Your Character Profile</h3>
+                
+                <div className="bg-gray-800/50 p-4 rounded-lg border border-gray-700 space-y-4">
                   <div className="space-y-1">
-                    <h4 className="text-sm font-medium text-green-400">Strengths:</h4>
-                    <p className="text-sm text-gray-300">
-                      {getStrengthsAndWeaknesses().strengths.length > 0 
-                        ? getStrengthsAndWeaknesses().strengths.join(', ')
-                        : 'Well-balanced across all attributes'}
-                    </p>
+                    <p className="text-lg font-bold">{name}</p>
+                    <p className="text-sm text-gray-300">Level 1 {getRecommendedClass()}</p>
                   </div>
                   
-                  <div className="space-y-1">
-                    <h4 className="text-sm font-medium text-red-400">Areas for Growth:</h4>
-                    <p className="text-sm text-gray-300">
-                      {getStrengthsAndWeaknesses().weaknesses.length > 0 
-                        ? getStrengthsAndWeaknesses().weaknesses.join(', ')
-                        : 'No significant weaknesses detected'}
-                    </p>
+                  <div className="space-y-3">
+                    <h4 className="text-sm font-medium">Your Attribute Scores:</h4>
+                    <div className="grid grid-cols-2 gap-2">
+                      {categories.map((category) => (
+                        <div key={category.id} className="flex items-center justify-between bg-gray-900/50 rounded p-2">
+                          <div className="flex items-center gap-2">
+                            {category.icon}
+                            <span className="text-sm">{category.title}</span>
+                          </div>
+                          <span className={`text-sm font-medium ${results[category.id] >= 4 ? 'text-green-400' : results[category.id] <= 2 ? 'text-red-400' : 'text-gray-300'}`}>
+                            {results[category.id]}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <div className="space-y-1">
+                      <h4 className="text-sm font-medium text-green-400">Strengths:</h4>
+                      <p className="text-sm text-gray-300">
+                        {getStrengthsAndWeaknesses().strengths.length > 0 
+                          ? getStrengthsAndWeaknesses().strengths.join(', ')
+                          : 'Well-balanced across all attributes'}
+                      </p>
+                    </div>
+                    
+                    <div className="space-y-1">
+                      <h4 className="text-sm font-medium text-red-400">Areas for Growth:</h4>
+                      <p className="text-sm text-gray-300">
+                        {getStrengthsAndWeaknesses().weaknesses.length > 0 
+                          ? getStrengthsAndWeaknesses().weaknesses.join(', ')
+                          : 'No significant weaknesses detected'}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="pt-2 border-t border-gray-700">
+                    <h4 className="text-sm font-medium mb-2">Stat Bonuses:</h4>
+                    <div className="grid grid-cols-3 gap-y-2 gap-x-4">
+                      {Object.entries(calculateStatBonuses()).map(([stat, bonus]) => (
+                        <div key={stat} className="flex justify-between">
+                          <span className="text-xs capitalize">{stat}</span>
+                          <span className={`text-xs ${bonus > 0 ? "text-solo-primary" : "text-gray-500"}`}>
+                            {bonus > 0 ? `+${bonus}` : '0'}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
                 
-                <div className="pt-2 border-t border-gray-700">
-                  <h4 className="text-sm font-medium mb-2">Stat Bonuses:</h4>
-                  <div className="grid grid-cols-3 gap-y-2 gap-x-4">
-                    {Object.entries(calculateStatBonuses()).map(([stat, bonus]) => (
-                      <div key={stat} className="flex justify-between">
-                        <span className="text-xs capitalize">{stat}</span>
-                        <span className={`text-xs ${bonus > 0 ? "text-solo-primary" : "text-gray-500"}`}>
-                          {bonus > 0 ? `+${bonus}` : '0'}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                <Button className="w-full mt-4" onClick={handleComplete}>
+                  Begin Your Journey
+                </Button>
               </div>
-              
-              <Button className="w-full mt-4" onClick={handleComplete}>
-                Begin Your Journey
-              </Button>
-            </div>
-          )}
-        </div>
-      </DialogContent>
-    </Dialog>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Auth Dialog */}
+      <AuthDialog
+        open={showAuthDialog}
+        onOpenChange={setShowAuthDialog}
+        onComplete={handleAuthComplete}
+        onSkip={handleSkipAuth}
+        characterName={name}
+      />
+    </>
   );
 };
 

@@ -1,12 +1,20 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ArrowRight, Award, Shield, Star, Sword } from 'lucide-react';
 import CharacterCreationDialog from '@/components/CharacterCreationDialog';
+import AuthDialog from '@/components/auth/AuthDialog';
 
 export default function Landing() {
+  const navigate = useNavigate();
   const [showCharacterCreation, setShowCharacterCreation] = useState(false);
+  const [showLoadGame, setShowLoadGame] = useState(false);
+  
+  const handleLoadGameComplete = () => {
+    setShowLoadGame(false);
+    navigate('/home');
+  };
   
   return (
     <div className="min-h-screen bg-gradient-to-b from-solo-dark to-gray-900">
@@ -19,9 +27,23 @@ export default function Landing() {
           <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
             Transform your daily tasks into an epic journey of self-improvement. Level up your life, one quest at a time.
           </p>
-          <Button size="lg" className="animate-pulse-glow" onClick={() => setShowCharacterCreation(true)}>
-            Enter Your Journey <ArrowRight className="ml-2" />
-          </Button>
+          <div className="flex flex-col justify-center gap-2">
+            <Button 
+              size="default"
+              className="animate-pulse-glow w-48 mx-auto text-sm rounded-xl bg-[#3B82F6] hover:bg-[#2563EB]" 
+              onClick={() => setShowCharacterCreation(true)}
+            >
+              Enter Your Journey <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+            <Button 
+              size="default"
+              variant="outline" 
+              className="w-48 mx-auto text-sm rounded-xl border-gray-700 bg-gray-900/50 hover:bg-gray-800/50" 
+              onClick={() => setShowLoadGame(true)}
+            >
+              Load Game
+            </Button>
+          </div>
         </div>
 
         {/* Features Grid */}
@@ -81,6 +103,14 @@ export default function Landing() {
       <CharacterCreationDialog 
         open={showCharacterCreation} 
         onOpenChange={setShowCharacterCreation} 
+      />
+      
+      {/* Load Game Dialog */}
+      <AuthDialog
+        open={showLoadGame}
+        onOpenChange={setShowLoadGame}
+        onComplete={handleLoadGameComplete}
+        characterName=""
       />
     </div>
   );

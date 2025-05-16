@@ -17,6 +17,7 @@ import { useEffect, useState } from "react";
 import { useSoloLevelingStore } from "./lib/store";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { LoadingScreen, LoadingError } from "./components/ui/loading-screen";
+import { AuthProvider } from "@/hooks/use-auth-context";
 
 // Import UserSetup component dynamically if it exists
 // Note: Remove this dynamic import approach once UserSetup component is properly created
@@ -160,54 +161,56 @@ const App = () => {
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <CurseChecker />
-            <Routes>
-              <Route path="/" element={<LandingPage />} />
-              <Route element={<Layout />}>
-                <Route path="/home" element={
-                  <ErrorBoundary>
-                    <Index />
-                  </ErrorBoundary>
-                } />
-                <Route path="/character" element={
-                  <ErrorBoundary>
-                    <Character />
-                  </ErrorBoundary>
-                } />
-                <Route path="/planner" element={
-                  <ErrorBoundary>
-                    <Planner />
-                  </ErrorBoundary>
-                } />
-                <Route path="/quests" element={
-                  <ErrorBoundary>
-                    <Quests />
-                  </ErrorBoundary>
-                } />
-                <Route path="/missions" element={
-                  <ErrorBoundary>
-                    <Missions />
-                  </ErrorBoundary>
-                } />
-                <Route path="/shop" element={
-                  <ErrorBoundary>
-                    <Shop />
-                  </ErrorBoundary>
-                } />
-                <Route path="/milestones" element={
-                  <ErrorBoundary>
-                    <Milestones />
-                  </ErrorBoundary>
-                } />
-              </Route>
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
+        <AuthProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <CurseChecker />
+              <Routes>
+                <Route path="/" element={<LandingPage />} />
+                <Route element={<Layout />}>
+                  <Route path="/home" element={
+                    <ErrorBoundary>
+                      <Index />
+                    </ErrorBoundary>
+                  } />
+                  <Route path="/character" element={
+                    <ErrorBoundary>
+                      <Character />
+                    </ErrorBoundary>
+                  } />
+                  <Route path="/planner" element={
+                    <ErrorBoundary>
+                      <Planner />
+                    </ErrorBoundary>
+                  } />
+                  <Route path="/quests" element={
+                    <ErrorBoundary>
+                      <Quests />
+                    </ErrorBoundary>
+                  } />
+                  <Route path="/missions" element={
+                    <ErrorBoundary>
+                      <Missions />
+                    </ErrorBoundary>
+                  } />
+                  <Route path="/shop" element={
+                    <ErrorBoundary>
+                      <Shop />
+                    </ErrorBoundary>
+                  } />
+                  <Route path="/milestones" element={
+                    <ErrorBoundary>
+                      <Milestones />
+                    </ErrorBoundary>
+                  } />
+                </Route>
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </BrowserRouter>
+          </TooltipProvider>
+        </AuthProvider>
       </QueryClientProvider>
     </ErrorBoundary>
   );
