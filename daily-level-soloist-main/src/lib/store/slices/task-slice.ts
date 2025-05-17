@@ -1,9 +1,10 @@
-import { StateCreator } from 'zustand';
+import { StateCreator, StoreApi } from 'zustand';
 import { Task, Difficulty, DailyWinCategory, Stat } from '../../types';
 import { v4 as uuidv4 } from 'uuid';
 import { getExpForDifficulty, calculateExpToNextLevel, calculateRank } from '../../utils/calculations';
 import { UserSlice } from './user-slice';
 import { toast } from '@/hooks/use-toast';
+import { StoreState } from '../index';
 
 export interface TaskSlice {
   tasks: Task[];
@@ -40,11 +41,11 @@ const attributeToDailyWin = (attributeCategory: string): DailyWinCategory | null
 };
 
 export const createTaskSlice: StateCreator<
-  TaskSlice & UserSlice,
+  StoreState,
   [],
   [],
   TaskSlice
-> = (set, get) => ({
+> = (set, get, _store) => ({
   tasks: [],
   createTask: (title, description, difficulty, category, deadline) => {
     const task: Task = {

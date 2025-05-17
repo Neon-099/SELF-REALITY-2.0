@@ -1,30 +1,62 @@
-import { StateCreator } from 'zustand';
-import { Mission, Rank } from '../../types';
+import { StateCreator, StoreApi } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
-import { differenceInDays, differenceInHours, addDays } from 'date-fns';
+import { Mission, Rank } from '@/lib/types';
+import { MongoDBService } from '../../services/mongodb-service';
 import { toast } from '@/hooks/use-toast';
-import { getDB } from '../../db';
+import { StoreState } from '../index'; // Assuming StoreState is now correctly exported from ../index
 
 export interface MissionSlice {
   missions: Mission[];
   completedMissionHistory: Mission[];
-  addMission: (title: string, description: string, expReward: number, rank?: Rank, day?: number, difficulty?: 'normal' | 'boss', count?: number, taskNames?: string[]) => void;
-  completeMission: (id: string) => Promise<void>;
+  addMission: (title: string, description: string, expReward: number, rank?: Rank, day?: number, difficulty?: 'normal' | 'boss', count?: number, taskNames?: string[]) => Promise<Mission>;
   startMission: (id: string) => Promise<void>;
   updateMissionTasks: (id: string, completedTaskIndices: number[]) => Promise<void>;
+  completeMission: (id: string) => Promise<void>;
+  loadMissions: () => Promise<void>;
   hasCompletedMissionToday: () => boolean;
   hasCompletedMissionRecently: (hours: number) => boolean;
-  getAvailableMissions: () => Mission[];
-  getNextMissionRelease: () => Date | null;
-  calculateMissionsCompleted: () => { today: number, total: number };
-  getMissionStats: () => { completed: number, streak: number, total: number };
 }
 
-export const createMissionSlice: StateCreator<MissionSlice & any> = (set, get) => ({
+export const createMissionSlice = (dbService: MongoDBService) => (
+  set: (partial: MissionSlice | Partial<MissionSlice> | ((state: MissionSlice) => MissionSlice | Partial<MissionSlice>), replace?: boolean | undefined) => void,
+  get: () => StoreState, 
+  _store: StoreApi<StoreState>
+) => ({
   missions: [],
   completedMissionHistory: [],
-  
-  addMission: (title: string, description: string, expReward: number, rank: Rank = 'F', day: number = 1, difficulty: 'normal' | 'boss' = 'normal', count: number = 1, taskNames: string[] = []) => {
+
+  loadMissions: async () => {
+    try {
+      const missionsFromDB = await dbService.getAllMissions();
+      if (!Array.isArray(missionsFromDB)) {
+        console.error('Failed to load missions: Expected an array, but received:', missionsFromDB);
+        toast({
+          title: "Error",
+          description: "Failed to load missions data format error. Please try again.",
+          variant: "destructive"
+        });
+        set({ missions: [], completedMissionHistory: [] });
+        return;
+      }
+
+      const completedMissions = missionsFromDB.filter(m => m.completed);
+      const activeMissions = missionsFromDB.filter(m => !m.completed);
+
+      set({
+        missions: activeMissions,
+        completedMissionHistory: completedMissions
+      });
+    } catch (error) {
+      console.error('Failed to load missions:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load missions. Please try again.",
+        variant: "destructive"
+      });
+    }
+  },
+
+  addMission: async (title, description, expReward, rank = 'F', day = 1, difficulty = 'normal', count = 1, taskNames = []) => {
     const mission: Mission = {
       id: uuidv4(),
       title,
@@ -40,106 +72,101 @@ export const createMissionSlice: StateCreator<MissionSlice & any> = (set, get) =
       taskNames,
       completedTaskIndices: []
     };
-    
-    set((state: MissionSlice) => ({
-      missions: [...state.missions, mission]
-    }));
-    
-    return mission;
-  },
-  
-  startMission: async (id: string) => {
-    const { missions } = get();
-    const mission = missions.find((m: Mission) => m.id === id);
-    
-    if (!mission || mission.completed || mission.started) return;
-    
-    const updatedMissions = missions.map((m: Mission) => 
-      m.id === id ? { ...m, started: true } : m
-    );
-    
-    set((state: MissionSlice) => ({
-      missions: updatedMissions
-    }));
-    
-    toast({
-      title: "Mission Started!",
-      description: `You've started the mission "${mission.title}"`,
-    });
-    
-    // Try to also save to IndexedDB for extra persistence
+
     try {
-      const db = await getDB();
-      await db.put('store', { ...mission, started: true }, `mission_${mission.id}`);
+      const savedMission = await dbService.createMission(mission);
+      set((state: MissionSlice) => ({
+        missions: [...state.missions, savedMission]
+      }));
+      return savedMission;
     } catch (error) {
-      console.error('Error saving started mission to IndexedDB:', error);
+      console.error('Failed to add mission:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create mission. Please try again.",
+        variant: "destructive"
+      });
+      return mission;
     }
   },
-  
-  updateMissionTasks: async (id: string, completedTaskIndices: number[]) => {
-    const { missions } = get();
-    const mission = missions.find((m: Mission) => m.id === id);
-    
-    if (!mission || mission.completed) return;
-    
-    // Remove the automatic mission completion logic
-    // Just update the completedTaskIndices
-    const updatedMissions = missions.map((m: Mission) => 
-      m.id === id ? { 
-        ...m, 
-        completedTaskIndices
-      } : m
-    );
-    
-    set((state: MissionSlice) => ({
-      missions: updatedMissions
-    }));
-    
-    // Try to save to IndexedDB for extra persistence
+
+  startMission: async (id) => {
     try {
-      const db = await getDB();
-      await db.put('store', { ...mission, completedTaskIndices }, `mission_${mission.id}`);
+      const updatedMission = await dbService.updateMission(id, { started: true });
+      if (updatedMission) {
+        set((state: MissionSlice) => ({
+          missions: state.missions.map(m => m.id === id ? updatedMission : m)
+        }));
+
+        toast({
+          title: "Mission Started!",
+          description: `You've started the mission "${updatedMission.title}"`,
+        });
+      }
     } catch (error) {
-      console.error('Error saving mission task updates to IndexedDB:', error);
+      console.error('Failed to start mission:', error);
+      toast({
+        title: "Error",
+        description: "Failed to start mission. Please try again.",
+        variant: "destructive"
+      });
     }
   },
-  
-  completeMission: async (id: string) => {
-    const { missions, addExp } = get();
-    const mission = missions.find((m: Mission) => m.id === id);
-    
-    if (!mission || mission.completed) return;
-    
-    const updatedMissions = missions.map((m: Mission) => 
-      m.id === id ? { ...m, completed: true, completedAt: new Date() } : m
-    );
-    
-    // Add to completed history
-    const completedMission = { ...mission, completed: true, completedAt: new Date() };
-    
-    set((state: MissionSlice) => ({
-      missions: updatedMissions,
-      completedMissionHistory: [...state.completedMissionHistory, completedMission]
-    }));
-    
-    // Award EXP for mission completion
-    addExp(mission.expReward);
-    
-    // Show toast
-    toast({
-      title: "Mission Completed!",
-      description: `You earned ${mission.expReward} EXP for completing "${mission.title}"`,
-    });
-    
-    // Try to also save to IndexedDB for extra persistence
+
+  updateMissionTasks: async (id, completedTaskIndices) => {
     try {
-      const db = await getDB();
-      await db.put('store', completedMission, `mission_${completedMission.id}`);
+      const updatedMission = await dbService.updateMission(id, { completedTaskIndices });
+      if (updatedMission) {
+        set((state: MissionSlice) => ({
+          missions: state.missions.map(m => m.id === id ? updatedMission : m)
+        }));
+      }
     } catch (error) {
-      console.error('Error saving completed mission to IndexedDB:', error);
+      console.error('Failed to update mission tasks:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update mission tasks. Please try again.",
+        variant: "destructive"
+      });
     }
   },
-  
+
+  completeMission: async (id) => {
+    try {
+      const { missions, addExp } = get();
+      const mission = missions.find(m => m.id === id);
+      
+      if (!mission || mission.completed) return;
+
+      const updatedMission = await dbService.updateMission(id, {
+        completed: true,
+        completedAt: new Date()
+      });
+
+      if (updatedMission) {
+        set((state: MissionSlice) => ({
+          missions: state.missions.filter(m => m.id !== id),
+          completedMissionHistory: [...state.completedMissionHistory, updatedMission]
+        }));
+
+        // Award EXP for mission completion
+        addExp(mission.expReward);
+
+        toast({
+          title: "Mission Completed!",
+          description: `You earned ${mission.expReward} EXP for completing "${mission.title}"`,
+        });
+      }
+    } catch (error) {
+      console.error('Failed to complete mission:', error);
+      toast({
+        title: "Error",
+        description: "Failed to complete mission. Please try again.",
+        variant: "destructive"
+      });
+    }
+  },
+
   hasCompletedMissionToday: () => {
     const { completedMissionHistory } = get();
     const today = new Date();
@@ -151,7 +178,7 @@ export const createMissionSlice: StateCreator<MissionSlice & any> = (set, get) =
       return completedDate.getTime() === today.getTime();
     });
   },
-  
+
   hasCompletedMissionRecently: (hours: number) => {
     const { completedMissionHistory } = get();
     const cutoff = new Date();
@@ -160,97 +187,5 @@ export const createMissionSlice: StateCreator<MissionSlice & any> = (set, get) =
     return completedMissionHistory.some((mission: Mission) => {
       return new Date(mission.completedAt as Date) > cutoff;
     });
-  },
-  
-  getAvailableMissions: () => {
-    const { missions } = get();
-    return missions.filter((mission: Mission) => !mission.completed);
-  },
-  
-  getNextMissionRelease: () => {
-    const { completedMissionHistory } = get();
-    
-    if (completedMissionHistory.length === 0) {
-      return null;
-    }
-    
-    // Find the most recently completed mission
-    const sortedHistory = [...completedMissionHistory].sort((a, b) => {
-      return new Date(b.completedAt as Date).getTime() - new Date(a.completedAt as Date).getTime();
-    });
-    
-    // Get the completion time of the most recent mission
-    const lastCompletion = new Date(sortedHistory[0].completedAt as Date);
-    
-    // Add 24 hours to the completion time
-    const nextRelease = new Date(lastCompletion);
-    nextRelease.setHours(nextRelease.getHours() + 24);
-    
-    return nextRelease;
-  },
-  
-  calculateMissionsCompleted: () => {
-    const { completedMissionHistory } = get();
-    
-    // Filter for missions completed today
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    const completedToday = completedMissionHistory.filter((mission: Mission) => {
-      const completedDate = new Date(mission.completedAt as Date);
-      completedDate.setHours(0, 0, 0, 0);
-      return completedDate.getTime() === today.getTime();
-    });
-    
-    return {
-      today: completedToday.length,
-      total: completedMissionHistory.length
-    };
-  },
-  
-  getMissionStats: () => {
-    const { completedMissionHistory } = get();
-    
-    // Calculate the streak
-    let streak = 0;
-    let today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    // Check if we have a mission completed today
-    const hasCompletedToday = completedMissionHistory.filter((mission: Mission) => {
-      const completedDate = new Date(mission.completedAt as Date);
-      completedDate.setHours(0, 0, 0, 0);
-      return completedDate.getTime() === today.getTime();
-    }).length > 0;
-    
-    if (hasCompletedToday) {
-      streak = 1;
-      let checkDate = new Date(today);
-      let keepGoing = true;
-      
-      while (keepGoing) {
-        // Move back one day
-        checkDate.setDate(checkDate.getDate() - 1);
-        
-        // Check if we have a mission completed on this day
-        const completedOnThisDay = completedMissionHistory.filter((mission: Mission) => {
-          const completedDate = new Date(mission.completedAt as Date);
-          completedDate.setHours(0, 0, 0, 0);
-          return completedDate.getTime() === checkDate.getTime();
-        }).length > 0;
-        
-        if (completedOnThisDay) {
-          streak++;
-        } else {
-          keepGoing = false;
-        }
-      }
-    }
-    
-    return {
-      completed: completedMissionHistory.length,
-      streak,
-      total: completedMissionHistory.length + get().missions.length
-    };
   }
 });

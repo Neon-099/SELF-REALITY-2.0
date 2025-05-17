@@ -44,7 +44,7 @@ const attributeToDailyWin = (attributeCategory: string): DailyWinCategory | null
 };
 
 // Use StoreState instead of listing all dependencies for better compatibility
-export const createQuestSlice = (dbService: MongoDBService) => (set, get, _store) => ({
+export const createQuestSlice: StateCreator<QuestSlice & any> = (dbService: MongoDBService, set, get) => ({
   quests: [],
   
   loadQuests: async () => {
@@ -197,4 +197,4 @@ export const createQuestSlice = (dbService: MongoDBService) => (set, get, _store
     // Quest with no tasks can be completed
     return true;
   }
-}); 
+});

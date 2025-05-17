@@ -1,81 +1,78 @@
 import { create } from 'zustand';
-import { persist, createJSONStorage, PersistOptions } from 'zustand/middleware';
-import { initialUser } from './initial-state';
 import { createTaskSlice, TaskSlice } from './slices/task-slice';
 import { createQuestSlice, QuestSlice } from './slices/quest-slice';
 import { createMissionSlice, MissionSlice } from './slices/mission-slice';
 import { createUserSlice, UserSlice } from './slices/user-slice';
 import { createShopSlice, ShopSlice } from './slices/shop-slice';
 import { createPunishmentSlice, PunishmentSlice } from './slices/punishment-slice';
-import { getDB } from '../db';
+import { initialUser } from './initial-state';
+import { MongoDBService } from '../services/mongodb-service';
 
-export type StoreState = TaskSlice & QuestSlice & MissionSlice & UserSlice & ShopSlice & PunishmentSlice;
+// Define the global store state by intersecting all slice states
+export type StoreState = TaskSlice &
+  QuestSlice &
+  MissionSlice &
+  UserSlice &
+  ShopSlice &
+  PunishmentSlice;
 
-// Define a custom type that extends PersistOptions and adds onError
-interface CustomPersistOptions<T> extends PersistOptions<T, T> {
-  onError?: (error: Error) => void;
-}
+const dbService = MongoDBService.getInstance();
 
-// Custom async storage for IndexedDB (store and retrieve strings only) with improved error handling
-const indexedDBStorage = {
-  getItem: async (name: string): Promise<string | null> => {
-    try {
-      const db = await getDB();
-      return await db.get('store', name);
-    } catch (error) {
-      console.error(`Failed to get item "${name}" from IndexedDB:`, error);
-      // Return null on error so the app can continue with default state
-      return null;
-    }
-  },
-  setItem: async (name: string, value: string): Promise<void> => {
-    try {
-      const db = await getDB();
-      await db.put('store', value, name);
-    } catch (error) {
-      console.error(`Failed to save item "${name}" to IndexedDB:`, error);
-      
-      // Optional: try to save to localStorage as fallback
-      try {
-        localStorage.setItem(`fallback_${name}`, value);
-        console.log(`Saved to localStorage as fallback for "${name}"`);
-      } catch (localStorageError) {
-        console.error('Fallback to localStorage also failed:', localStorageError);
-      }
-    }
-  },
-  removeItem: async (name: string): Promise<void> => {
-    try {
-      const db = await getDB();
-      await db.delete('store', name);
-    } catch (error) {
-      console.error(`Failed to remove item "${name}" from IndexedDB:`, error);
-    }
-  },
+// Ensure MongoDB service is initialized before use
+const initializeDB = async () => {
+  try {
+    return await dbService.initialize();
+  } catch (error) {
+    console.error('Error initializing MongoDB service:', error);
+    return false;
+  }
 };
 
-// Create store with IndexedDB persistence using createJSONStorage
-export const useSoloLevelingStore = create<StoreState>()(
-  persist(
-    (...a) => ({
-      user: initialUser,
-      ...createTaskSlice(...a),
-      ...createQuestSlice(...a),
-      ...createMissionSlice(...a),
-      ...createUserSlice(...a),
-      ...createShopSlice(...a),
-      ...createPunishmentSlice(...a),
-    }),
-    {
-      name: 'soloist-store',
-      storage: createJSONStorage(() => indexedDBStorage),
-      // Add an onError handler to handle persistence failures
-      onError: (error) => {
-        console.error('An error occurred during state persistence:', error);
+// Create store with MongoDB persistence
+export const useSoloLevelingStore = create<StoreState>()((set, get) => {
+  // Create slices with proper typing
+  const taskSlice = createTaskSlice(set, get);
+  const questSlice = createQuestSlice(dbService)(set, get);
+  const missionSlice = createMissionSlice(dbService)(set, get);
+  const userSlice = createUserSlice(dbService)(set, get);
+  const shopSlice = createShopSlice(dbService)(set, get);
+  const punishmentSlice = createPunishmentSlice(set, get);
+
+  // Initialize store with default values
+  const store = {
+    user: initialUser,
+    ...taskSlice,
+    ...questSlice,
+    ...missionSlice,
+    ...userSlice,
+    ...shopSlice,
+    ...punishmentSlice,
+  };
+
+  // Initialize the database connection and load initial data
+  (async () => {
+    try {
+      const initialized = await initializeDB();
+      
+      if (initialized) {
+        // Load data in parallel
+        await Promise.all([
+          store.loadQuests(),
+          store.loadUser(),
+          store.loadMissions(),
+        ]).catch(error => {
+          console.error('Failed to load data:', error);
+        });
+      } else {
+        console.error('Failed to initialize database, using default values');
       }
-    } as CustomPersistOptions<StoreState>
-  )
-);
+    } catch (error) {
+      console.error('Failed to load initial data:', error);
+    }
+  })();
+
+  return store;
+});
 
 // Re-export types and functions that might be needed elsewhere
 export * from './slices/task-slice';

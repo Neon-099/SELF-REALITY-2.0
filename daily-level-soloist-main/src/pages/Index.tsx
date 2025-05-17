@@ -32,9 +32,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 const Index = () => {
-  const [user, tasks, updateStreak, checkResetDailyWins] = useSoloLevelingStore(
-    state => [state.user, state.tasks, state.updateStreak, state.checkResetDailyWins]
-  );
+  const { user, tasks, updateStreak, checkResetDailyWins } = useSoloLevelingStore(state => ({
+    user: state.user,
+    tasks: Array.isArray(state.tasks) ? state.tasks : [],
+    updateStreak: state.updateStreak,
+    checkResetDailyWins: state.checkResetDailyWins
+  }));
   const { toast } = useToast();
   const [showCompletedTasks, setShowCompletedTasks] = useState(false);
   const [currentDate, setCurrentDate] = useState(new Date());

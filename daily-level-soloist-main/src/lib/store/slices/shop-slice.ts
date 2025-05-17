@@ -1,6 +1,8 @@
-import { StateCreator } from 'zustand';
+import { StateCreator, StoreApi } from 'zustand';
 import { ShopItem } from '../../types';
 import { v4 as uuidv4 } from 'uuid';
+import { MongoDBService } from '../../services/mongodb-service';
+import { StoreState } from '../index';
 
 export interface ShopSlice {
   shopItems: ShopItem[];
@@ -8,29 +10,36 @@ export interface ShopSlice {
   addShopItem: (name: string, description: string, cost: number, type: 'reward' | 'boost' | 'cosmetic') => void;
 }
 
-export const createShopSlice: StateCreator<ShopSlice & any> = (set) => ({
+export const createShopSlice = (dbService: MongoDBService) => (
+  set: (
+    partial: ShopSlice | Partial<ShopSlice> | ((state: StoreState) => ShopSlice | Partial<ShopSlice> | Partial<StoreState>),
+    replace?: boolean | undefined
+  ) => void,
+  get: () => StoreState,
+  _store: StoreApi<StoreState>
+) => ({
   shopItems: [],
   
   purchaseItem: (id: string) => {
-    set((state: any) => {
+    set((state: StoreState) => {
       const item = state.shopItems.find((i: ShopItem) => i.id === id);
-      if (!item || item.purchased || state.user.gold < item.cost) return state;
+      if (!item || item.purchased || !state.user || state.user.gold < item.cost) {
+        return {};
+      }
       
       const updatedItems = state.shopItems.map((i: ShopItem) => 
         i.id === id ? { ...i, purchased: true } : i
       );
       
-      // Apply any special effects based on item type
       let updatedStats = { ...state.user.stats };
       if (item.type === 'boost') {
-        // Simple boost logic - could be expanded
         const statToBoost = item.name.toLowerCase().includes('intelligence') 
           ? 'intelligence' 
           : item.name.toLowerCase().includes('strength') 
             ? 'strength' 
             : 'willpower';
         
-        updatedStats[statToBoost] = updatedStats[statToBoost] + 1;
+        updatedStats[statToBoost] = (updatedStats[statToBoost] || 0) + 1;
       }
       
       return {
@@ -40,23 +49,24 @@ export const createShopSlice: StateCreator<ShopSlice & any> = (set) => ({
           gold: state.user.gold - item.cost,
           stats: updatedStats
         }
-      };
+      } as Partial<StoreState>;
     });
   },
   
   addShopItem: (name: string, description: string, cost: number, type: 'reward' | 'boost' | 'cosmetic') => {
-    set((state: ShopSlice) => ({
+    const newItem: ShopItem = {
+      id: uuidv4(),
+      name,
+      description,
+      cost,
+      type,
+      purchased: false
+    };
+    set((state: StoreState) => ({
       shopItems: [
-        ...state.shopItems,
-        {
-          id: uuidv4(),
-          name,
-          description,
-          cost,
-          type,
-          purchased: false
-        }
+        ...(state.shopItems || []),
+        newItem
       ]
-    }));
+    } as Partial<ShopSlice>));
   }
 });

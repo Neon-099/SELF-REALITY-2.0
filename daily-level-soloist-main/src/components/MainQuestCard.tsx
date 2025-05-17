@@ -1,5 +1,5 @@
 import React from 'react';
-import { Star, CheckCircle, CalendarClock, Swords, ListTodo, Clock, X } from 'lucide-react';
+import { Star, CheckCircle, CalendarClock, Swords, ListTodo, Clock, X, ChevronDown } from 'lucide-react';
 import { Button } from './ui/button';
 import { format } from 'date-fns';
 import { useSoloLevelingStore } from '@/lib/store';
@@ -491,6 +491,13 @@ const MainQuestCard: React.FC<MainQuestCardProps> = ({ quest, onComplete, onStar
               </div>
             )}
           </div>
+        </div>
+      )}
+      
+      {/* Completion indicator */}
+      {quest.completed && (
+        <div className="flex items-center justify-center gap-2 mt-2 text-yellow-400 text-xs font-medium">
+          <ChevronDown size={14} className="drop-shadow-sm" /> Completed
         </div>
       )}
     </div>

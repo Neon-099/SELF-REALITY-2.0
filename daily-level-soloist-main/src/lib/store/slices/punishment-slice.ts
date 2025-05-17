@@ -1,6 +1,7 @@
-import { StateCreator } from 'zustand';
+import { StateCreator, StoreApi } from 'zustand';
 import { Mission, Task, Quest } from '../../types';
 import { toast } from '@/hooks/use-toast';
+import { StoreState } from '../index';
 
 export interface PunishmentSlice {
   // State
@@ -28,7 +29,12 @@ export interface PunishmentSlice {
   areSideQuestsLocked: () => boolean;
 }
 
-export const createPunishmentSlice: StateCreator<PunishmentSlice & any> = (set, get) => ({
+export const createPunishmentSlice: StateCreator<
+  StoreState,
+  [],
+  [],
+  PunishmentSlice
+> = (set, get, _store) => ({
   // State
   chanceCounter: 0,
   isCursed: false,

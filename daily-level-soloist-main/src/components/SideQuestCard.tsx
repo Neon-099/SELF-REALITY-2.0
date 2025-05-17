@@ -1,5 +1,5 @@
 import React from 'react';
-import { Star, CheckCircle, CalendarClock, Sword } from 'lucide-react';
+import { Star, CheckCircle, CalendarClock, Sword, ChevronDown } from 'lucide-react';
 import { Button } from './ui/button';
 import { format } from 'date-fns';
 
@@ -62,7 +62,7 @@ const SideQuestCard: React.FC<SideQuestCardProps> = ({ quest, onComplete }) => {
       )}
       {quest.completed && (
         <div className="flex items-center justify-center gap-2 mt-2 text-green-400 text-xs font-medium">
-          <CheckCircle size={14} className="drop-shadow-sm" /> Completed
+          <ChevronDown size={14} className="drop-shadow-sm" /> Completed
         </div>
       )}
     </div>

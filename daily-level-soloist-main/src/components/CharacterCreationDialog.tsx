@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useSoloLevelingStore } from '@/lib/store';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -9,6 +8,8 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Stat } from '@/lib/types';
 import { Brain, Dumbbell, MessagesSquare, HeartPulse, Target, BookOpen, Clock } from 'lucide-react';
 import AuthDialog from './auth/AuthDialog';
+import { MongoDBService } from '@/lib/services/mongodb-service';
+import { auth } from '@/lib/auth';
 
 type Category = {
   id: string;
@@ -110,10 +111,14 @@ const categories: Category[] = [
 interface CharacterCreationDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onComplete?: () => void;  // Optional callback for when character creation is complete
 }
 
-const CharacterCreationDialog: React.FC<CharacterCreationDialogProps> = ({ open, onOpenChange }) => {
-  const navigate = useNavigate();
+const CharacterCreationDialog: React.FC<CharacterCreationDialogProps> = ({
+  open,
+  onOpenChange,
+  onComplete
+}) => {
   const [name, setName] = useState("");
   const [step, setStep] = useState<'name' | 'survey' | 'summary'>('name');
   const [currentCategory, setCurrentCategory] = useState(0);
@@ -121,9 +126,11 @@ const CharacterCreationDialog: React.FC<CharacterCreationDialogProps> = ({ open,
   const [answers, setAnswers] = useState<Record<string, number[]>>({});
   const [results, setResults] = useState<Record<string, number>>({});
   const [showAuthDialog, setShowAuthDialog] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Get the store functions
-  const { user, increaseStatFree, updateUserName } = useSoloLevelingStore();
+  const { user, increaseStatFree, updateUserName, updateUser } = useSoloLevelingStore();
+  const dbService = MongoDBService.getInstance();
   
   // Initialize answers structure
   useEffect(() => {
@@ -249,39 +256,100 @@ const CharacterCreationDialog: React.FC<CharacterCreationDialogProps> = ({ open,
   };
   
   // Complete character creation
-  const handleComplete = () => {
-    // Update the user's name
-    updateUserName(name);
-    
-    // Apply stat bonuses based on results
-    const statBonuses = calculateStatBonuses();
-    
-    // Update each stat with the calculated bonus
-    Object.entries(statBonuses).forEach(([stat, bonus]) => {
-      if (bonus > 0) {
-        // Only apply bonuses for stats with non-zero values
-        increaseStatFree(stat as Stat, bonus);
+  const handleComplete = async () => {
+    setIsSubmitting(true);
+    try {
+      // Update the user's name
+      updateUserName(name);
+      
+      // Apply stat bonuses based on results
+      const statBonuses = calculateStatBonuses();
+      
+      // Prepare full user data with survey results for MongoDB storage
+      const characterData = {
+        name,
+        characterClass: getRecommendedClass(),
+        surveyResults: results,
+        surveyAnswers: answers,
+        strengths: getStrengthsAndWeaknesses().strengths,
+        weaknesses: getStrengthsAndWeaknesses().weaknesses,
+        completedCharacterCreation: true,
+        lastUpdated: new Date()
+      };
+      
+      // Update user state with all character data
+      await updateUser(characterData);
+      
+      // Update stats with calculated bonuses
+      Object.entries(statBonuses).forEach(([stat, bonus]) => {
+        if (bonus > 0) {
+          // Only apply bonuses for stats with non-zero values
+          increaseStatFree(stat as Stat, bonus);
+        }
+      });
+      
+      // Show auth dialog to save progress to account
+      setShowAuthDialog(true);
+    } catch (error) {
+      console.error('Error saving character data:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  
+  // Handle auth completion - now connects character data to authenticated user
+  const handleAuthComplete = async () => {
+    try {
+      // Get current authenticated user
+      const currentUser = auth.getCurrentUser();
+      
+      if (currentUser) {
+        // Link the character data with the authenticated user ID
+        await updateUser({
+          authUserId: currentUser.uid,
+          email: currentUser.email
+        } as any); // Use type assertion to avoid type issues
+        
+        console.log('Character data linked to authenticated user:', currentUser.uid);
       }
-    });
-    
-    // Show auth dialog instead of navigating directly
-    setShowAuthDialog(true);
+      
+      // Close dialogs and navigate to home using callback
+      setShowAuthDialog(false);
+      onOpenChange(false);
+      
+      // Use the onComplete callback if provided, otherwise redirect manually
+      if (onComplete) {
+        onComplete();
+      } else {
+        // Fallback for direct navigation when not in a Router context
+        window.location.href = '/home';
+      }
+    } catch (error) {
+      console.error('Error linking character to authenticated user:', error);
+      // Still navigate to home even if there's an error
+      setShowAuthDialog(false);
+      onOpenChange(false);
+      
+      if (onComplete) {
+        onComplete();
+      } else {
+        window.location.href = '/home';
+      }
+    }
   };
   
-  // Handle auth completion
-  const handleAuthComplete = () => {
-    // Close dialogs and navigate to home
-    setShowAuthDialog(false);
-    onOpenChange(false);
-    navigate('/home');
-  };
-  
-  // Handle skipping auth
+  // Handle skipping auth - still save the character data but not linked to auth
   const handleSkipAuth = () => {
     // Close dialogs and navigate to home
     setShowAuthDialog(false);
     onOpenChange(false);
-    navigate('/home');
+    
+    // Use the onComplete callback if provided, otherwise redirect manually
+    if (onComplete) {
+      onComplete();
+    } else {
+      window.location.href = '/home';
+    }
   };
   
   // Get the total number of questions
@@ -450,8 +518,12 @@ const CharacterCreationDialog: React.FC<CharacterCreationDialogProps> = ({ open,
                   </div>
                 </div>
                 
-                <Button className="w-full mt-4" onClick={handleComplete}>
-                  Begin Your Journey
+                <Button 
+                  className="w-full mt-4" 
+                  onClick={handleComplete} 
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? 'Saving...' : 'Begin Your Journey'}
                 </Button>
               </div>
             )}

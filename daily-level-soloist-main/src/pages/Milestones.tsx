@@ -3,32 +3,32 @@ import { useSoloLevelingStore } from '@/lib/store';
 import { Award, Calendar, Trophy } from 'lucide-react';
 
 const Milestones = () => {
-  const user = useSoloLevelingStore(state => state.user);
+  const {
+    user, 
+    tasks = [],
+    quests = [],
+    missions = []
+  } = useSoloLevelingStore(state => ({
+    user: state.user,
+    tasks: Array.isArray(state.tasks) ? state.tasks : [],
+    quests: Array.isArray(state.quests) ? state.quests : [],
+    missions: Array.isArray(state.missions) ? state.missions : []
+  }));
 
   // Calculate stats
-  const completedTasks = useSoloLevelingStore(
-    state => state.tasks.filter(task => task.completed).length
-  );
+  const completedTasks = tasks.filter(task => task.completed).length;
   
-  const completedMainQuests = useSoloLevelingStore(
-    state => state.quests.filter(quest => quest.completed && quest.isMainQuest).length
-  );
+  const completedMainQuests = quests.filter(quest => quest.completed && quest.isMainQuest).length;
   
-  const completedSideQuests = useSoloLevelingStore(
-    state => state.quests.filter(quest => quest.completed && !quest.isMainQuest).length
-  );
+  const completedSideQuests = quests.filter(quest => quest.completed && !quest.isMainQuest).length;
   
-  const completedMissions = useSoloLevelingStore(
-    state => state.missions.filter(mission => mission.completed).length
-  );
+  const completedMissions = missions.filter(mission => mission.completed).length;
 
   // New: total completed quests
   const completedTotalQuests = completedMainQuests + completedSideQuests;
 
   // New: completed daily quests
-  const completedDailyQuests = useSoloLevelingStore(
-    state => state.quests.filter(quest => quest.completed && quest.isDaily).length
-  );
+  const completedDailyQuests = quests.filter(quest => quest.completed && quest.isDaily).length;
 
   return (
     <div className="space-y-6">

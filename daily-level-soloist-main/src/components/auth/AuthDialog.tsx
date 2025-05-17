@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Button } from '@/components/ui/button';
 import AuthForm from './AuthForm';
 import { auth } from '@/lib/auth';
+import { useSoloLevelingStore } from '@/lib/store';
 
 interface AuthDialogProps {
   open: boolean;
@@ -20,16 +21,60 @@ const AuthDialog: React.FC<AuthDialogProps> = ({
   characterName 
 }) => {
   const [showForm, setShowForm] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const updateUser = useSoloLevelingStore(state => state.updateUser);
   
-  const handleAuthComplete = () => {
-    onComplete();
+  const handleAuthComplete = async () => {
+    setIsProcessing(true);
+    try {
+      // Get the currently authenticated user
+      const currentUser = auth.getCurrentUser();
+      
+      if (currentUser) {
+        // Update user record with authentication information
+        await updateUser({
+          authUserId: currentUser.uid,
+          email: currentUser.email,
+          username: currentUser.username || currentUser.email.split('@')[0]
+        });
+        
+        console.log('Character data linked to authenticated user account:', currentUser.uid);
+      }
+      
+      onComplete();
+    } catch (error) {
+      console.error('Error completing authentication flow:', error);
+      // Still continue even if there was an error
+      onComplete();
+    } finally {
+      setIsProcessing(false);
+    }
   };
   
-  const handleSkip = () => {
-    if (onSkip) {
-      onSkip();
-    } else {
-      onComplete();
+  const handleSkip = async () => {
+    setIsProcessing(true);
+    try {
+      // Mark the character as using local storage only
+      await updateUser({
+        usingLocalStorageOnly: true,
+        lastUpdated: new Date()
+      });
+      
+      if (onSkip) {
+        onSkip();
+      } else {
+        onComplete();
+      }
+    } catch (error) {
+      console.error('Error handling skip auth:', error);
+      // Continue anyway
+      if (onSkip) {
+        onSkip();
+      } else {
+        onComplete();
+      }
+    } finally {
+      setIsProcessing(false);
     }
   };
   
@@ -54,6 +99,7 @@ const AuthDialog: React.FC<AuthDialogProps> = ({
               <Button 
                 className="w-full" 
                 onClick={() => setShowForm(true)}
+                disabled={isProcessing}
               >
                 Create Account / Login
               </Button>
@@ -68,8 +114,9 @@ const AuthDialog: React.FC<AuthDialogProps> = ({
                 variant="outline" 
                 className="w-full text-gray-400 border-gray-700 hover:bg-gray-700/50"
                 onClick={handleSkip}
+                disabled={isProcessing}
               >
-                Continue Without Account
+                {isProcessing ? 'Processing...' : 'Continue Without Account'}
               </Button>
               
               <p className="text-xs text-gray-500 text-center mt-2">
@@ -80,6 +127,8 @@ const AuthDialog: React.FC<AuthDialogProps> = ({
             <AuthForm 
               onComplete={handleAuthComplete} 
               isDialog={true}
+              isProcessing={isProcessing}
+              setIsProcessing={setIsProcessing}
             />
           )}
         </div>

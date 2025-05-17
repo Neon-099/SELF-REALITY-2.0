@@ -13,6 +13,7 @@ import { predefinedMissions } from '@/data/predefined-missions';
 import { endOfDay } from 'date-fns';
 import { getDB } from '@/lib/db';
 import { Quest, ShopItem } from '@/lib/types';
+import { clearDatabase } from "../lib/clearDatabase";
 
 const rankDetails = [
   {
@@ -927,6 +928,28 @@ const Character = () => {
                 className="text-xs sm:text-sm py-1 px-2 sm:py-2 sm:px-3"
               >
                 Refresh Data
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={async () => {
+                  const success = await clearDatabase();
+                  if (success) {
+                    toast({
+                      title: "Database Cleared",
+                      description: "Successfully cleared all local data. Please refresh the page.",
+                    });
+                  } else {
+                    toast({
+                      title: "Error",
+                      description: "Failed to clear database. Check console for details.",
+                      variant: "destructive"
+                    });
+                  }
+                }}
+                className="text-xs sm:text-sm py-1 px-2 sm:py-2 sm:px-3"
+              >
+                Clear Database
               </Button>
               <Button
                 variant="ghost"
