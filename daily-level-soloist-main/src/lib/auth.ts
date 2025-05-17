@@ -1,11 +1,14 @@
 import { v4 as uuidv4 } from 'uuid';
 import { getDB } from './db';
+import { MongoDBService } from './services/mongodb-service';
+import { useSoloLevelingStore } from './store';
 
 export interface AuthUser {
   uid: string;
   email: string;
   username?: string;
   createdAt: Date;
+  lastLogin?: Date;
 }
 
 export interface AuthError {
@@ -13,34 +16,43 @@ export interface AuthError {
   message: string;
 }
 
-// Simulating Firebase-like auth for local demo
-// In a real app, this would use Firebase, Auth0, or a backend service
+type AuthStateChangeHandler = (user: AuthUser | null) => void;
+
 class AuthService {
   private currentUser: AuthUser | null = null;
-  private listeners: ((user: AuthUser | null) => void)[] = [];
+  private listeners: AuthStateChangeHandler[] = [];
+  private dbService = MongoDBService.getInstance();
 
   constructor() {
-    // Initialize auth state from localStorage
-    this.initFromStorage();
+    // Try to load auth state from localStorage
+    this.loadFromStorage();
   }
 
-  private initFromStorage() {
+  // Load auth state from storage
+  private loadFromStorage(): void {
     try {
-      const userJson = localStorage.getItem('auth_user');
-      if (userJson) {
-        const userData = JSON.parse(userJson);
-        // Convert string dates back to Date objects
-        userData.createdAt = new Date(userData.createdAt);
-        this.currentUser = userData;
+      const storedUser = localStorage.getItem('auth_user');
+      if (storedUser) {
+        const userData = JSON.parse(storedUser);
+        this.currentUser = {
+          ...userData,
+          createdAt: new Date(userData.createdAt),
+          lastLogin: userData.lastLogin ? new Date(userData.lastLogin) : new Date()
+        };
+        
+        console.log('Loaded authenticated user from storage:', this.currentUser.email);
       }
     } catch (error) {
       console.error('Failed to load auth state from storage:', error);
     }
   }
 
-  private saveToStorage() {
+  // Save auth state to storage
+  private saveToStorage(): void {
     try {
       if (this.currentUser) {
+        // Update last login time
+        this.currentUser.lastLogin = new Date();
         localStorage.setItem('auth_user', JSON.stringify(this.currentUser));
       } else {
         localStorage.removeItem('auth_user');
@@ -50,26 +62,59 @@ class AuthService {
     }
   }
 
-  private notifyListeners() {
+  // Notify listeners of state change
+  private notifyListeners(): void {
     this.listeners.forEach(listener => listener(this.currentUser));
   }
 
-  // Get currently logged in user
-  public getUser(): AuthUser | null {
-    return this.currentUser;
+  // Email validation helper
+  private isValidEmail(email: string): boolean {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
   }
 
-  // Add auth state change listener
-  public onAuthStateChanged(callback: (user: AuthUser | null) => void): () => void {
-    this.listeners.push(callback);
-    
-    // Call immediately with current state
-    callback(this.currentUser);
-    
-    // Return unsubscribe function
-    return () => {
-      this.listeners = this.listeners.filter(listener => listener !== callback);
-    };
+  // Password validation helper
+  private isValidPassword(password: string): boolean {
+    return password.length >= 6;
+  }
+
+  // Sign in with email and password
+  public async signIn(email: string, password: string): Promise<AuthUser> {
+    try {
+      // Validate email format
+      if (!this.isValidEmail(email)) {
+        throw { code: 'auth/invalid-email', message: 'Invalid email format' };
+      }
+
+      // Validate password format
+      if (!this.isValidPassword(password)) {
+        throw { code: 'auth/invalid-password', message: 'Password must be at least 6 characters' };
+      }
+
+      // Get users from storage
+      const users = await this.getUsers();
+
+      // Find user with matching email
+      const user = users.find(u => u.email.toLowerCase() === email.toLowerCase());
+      if (!user) {
+        throw { code: 'auth/user-not-found', message: 'No user found with this email' };
+      }
+
+      // In a real app, we would verify the password here
+      // For this simplified version, we're skipping password verification
+
+      // Update current user
+      this.currentUser = user;
+      this.saveToStorage();
+      this.notifyListeners();
+
+      // Link the authenticated user with character data in MongoDB
+      await this.linkUserToCharacterData(user);
+
+      return user;
+    } catch (error) {
+      throw error;
+    }
   }
 
   // Sign up with email and password
@@ -102,48 +147,72 @@ class AuthService {
       this.saveToStorage();
       this.notifyListeners();
 
+      // Link the newly created user with character data in MongoDB
+      await this.linkUserToCharacterData(newUser);
+
       return newUser;
     } catch (error) {
       throw error;
     }
   }
 
-  // Sign in with email and password
-  public async signIn(email: string, password: string): Promise<AuthUser> {
+  // Link authenticated user with character data in MongoDB
+  private async linkUserToCharacterData(authUser: AuthUser): Promise<void> {
     try {
-      // Find user with matching email
-      const existingUsers = await this.getUsers();
-      const user = existingUsers.find(user => user.email === email);
-
-      if (!user) {
-        throw { code: 'auth/user-not-found', message: 'No user found with this email' };
+      // Load the store
+      const store = useSoloLevelingStore.getState();
+      
+      if (!store.user || !store.user.id) {
+        console.warn('No character data found to link with authenticated user');
+        return;
       }
+      
+      // Update user data in MongoDB to include authentication info
+      await store.updateUser({
+        authUserId: authUser.uid,
+        email: authUser.email,
+        username: authUser.username || authUser.email.split('@')[0]
+      });
+      
+      console.log('Successfully linked auth user to character data');
 
-      // In a real app, we would check the password hash
-      // For this demo, we're just simulating successful login
-
-      // Update current user
-      this.currentUser = user;
-      this.saveToStorage();
-      this.notifyListeners();
-
-      return user;
+      // Check if we need to load this user's data
+      // This is important for returning players who already have character data
+      const linkedCharacter = await this.dbService.getUserByAuthId(authUser.uid);
+      if (linkedCharacter && linkedCharacter.id !== store.user.id) {
+        // This user has a different character data than the currently loaded one
+        // Update the store with this user's character data
+        store.setUser(linkedCharacter);
+        console.log('Loaded existing character data for authenticated user:', linkedCharacter.name);
+      }
     } catch (error) {
-      throw error;
+      console.error('Failed to link auth user with character data:', error);
     }
   }
 
   // Sign out current user
-  public async signOut(): Promise<void> {
+  public signOut(): void {
     this.currentUser = null;
     this.saveToStorage();
     this.notifyListeners();
   }
 
-  // Helper method to validate email format
-  private isValidEmail(email: string): boolean {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
+  // Get current user
+  public getCurrentUser(): AuthUser | null {
+    return this.currentUser;
+  }
+
+  // Add auth state change listener
+  public onAuthStateChanged(callback: AuthStateChangeHandler): () => void {
+    this.listeners.push(callback);
+
+    // Call with current state immediately
+    callback(this.currentUser);
+
+    // Return unsubscribe function
+    return () => {
+      this.listeners = this.listeners.filter(listener => listener !== callback);
+    };
   }
 
   // Helper method to get all users from IndexedDB
@@ -172,7 +241,7 @@ class AuthService {
   }
 }
 
-// Export a singleton instance
+// Create and export auth service instance
 export const auth = new AuthService();
 
 // Create a hook to use auth in components

@@ -105,7 +105,7 @@ let dbPromise: Promise<IDBPDatabase<SoloistDB>> | null = null;
 
 export function getDB() {
   if (!dbPromise) {
-    dbPromise = openDB<SoloistDB>('soloist-db', 4, { // Increment version for schema change
+    dbPromise = openDB<SoloistDB>('soloist-db', 4, {
       upgrade(db, oldVersion, newVersion) {
         // We're not creating mission stores anymore but keeping legacy code
         // for data migration purposes
@@ -121,7 +121,7 @@ export function getDB() {
             // In a real migration we would get all missions and add them to the store
             // Since we're using Zustand's persist middleware, we'll handle this in the mission slice
             migrationDb.deleteObjectStore('missions');
-        }
+          }
           if (migrationDb.objectStoreNames.contains('completedMissions')) {
             // Same for completed missions
             migrationDb.deleteObjectStore('completedMissions');

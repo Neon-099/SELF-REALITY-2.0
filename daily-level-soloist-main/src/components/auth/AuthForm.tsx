@@ -7,18 +7,26 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from '@/hooks/use-toast';
-import { AtSign, Lock, User, Mail, ArrowRight } from 'lucide-react';
+import { AtSign, Lock, User, Mail, ArrowRight, Eye, EyeOff } from 'lucide-react';
 
 interface AuthFormProps {
   onComplete: () => void;
   isDialog?: boolean;
+  isProcessing?: boolean;
+  setIsProcessing?: (isProcessing: boolean) => void;
 }
 
-const AuthForm: React.FC<AuthFormProps> = ({ onComplete, isDialog = false }) => {
+const AuthForm: React.FC<AuthFormProps> = ({ 
+  onComplete, 
+  isDialog = false,
+  isProcessing = false,
+  setIsProcessing
+}) => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [mode, setMode] = useState<'login' | 'signup'>('login');
   const [error, setError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
   
   // Form state
   const [email, setEmail] = useState('');
@@ -28,7 +36,14 @@ const AuthForm: React.FC<AuthFormProps> = ({ onComplete, isDialog = false }) => 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    setIsLoading(true);
+    
+    // Use the parent's loading state management if provided
+    const setLoadingState = (state: boolean) => {
+      setIsLoading(state);
+      if (setIsProcessing) setIsProcessing(state);
+    };
+    
+    setLoadingState(true);
     
     try {
       if (mode === 'signup') {
@@ -57,10 +72,14 @@ const AuthForm: React.FC<AuthFormProps> = ({ onComplete, isDialog = false }) => 
         description: authError.message || 'An error occurred. Please try again.',
         variant: "destructive"
       });
-    } finally {
-      setIsLoading(false);
+      
+      // Reset loading state on error
+      setLoadingState(false);
     }
   };
+  
+  // Determine if the form is loading
+  const formIsLoading = isLoading || isProcessing;
   
   return (
     <Card className={`w-full ${!isDialog ? 'max-w-md mx-auto' : ''} bg-gray-800/50 border-gray-700`}>
@@ -80,58 +99,85 @@ const AuthForm: React.FC<AuthFormProps> = ({ onComplete, isDialog = false }) => 
           </TabsList>
           
           <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <div className="flex justify-start">
+                <div className="space-x-2 bg-gray-800/50 rounded-lg p-0.5">
+                  <Button
+                    type="button"
+                    variant={mode === 'login' ? "default" : "ghost"}
+                    onClick={() => setMode('login')}
+                    className={`${mode === 'login' ? 'bg-solo-primary' : 'text-gray-400'} px-4 py-1`}
+                    size="sm"
+                    disabled={formIsLoading}
+                  >
+                    Login
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={mode === 'signup' ? "default" : "ghost"}
+                    onClick={() => setMode('signup')}
+                    className={`${mode === 'signup' ? 'bg-solo-primary' : 'text-gray-400'} px-4 py-1`}
+                    size="sm"
+                    disabled={formIsLoading}
+                  >
+                    Sign Up
+                  </Button>
+                </div>
+              </div>
+            </div>
+            
             {mode === 'signup' && (
               <div className="space-y-2">
-                <Label htmlFor="username" className="text-sm">Username</Label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
-                    <User size={16} />
-                  </div>
-                  <Input
-                    id="username"
-                    type="text"
-                    placeholder="Enter your username"
-                    className="pl-10 bg-gray-900/50 border-gray-700"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                  />
-                </div>
+                <Label htmlFor="username">Username</Label>
+                <Input
+                  id="username"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder="Enter your username"
+                  className="bg-gray-800/50 border-gray-700"
+                  disabled={formIsLoading}
+                  required
+                />
               </div>
             )}
             
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-sm">Email</Label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
-                  <Mail size={16} />
-                </div>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="you@example.com"
-                  required
-                  className="pl-10 bg-gray-900/50 border-gray-700"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-              </div>
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Enter your email"
+                className="bg-gray-800/50 border-gray-700"
+                disabled={formIsLoading}
+                required
+              />
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-sm">Password</Label>
+              <Label htmlFor="password">Password</Label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
-                  <Lock size={16} />
-                </div>
                 <Input
                   id="password"
-                  type="password"
-                  placeholder="••••••••"
-                  required
-                  className="pl-10 bg-gray-900/50 border-gray-700"
+                  type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter your password"
+                  className="bg-gray-800/50 border-gray-700 pr-10"
+                  disabled={formIsLoading}
+                  required
                 />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0"
+                  onClick={() => setShowPassword(!showPassword)}
+                  disabled={formIsLoading}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </Button>
               </div>
             </div>
             
@@ -143,20 +189,15 @@ const AuthForm: React.FC<AuthFormProps> = ({ onComplete, isDialog = false }) => 
             
             <Button 
               type="submit" 
-              className="w-full mt-6" 
-              disabled={isLoading}
+              className="w-full mt-6"
+              disabled={formIsLoading}
             >
-              {isLoading ? (
-                <span className="flex items-center">
-                  <span className="animate-spin mr-2 h-4 w-4 border-2 border-white border-opacity-50 border-t-transparent rounded-full"></span>
-                  Processing...
-                </span>
-              ) : (
-                <span className="flex items-center justify-center">
-                  {mode === 'login' ? 'Log In' : 'Create Account'}
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </span>
-              )}
+              {formIsLoading 
+                ? 'Processing...' 
+                : mode === 'login' 
+                  ? 'Login' 
+                  : 'Create Account'
+              }
             </Button>
           </form>
         </Tabs>
