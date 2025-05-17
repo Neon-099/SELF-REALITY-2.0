@@ -1,0 +1,10 @@
+{
+  "dependencies": {
+    "@types/connect": "^3.4.38",
+    "connect": "^3.7.0",
+    "idb": "^8.0.3"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.4"
+  }
+}

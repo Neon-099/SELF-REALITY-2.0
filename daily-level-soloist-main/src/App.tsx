@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, Outlet } from "react-router-dom";
 import { Layout } from "./components/layout/Layout";
 import Index from "./pages/Index";
 import Character from "./pages/Character";
@@ -18,6 +18,11 @@ import { useSoloLevelingStore } from "./lib/store";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { LoadingScreen, LoadingError } from "./components/ui/loading-screen";
 import { AuthProvider } from "@/hooks/use-auth-context";
+import { MongoDBService } from './lib/services/mongodb-service';
+import { getDB } from './lib/db';
+import { toast } from "@/components/ui/use-toast";
+import { auth } from './lib/auth';
+import CharacterCreationDialog from "@/components/CharacterCreationDialog";
 
 // Import UserSetup component dynamically if it exists
 // Note: Remove this dynamic import approach once UserSetup component is properly created
@@ -104,29 +109,113 @@ function CurseChecker(): React.ReactNode {
   return null;
 }
 
+// Character creation guard component - checks if character creation is completed
+const CharacterCreationGuard = () => {
+  const user = useSoloLevelingStore(state => state.user);
+  const [showCharacterCreation, setShowCharacterCreation] = useState(false);
+  
+  useEffect(() => {
+    // Check if character creation is needed for any page except landing
+    if (user && !user.completedCharacterCreation) {
+      setShowCharacterCreation(true);
+    }
+  }, [user]);
+  
+  if (showCharacterCreation) {
+    return (
+      <CharacterCreationDialog
+        open={true}
+        onOpenChange={() => {}}
+        onComplete={() => {
+          setShowCharacterCreation(false);
+          window.location.href = '/home';
+        }}
+      />
+    );
+  }
+  
+  // If character creation is completed or not needed, render the layout which has its own Outlet
+  return <Layout />;
+};
+
 const App = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const store = useSoloLevelingStore();
+  const dbService = MongoDBService.getInstance();
   
-  // Add effect to handle initial loading state
+  // Add effect to handle initial loading state and migration
   useEffect(() => {
     const loadApp = async () => {
       try {
-        // Simulate checking if store is ready by waiting briefly
-        // This gives time for the persist middleware to hydrate
-        await new Promise(resolve => setTimeout(resolve, 800));
+        console.log('Initializing app and loading user data...');
         
-        // Check if there was a fallback to localStorage (indicating IndexedDB failed)
-        const fallbackExists = Object.keys(localStorage).some(key => key.startsWith('fallback_'));
-        if (fallbackExists) {
-          console.warn('Using localStorage fallback - IndexedDB may have failed');
+        // Initialize MongoDB connection
+        await dbService.initialize();
+
+        // Get current authenticated user if any
+        const currentAuthUser = auth.getCurrentUser();
+
+        // Check if we need to migrate data from IndexedDB
+        const db = await getDB();
+        const storeData = await db.get('store', 'soloist-store');
+        
+        if (storeData) {
+          // Parse the data
+          const data = JSON.parse(storeData);
+          
+          // Migrate data to MongoDB
+          const success = await dbService.migrateFromLocalStorage(data.state);
+          
+          if (success) {
+            // Clear IndexedDB after successful migration
+            await db.delete('store', 'soloist-store');
+            localStorage.clear(); // Clear localStorage as well
+            
+            toast({
+              title: "Migration Complete",
+              description: "Your data has been successfully migrated to MongoDB.",
+            });
+          }
+        }
+
+        // Load all necessary data in parallel
+        await Promise.all([
+          store.loadQuests(),
+          store.loadUser(), // This should load the user data from MongoDB
+          store.loadMissions(),
+        ]);
+
+        // If there's an authenticated user, try to load their specific character data
+        if (currentAuthUser) {
+          console.log('Authenticated user found, loading character data for:', currentAuthUser.uid);
+          
+          // Try to find character data linked to this auth user
+          const linkedUser = await dbService.getUserByAuthId(currentAuthUser.uid);
+          
+          if (linkedUser) {
+            console.log('Found character data for authenticated user');
+            // Set the user data in the store - this will override the default user
+            store.setUser(linkedUser);
+          } else {
+            console.log('No character data found for authenticated user');
+          }
+        }
+
+        // Update the last login date
+        if (store.user && store.user.id) {
+          await store.updateUser({
+            lastLogin: new Date()
+          });
+          
+          // Update streak if appropriate
+          store.updateStreak();
         }
         
         setIsLoading(false);
       } catch (error) {
         console.error('Error initializing app:', error);
-        setLoadError('Failed to load game data. Please check your browser settings or try again.');
+        setLoadError('Failed to load game data. Please check your database connection or try again.');
         setIsLoading(false);
       }
     };
@@ -168,8 +257,11 @@ const App = () => {
             <BrowserRouter>
               <CurseChecker />
               <Routes>
+                {/* Landing page is always accessible */}
                 <Route path="/" element={<LandingPage />} />
-                <Route element={<Layout />}>
+                
+                {/* Protected routes with character creation guard */}
+                <Route element={<CharacterCreationGuard />}>
                   <Route path="/home" element={
                     <ErrorBoundary>
                       <Index />
