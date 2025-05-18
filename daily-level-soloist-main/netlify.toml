@@ -1,5 +1,5 @@
 [build]
-  base = "/"
+  base = "daily-level-soloist-main"
   command = "npm run netlify:build"
   publish = "dist"
 
