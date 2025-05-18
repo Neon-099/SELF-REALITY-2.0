@@ -680,39 +680,122 @@ const Character = () => {
         </Card>
       </div>
       
-      {/* Stats Grid */}
-      <div>
-        <h2 className="text-2xl font-bold bg-gradient-to-r from-solo-primary to-blue-500 bg-clip-text text-transparent mb-4">Attributes</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
-          <StatCard 
-            name="physical" 
-            value={user.stats.physical}
-            icon={<DumbbellIcon size={18} />}
-          />
-          <StatCard 
-            name="cognitive" 
-            value={user.stats.cognitive}
-            icon={<BrainIcon size={18} />}
-          />
-          <StatCard 
-            name="emotional" 
-            value={user.stats.emotional}
-            icon={<HeartIcon size={18} />}
-          />
-          <StatCard 
-            name="spiritual" 
-            value={user.stats.spiritual}
-            icon={<SparklesIcon size={18} />}
-          />
-          <StatCard 
-            name="social" 
-            value={user.stats.social}
-            icon={<SmileIcon size={18} />}
-          />
-        </div>
+      {/* Mobile attributes dialog button */}
+      <div className="sm:hidden flex justify-center">
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button 
+              className="bg-gradient-to-r from-solo-primary to-blue-500 text-white font-medium rounded-lg shadow-md hover:shadow-lg transition-all duration-300 px-4 py-2.5"
+            >
+              <SparklesIcon className="mr-2 h-4 w-4" />
+              View Attributes
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="bg-solo-dark border-gray-800 p-4 max-w-[90vw] mx-auto rounded-xl">
+            <DialogHeader className="pb-2 border-b border-gray-800">
+              <DialogTitle className="text-lg font-bold bg-gradient-to-r from-solo-primary to-blue-500 bg-clip-text text-transparent flex items-center">
+                <SparklesIcon className="mr-2 h-5 w-5 text-solo-primary" />
+                Your Attributes
+              </DialogTitle>
+            </DialogHeader>
+            
+            <div className="pt-3">
+              <div className="grid grid-cols-1 gap-2.5">
+                {/* Physical Stat - Enhanced mobile version */}
+                <div className="flex items-center p-2.5 bg-gray-800/40 rounded-lg border border-gray-800/80 hover:bg-gray-800/60 transition-all duration-300 hover:border-gray-700">
+                  <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-red-500/20 to-red-700/20 flex items-center justify-center shadow-inner mr-3">
+                    <DumbbellIcon size={18} className="text-red-400" />
+                  </div>
+                  <div className="flex-grow">
+                    <div className="flex justify-between items-center">
+                      <h3 className="capitalize font-medium text-gray-200">Physical</h3>
+                      <span className="text-lg font-bold text-red-400">{user.stats.physical}</span>
+                    </div>
+                    <div className="w-full bg-gray-900/70 h-1.5 rounded-full mt-1 overflow-hidden">
+                      <div className="bg-gradient-to-r from-red-500 to-red-700 h-full rounded-full" 
+                          style={{ width: `${Math.min(100, user.stats.physical)}%` }} />
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Cognitive Stat - Enhanced mobile version */}
+                <div className="flex items-center p-2.5 bg-gray-800/40 rounded-lg border border-gray-800/80 hover:bg-gray-800/60 transition-all duration-300 hover:border-gray-700">
+                  <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-blue-500/20 to-blue-700/20 flex items-center justify-center shadow-inner mr-3">
+                    <BrainIcon size={18} className="text-blue-400" />
+                  </div>
+                  <div className="flex-grow">
+                    <div className="flex justify-between items-center">
+                      <h3 className="capitalize font-medium text-gray-200">Cognitive</h3>
+                      <span className="text-lg font-bold text-blue-400">{user.stats.cognitive}</span>
+                    </div>
+                    <div className="w-full bg-gray-900/70 h-1.5 rounded-full mt-1 overflow-hidden">
+                      <div className="bg-gradient-to-r from-blue-500 to-blue-700 h-full rounded-full" 
+                          style={{ width: `${Math.min(100, user.stats.cognitive)}%` }} />
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Emotional Stat - Enhanced mobile version */}
+                <div className="flex items-center p-2.5 bg-gray-800/40 rounded-lg border border-gray-800/80 hover:bg-gray-800/60 transition-all duration-300 hover:border-gray-700">
+                  <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-pink-500/20 to-pink-700/20 flex items-center justify-center shadow-inner mr-3">
+                    <HeartIcon size={18} className="text-pink-400" />
+                  </div>
+                  <div className="flex-grow">
+                    <div className="flex justify-between items-center">
+                      <h3 className="capitalize font-medium text-gray-200">Emotional</h3>
+                      <span className="text-lg font-bold text-pink-400">{user.stats.emotional}</span>
+                    </div>
+                    <div className="w-full bg-gray-900/70 h-1.5 rounded-full mt-1 overflow-hidden">
+                      <div className="bg-gradient-to-r from-pink-500 to-pink-700 h-full rounded-full" 
+                          style={{ width: `${Math.min(100, user.stats.emotional)}%` }} />
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Spiritual Stat - Enhanced mobile version */}
+                <div className="flex items-center p-2.5 bg-gray-800/40 rounded-lg border border-gray-800/80 hover:bg-gray-800/60 transition-all duration-300 hover:border-gray-700">
+                  <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-purple-500/20 to-purple-700/20 flex items-center justify-center shadow-inner mr-3">
+                    <SparklesIcon size={18} className="text-purple-400" />
+                  </div>
+                  <div className="flex-grow">
+                    <div className="flex justify-between items-center">
+                      <h3 className="capitalize font-medium text-gray-200">Spiritual</h3>
+                      <span className="text-lg font-bold text-purple-400">{user.stats.spiritual}</span>
+                    </div>
+                    <div className="w-full bg-gray-900/70 h-1.5 rounded-full mt-1 overflow-hidden">
+                      <div className="bg-gradient-to-r from-purple-500 to-purple-700 h-full rounded-full" 
+                          style={{ width: `${Math.min(100, user.stats.spiritual)}%` }} />
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Social Stat - Enhanced mobile version */}
+                <div className="flex items-center p-2.5 bg-gray-800/40 rounded-lg border border-gray-800/80 hover:bg-gray-800/60 transition-all duration-300 hover:border-gray-700">
+                  <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-green-500/20 to-green-700/20 flex items-center justify-center shadow-inner mr-3">
+                    <SmileIcon size={18} className="text-green-400" />
+                  </div>
+                  <div className="flex-grow">
+                    <div className="flex justify-between items-center">
+                      <h3 className="capitalize font-medium text-gray-200">Social</h3>
+                      <span className="text-lg font-bold text-green-400">{user.stats.social}</span>
+                    </div>
+                    <div className="w-full bg-gray-900/70 h-1.5 rounded-full mt-1 overflow-hidden">
+                      <div className="bg-gradient-to-r from-green-500 to-green-700 h-full rounded-full" 
+                          style={{ width: `${Math.min(100, user.stats.social)}%` }} />
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="mt-4 pt-3 border-t border-gray-800 text-center">
+                <p className="text-xs text-gray-400">Increase attributes by completing quests and missions</p>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
-      
-      {/* Rank System */}
+
+      {/* Rank System - Stacked on mobile, side-by-side on desktop */}
       <div>
         <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
           <Crown className="text-yellow-400" size={24} />

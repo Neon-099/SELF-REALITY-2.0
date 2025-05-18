@@ -50,7 +50,7 @@ export interface Mission {
   title: string;
   description: string;
   completed: boolean;
-  started?: boolean; // Whether the mission has been started
+  started?: boolean;
   expReward: number;
   createdAt: Date;
   completedAt?: Date;

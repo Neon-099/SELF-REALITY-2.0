@@ -2,6 +2,7 @@ import React from 'react';
 import { DailyWinCategory, DailyWinProgress } from '@/lib/types';
 import { getCategoryColor } from '@/lib/utils';
 import { cn } from '@/lib/utils';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface DailyWinCardProps {
   category: DailyWinCategory;
@@ -13,6 +14,8 @@ export function DailyWinCard({ category, completed, icon }: DailyWinCardProps) {
   // Handle both object and number formats
   const completedCount = typeof completed === 'object' ? completed.count : completed;
   const isCompleted = typeof completed === 'object' ? completed.isCompleted : completedCount >= 1;
+  
+  const isMobile = useIsMobile();
   
   // Get category-specific classes
   const getCategoryClasses = () => {
@@ -80,17 +83,17 @@ export function DailyWinCard({ category, completed, icon }: DailyWinCardProps) {
   return (
     <div 
       className={cn(
-        "group bg-solo-dark border border-gray-800 rounded-lg p-4",
+        "group bg-solo-dark border border-gray-800 rounded-lg p-2 sm:p-4",
         "transition-all duration-300 ease-in-out hover:scale-[1.02]",
         "hover:border-gray-700",
         isCompleted && "hover:shadow-md", 
         isCompleted && classes.hoverShadow
       )}
     >
-      <div className="flex items-center gap-3 mb-3">
+      <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
         <div 
           className={cn(
-            "w-10 h-10 rounded-full flex items-center justify-center",
+            "w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center",
             "transition-all duration-300 ease-in-out hover:scale-110",
             classes.bgOpacity, classes.textColor,
             isCompleted ? "animate-pulse-subtle" : "hover:drop-shadow-md",
@@ -107,15 +110,15 @@ export function DailyWinCard({ category, completed, icon }: DailyWinCardProps) {
         </div>
         <div>
           <h3 className={cn(
-            "font-medium capitalize text-solo-text",
+            "font-medium capitalize text-solo-text text-sm sm:text-base",
             "transition-all duration-300 ease-in-out",
             isCompleted && classes.textColor,
             classes.hoverText
           )}>
             {category}
           </h3>
-          <p className="text-xs text-gray-400 transition-all duration-300 group-hover:text-gray-300">
-            Daily wins: {completedCount}/1
+          <p className="text-[10px] sm:text-xs text-gray-400 transition-all duration-300 group-hover:text-gray-300">
+            {isMobile ? `${completedCount}/1` : `Daily wins: ${completedCount}/1`}
           </p>
         </div>
       </div>
@@ -125,7 +128,7 @@ export function DailyWinCard({ category, completed, icon }: DailyWinCardProps) {
           <div
             key={i}
             className={cn(
-              "h-2 flex-1 rounded-full transition-all duration-300 ease-in-out",
+              "h-1.5 sm:h-2 flex-1 rounded-full transition-all duration-300 ease-in-out",
               isCompleted
                 ? `${classes.bg} hover:brightness-110 shadow-inner shadow-black/20` 
                 : "bg-gray-800 hover:bg-gray-700",

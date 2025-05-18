@@ -455,70 +455,67 @@ const Missions = () => {
                   
                   <div className="grid grid-cols-2 gap-2">
                     <div className="space-y-1">
-                    <Label htmlFor="mission-day">Day</Label>
-                    <Input
-                      id="mission-day"
-                      name="day"
-                      type="number"
-                      min="1"
-                      placeholder="Day"
-                      value={newMission.day}
-                      onChange={handleNewMissionChange}
-                      required
-                        className="h-8"
+                      <Label htmlFor="mission-day">Day</Label>
+                      <Input
+                        id="mission-day"
+                        name="day"
+                        type="number"
+                        min="1"
+                        placeholder="Day"
+                        value={newMission.day}
+                        onChange={handleNewMissionChange}
+                        required
                       />
                     </div>
                     <div className="space-y-1">
-                      <Label htmlFor="mission-exp">XP</Label>
+                      <Label htmlFor="mission-exp">XP Reward</Label>
                       <Input
                         id="mission-exp"
                         name="expReward"
                         type="number"
                         min="1"
-                        placeholder="XP"
+                        placeholder="Enter XP amount"
                         value={newMission.expReward}
                         onChange={handleNewMissionChange}
                         required
-                        className="h-8"
-                    />
+                      />
                     </div>
                   </div>
                   
                   <div className="grid grid-cols-2 gap-2">
                     <div className="space-y-1">
-                      <Label htmlFor="mission-count">Tasks</Label>
+                      <Label htmlFor="mission-count">Task Count</Label>
                       <Input
                         id="mission-count"
                         name="count"
                         type="number"
                         min="1"
                         max="100"
-                        placeholder="# of tasks"
+                        placeholder="Number of tasks"
                         value={newMission.count}
                         onChange={handleNewMissionChange}
                         required
-                        className="h-8"
                       />
                     </div>
                     <div className="space-y-1">
-                    <Label htmlFor="mission-difficulty">Difficulty</Label>
-                    <Select name="difficulty" value={newMission.difficulty} onValueChange={val => setNewMission(n => ({ ...n, difficulty: val as Difficulty }))}>
-                        <SelectTrigger id="mission-difficulty" className="h-8">
-                          <SelectValue placeholder="Difficulty" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="normal">Normal</SelectItem>
-                        <SelectItem value="boss">Boss</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                      <Label htmlFor="mission-difficulty">Difficulty</Label>
+                      <Select name="difficulty" value={newMission.difficulty} onValueChange={val => setNewMission(n => ({ ...n, difficulty: val as Difficulty }))}>
+                        <SelectTrigger id="mission-difficulty">
+                          <SelectValue placeholder="Select difficulty" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="normal">Normal</SelectItem>
+                          <SelectItem value="boss">Boss</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
                   
                   <div className="space-y-1">
                     <Label htmlFor="mission-rank">Rank</Label>
                     <Select name="rank" value={newMission.rank} onValueChange={val => setNewMission(n => ({ ...n, rank: val as Rank }))}>
-                      <SelectTrigger id="mission-rank" className="h-8">
-                        <SelectValue placeholder="Rank" />
+                      <SelectTrigger id="mission-rank">
+                        <SelectValue placeholder="Select rank" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="F">F</SelectItem>
@@ -536,16 +533,16 @@ const Missions = () => {
                   
                   {/* Task Names */}
                   {parseInt(String(newMission.count)) > 1 && (
-                    <div className="space-y-1">
+                    <div className="space-y-2">
                       <Label>Task Names</Label>
-                      <div className="space-y-1 max-h-32 overflow-y-auto pr-1">
+                      <div className="space-y-2 max-h-40 overflow-y-auto pr-2">
                         {newMission.taskNames.map((taskName, index) => (
-                          <div key={index} className="flex items-center gap-1">
+                          <div key={index} className="flex items-center gap-2">
                             <Input
                               placeholder={`Task ${index + 1}`}
                               value={taskName}
                               onChange={(e) => handleTaskNameChange(index, e.target.value)}
-                              className="flex-1 h-7 text-sm"
+                              className="flex-1"
                             />
                           </div>
                         ))}
