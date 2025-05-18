@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "netlify:build": "npm install && tsc --noEmit && vite build",
     "typecheck": "tsc --noEmit",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
@@ -87,5 +88,8 @@
     "typescript": "^5.5.3",
     "typescript-eslint": "^8.0.1",
     "vite": "^5.4.1"
+  },
+  "engines": {
+    "node": "18.x"
   }
 }
