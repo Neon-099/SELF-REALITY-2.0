@@ -594,27 +594,7 @@ const Quests = () => {
           </div>
         </section>
 
-        {/* Daily Quests Section */}
-        <section className="mb-8">
-          <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
-            <CalendarClock className="text-green-500" size={20} />
-            <span>Daily Quests</span>
-          </h3>
-
-          <div className="grid gap-4">
-            {activeDailyQuests.length > 0 ? (
-              activeDailyQuests.map(quest => (
-                <DailyQuestCard
-                  key={quest.id}
-                  quest={quest}
-                  onComplete={handleCompleteQuest}
-                />
-              ))
-            ) : (
-              <p className="text-gray-500 italic p-4 border border-dashed border-gray-700 rounded-lg bg-gray-900/30">No active daily quests. Add one to get started!</p>
-            )}
-          </div>
-        </section>
+        
 
         {/* Side Quests Section */}
         <section className="mb-8">
@@ -635,6 +615,28 @@ const Quests = () => {
             ) : (
               <p className="text-gray-500 italic p-4 border border-dashed border-gray-700 rounded-lg bg-gray-900/30">No active side quests. Add one to get started!</p>
             )}
+            
+            {/* Daily Quests Section */}
+        <section className="mb-8">
+          <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
+            <CalendarClock className="text-green-500" size={20} />
+            <span>Daily Quests</span>
+          </h3>
+
+          <div className="grid gap-4">
+            {activeDailyQuests.length > 0 ? (
+              activeDailyQuests.map(quest => (
+                <DailyQuestCard
+                  key={quest.id}
+                  quest={quest}
+                  onComplete={handleCompleteQuest}
+                />
+              ))
+            ) : (
+              <p className="text-gray-500 italic p-4 border border-dashed border-gray-700 rounded-lg bg-gray-900/30">No active daily quests. Add one to get started!</p>
+            )}
+          </div>
+        </section>
           </div>
         </section>
       </div>
