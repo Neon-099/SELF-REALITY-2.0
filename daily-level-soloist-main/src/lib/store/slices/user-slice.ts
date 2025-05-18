@@ -56,7 +56,7 @@ export const createUserSlice = (dbService: MongoDBService) => (
         console.error('Error fetching user:', error);
         return null;
       });
-      
+
       if (userData) {
         set((state: any) => ({
           user: {
@@ -95,15 +95,17 @@ export const createUserSlice = (dbService: MongoDBService) => (
       // Use local storage as fallback
     }
   },
+
+
   addExp: (exp) => {
     set((state: any) => {
       // Get the current EXP modifier from punishment system
       // We're explicitly NOT applying it here because callers should handle this
       // This prevents double-applying the modifier
-      
+
       let { exp: currentExp, level, expToNextLevel } = state.user;
       currentExp += exp;
-      
+
       let leveledUp = false;
       while (currentExp >= expToNextLevel) {
         level++;
@@ -111,19 +113,19 @@ export const createUserSlice = (dbService: MongoDBService) => (
         expToNextLevel = calculateExpToNextLevel(level);
         leveledUp = true;
       }
-      
+
       const rank = leveledUp ? calculateRank(level) : state.user.rank;
-      
+
       // Show toast notification for EXP earned
       toast({
         title: `+${exp} EXP`,
         description: `You earned experience!`,
         variant: "default"
       });
-      
+
       // Award gold based on EXP (2 gold for every 5 EXP)
       let goldEarned = Math.floor(exp / 5) * 2;
-      
+
       if (goldEarned > 0) {
         // Show separate toast for gold
         setTimeout(() => {
@@ -134,7 +136,7 @@ export const createUserSlice = (dbService: MongoDBService) => (
           });
         }, 500);
       }
-      
+
       const updatedUser = {
         ...state.user,
         exp: currentExp,
@@ -143,10 +145,10 @@ export const createUserSlice = (dbService: MongoDBService) => (
         rank,
         gold: state.user.gold + goldEarned
       };
-      
+
       // Update in MongoDB
       dbService.updateUser(state.user.id, updatedUser).catch(console.error);
-      
+
       return { user: updatedUser };
     });
   },
@@ -156,10 +158,10 @@ export const createUserSlice = (dbService: MongoDBService) => (
         ...state.user,
         gold: state.user.gold + amount
       };
-      
+
       // Update in MongoDB
       dbService.updateUser(state.user.id, updatedUser).catch(console.error);
-      
+
       return { user: updatedUser };
     });
   },
@@ -169,7 +171,7 @@ export const createUserSlice = (dbService: MongoDBService) => (
   increaseStatFree: (stat, amount = 1) => {
     set((state: any) => {
       const currentStatValue = state.user.stats[stat];
-      
+
       const updatedUser = {
         ...state.user,
         stats: {
@@ -177,10 +179,10 @@ export const createUserSlice = (dbService: MongoDBService) => (
           [stat]: currentStatValue + amount
         }
       };
-      
+
       // Update in MongoDB
       dbService.updateUser(state.user.id, updatedUser).catch(console.error);
-      
+
       return { user: updatedUser };
     });
   },
@@ -189,24 +191,24 @@ export const createUserSlice = (dbService: MongoDBService) => (
       // Get current stat exp and level
       const statLevel = state.user.stats[stat];
       const statExpKey = `${stat}Exp` as keyof typeof state.user.stats;
-      
+
       // Ensure currentStatExp is a valid number
       const currentStatExp = typeof state.user.stats[statExpKey] === 'number' && !isNaN(state.user.stats[statExpKey])
         ? state.user.stats[statExpKey]
         : 0;
-      
+
       // Use a fixed value of 100 for EXP needed for next level
       const expToNextLevel = 100;
-      
+
       // Add exp
       let newStatExp = currentStatExp + amount;
       let newStatLevel = statLevel;
-      
+
       // Level up if enough exp
       if (newStatExp >= expToNextLevel) {
         newStatExp -= expToNextLevel;
         newStatLevel += 1;
-        
+
         // Show toast for level up
         toast({
           title: `${stat.charAt(0).toUpperCase() + stat.slice(1)} Leveled Up!`,
@@ -221,7 +223,7 @@ export const createUserSlice = (dbService: MongoDBService) => (
           variant: "default"
         });
       }
-      
+
       const updatedUser = {
         ...state.user,
         stats: {
@@ -230,10 +232,10 @@ export const createUserSlice = (dbService: MongoDBService) => (
           [statExpKey]: newStatExp
         }
       };
-      
+
       // Update in MongoDB
       dbService.updateUser(state.user.id, updatedUser).catch(console.error);
-      
+
       return { user: updatedUser };
     });
   },
@@ -241,7 +243,7 @@ export const createUserSlice = (dbService: MongoDBService) => (
     set((state) => {
       // Check if this category is already completed
       const currentProgress = state.user.dailyWins[category];
-      
+
       // If already completed, return without changes
       if (currentProgress.isCompleted) {
         toast({
@@ -251,22 +253,22 @@ export const createUserSlice = (dbService: MongoDBService) => (
         });
         return state;
       }
-      
+
       // Update daily win count to 1 (limit to exactly 1)
       const newCount = 1;
       const isCompleted = true;
-      
+
       // Get the EXP modifier from the punishment system
       const { getExpModifier } = get();
       const expModifier = getExpModifier();
-      
+
       // Give attribute EXP reward for completing daily win
         setTimeout(() => {
           const statToIncrease = dailyWinToStat(category);
         // Apply the EXP modifier to the stat EXP reward
         const statExpReward = Math.floor(10 * expModifier);
         get().addStatExp(statToIncrease, statExpReward);
-        
+
         // Notify user if a penalty was applied
         if (expModifier < 1) {
           toast({
@@ -289,10 +291,10 @@ export const createUserSlice = (dbService: MongoDBService) => (
           },
         },
       };
-      
+
       // Update in MongoDB
       dbService.updateUser(state.user.id, updatedUser).catch(console.error);
-      
+
       return { user: updatedUser };
     });
   },
@@ -302,10 +304,10 @@ export const createUserSlice = (dbService: MongoDBService) => (
         ...state.user,
         dailyWins: createEmptyDailyWins(),
       };
-      
+
       // Update in MongoDB
       dbService.updateUser(state.user.id, updatedUser).catch(console.error);
-      
+
       return { user: updatedUser };
     });
   },
@@ -313,7 +315,7 @@ export const createUserSlice = (dbService: MongoDBService) => (
     set((state) => {
       const today = new Date();
       let needsReset = false;
-      
+
       // Check each category's last update date
       Object.values(state.user.dailyWins).forEach(progress => {
         const lastUpdated = new Date(progress.lastUpdated);
@@ -321,25 +323,25 @@ export const createUserSlice = (dbService: MongoDBService) => (
           needsReset = true;
         }
       });
-      
+
       // If any category needs reset, reset all
       if (needsReset) {
         toast({
           title: "Daily Wins Reset",
           description: "Your daily wins have been reset for a new day!",
         });
-        
+
         const updatedUser = {
           ...state.user,
           dailyWins: createEmptyDailyWins(),
         };
-        
+
         // Update in MongoDB
         dbService.updateUser(state.user.id, updatedUser).catch(console.error);
-        
+
         return { user: updatedUser };
       }
-      
+
       return state;
     });
   },
@@ -347,21 +349,21 @@ export const createUserSlice = (dbService: MongoDBService) => (
     set((state: any) => {
       const today = new Date();
       const lastActive = new Date(state.user.lastActive);
-      
+
       const isYesterday = (
         lastActive.getDate() === today.getDate() - 1 &&
         lastActive.getMonth() === today.getMonth() &&
         lastActive.getFullYear() === today.getFullYear()
       );
-      
+
       const isToday = (
         lastActive.getDate() === today.getDate() &&
         lastActive.getMonth() === today.getMonth() &&
         lastActive.getFullYear() === today.getFullYear()
       );
-      
+
       let streakDays = state.user.streakDays;
-      
+
       if (isToday) {
         return state;
       } else if (isYesterday) {
@@ -369,22 +371,22 @@ export const createUserSlice = (dbService: MongoDBService) => (
       } else {
         streakDays = 1;
       }
-      
+
       const longestStreak = Math.max(streakDays, state.user.longestStreak);
-      
+
       // Check if daily wins need to be reset
       get().checkResetDailyWins();
-      
+
       const updatedUser = {
         ...state.user,
         streakDays,
         longestStreak,
         lastActive: today
       };
-      
+
       // Update in MongoDB
       dbService.updateUser(state.user.id, updatedUser).catch(console.error);
-      
+
       return { user: updatedUser };
     });
   },
@@ -399,13 +401,13 @@ export const createUserSlice = (dbService: MongoDBService) => (
         ...state.user,
         name: name
       };
-      
+
       // Update in MongoDB
       dbService.updateUser(state.user.id, updatedUser).catch(console.error);
-      
+
       return { user: updatedUser };
     });
-    
+
     // Optional: Show toast notification for name update
     toast({
       title: "Name Updated",
@@ -416,28 +418,28 @@ export const createUserSlice = (dbService: MongoDBService) => (
   updateUser: async (userData: Partial<User>) => {
     try {
       const currentState = get();
-      
+
       if (!currentState.user || !currentState.user.id) {
         console.error('Cannot update user: No user ID found');
         return;
       }
-      
+
       // Update the local state
       set((state: any) => {
         const updatedUser = {
           ...state.user,
           ...userData
         };
-        
+
         return { user: updatedUser };
       });
-      
+
       // Get the current state after our update
       const updatedState = get();
-      
+
       // Save to MongoDB
       await dbService.updateUser(updatedState.user.id, updatedState.user);
-      
+
       console.log('User data successfully saved to MongoDB');
     } catch (error) {
       console.error('Failed to update user data in MongoDB:', error);
@@ -447,7 +449,7 @@ export const createUserSlice = (dbService: MongoDBService) => (
   setUser: (userData: User) => {
     // Directly set the user data in the store
     set({ user: userData });
-    
+
     console.log('User data set in store:', userData.name);
   }
 });

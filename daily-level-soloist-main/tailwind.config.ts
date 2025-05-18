@@ -12,6 +12,14 @@ export default {
 	],
 	prefix: "",
 	theme: {
+		screens: {
+			'xs': '480px',
+			'sm': '640px',
+			'md': '768px',
+			'lg': '1024px',
+			'xl': '1280px',
+			'2xl': '1536px',
+		},
 		container: {
 			center: true,
 			padding: '2rem',
@@ -107,27 +115,27 @@ export default {
 					to: { height: '0' }
 				},
 				'pulse-glow': {
-					'0%, 100%': { 
+					'0%, 100%': {
 						boxShadow: '0 0 5px rgba(59, 130, 246, 0.5)',
 						opacity: '0.8'
 					},
-					'50%': { 
+					'50%': {
 						boxShadow: '0 0 20px rgba(59, 130, 246, 0.8)',
 						opacity: '1'
 					}
 				},
 				'pulse-slow': {
-					'0%, 100%': { 
+					'0%, 100%': {
 						opacity: '1',
 						transform: 'scale(1)'
 					},
-					'50%': { 
+					'50%': {
 						opacity: '0.7',
 						transform: 'scale(1.05)'
 					}
 				},
 				'level-up': {
-					'0%': { 
+					'0%': {
 						transform: 'scale(0.9)',
 						opacity: '0'
 					},
@@ -141,11 +149,11 @@ export default {
 					}
 				},
 				'pulse-subtle': {
-					'0%, 100%': { 
+					'0%, 100%': {
 						opacity: '1',
 						boxShadow: '0 0 0 rgba(255, 255, 255, 0)'
 					},
-					'50%': { 
+					'50%': {
 						opacity: '0.9',
 						boxShadow: '0 0 10px rgba(255, 255, 255, 0.2)'
 					}

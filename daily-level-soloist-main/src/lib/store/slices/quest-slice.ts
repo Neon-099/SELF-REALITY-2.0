@@ -9,14 +9,14 @@ import { MongoDBService } from '../../services/mongodb-service';
 
 export interface QuestSlice {
   quests: Quest[];
-  addQuest: (title: string, description: string, isMainQuest?: boolean, difficulty?: Difficulty) => Quest;
+  addQuest: (title: string, description: string, isMainQuest?: boolean, expRewardOrDifficulty?: number | Difficulty, deadline?: Date, difficulty?: Difficulty, category?: DailyWinCategory, isDaily?: boolean) => Promise<Quest>;
   completeQuest: (id: string) => void;
-  startQuest: (id: string) => void;
-  addQuestTask: (questId: string, taskDescription: string) => void;
-  completeQuestTask: (questId: string, taskIndex: number) => void;
+  startQuest: (id: string) => Promise<void>;
+  addQuestTask: (questId: string, taskTitle: string, taskDescription?: string, category?: DailyWinCategory, difficulty?: Difficulty, deadline?: Date) => Promise<void>;
+  completeQuestTask: (questId: string, taskId: string) => Promise<void>;
   canCompleteQuest: (id: string) => boolean;
-  updateQuest: (id: string, updates: Partial<Quest>) => void;
-  deleteQuest: (id: string) => void;
+  updateQuest: (id: string, updates: Partial<Quest>) => Promise<void>;
+  deleteQuest: (id: string) => Promise<void>;
   loadQuests: () => Promise<void>;
 }
 
@@ -46,7 +46,7 @@ const attributeToDailyWin = (attributeCategory: string): DailyWinCategory | null
 // Use StoreState instead of listing all dependencies for better compatibility
 export const createQuestSlice = (dbService: MongoDBService) => (set, get, _store) => ({
   quests: [],
-  
+
   loadQuests: async () => {
     try {
       const quests = await dbService.getAllQuests();
@@ -56,18 +56,29 @@ export const createQuestSlice = (dbService: MongoDBService) => (set, get, _store
     }
   },
 
-  addQuest: async (title: string, description: string, isMainQuest: boolean = false, difficulty: Difficulty = 'normal') => {
+  addQuest: async (title: string, description: string, isMainQuest: boolean = false, expRewardOrDifficulty: number | Difficulty = 'normal', deadline?: Date, difficulty: Difficulty = 'normal', category?: DailyWinCategory, isDaily: boolean = false) => {
+    // If first expReward parameter is a number, use it as custom exp reward, otherwise use mapping
+    const isCustomExp = typeof expRewardOrDifficulty === 'number';
+    const expReward = isCustomExp ? expRewardOrDifficulty : expRewards[expRewardOrDifficulty as Difficulty];
+    const effectiveDifficulty = isCustomExp ? difficulty : expRewardOrDifficulty as Difficulty;
+
     const quest: Quest = {
       id: uuidv4(),
       title,
       description,
       isMainQuest,
-      difficulty,
+      isDaily,
+      difficulty: effectiveDifficulty,
       createdAt: new Date(),
       completed: false,
-      expReward: expRewards[difficulty],
+      expReward,
       tasks: [],
-      started: false
+      started: false,
+      deadline: deadline || null,
+      completedAt: null,
+      missed: false,
+      isRecoveryQuest: false,
+      category
     };
 
     try {
@@ -84,16 +95,47 @@ export const createQuestSlice = (dbService: MongoDBService) => (set, get, _store
 
   completeQuest: async (id: string) => {
     try {
+      // Get the quest before updating it
+      const quest = get().quests.find(q => q.id === id);
+      if (!quest) {
+        console.error('Quest not found:', id);
+        return;
+      }
+
+      // Get the EXP reward from the quest
+      const expReward = quest.expReward || 0;
+
+      // Update the quest in the database
       const updatedQuest = await dbService.updateQuest(id, {
         completed: true,
         completedAt: new Date()
       });
 
       if (updatedQuest) {
+        // Update the quest in the state
         set((state: QuestSlice) => ({
           quests: state.quests.map(q => q.id === id ? updatedQuest : q)
         }));
+
+        // Directly add EXP to the user
+        if (expReward > 0) {
+          const { addExp } = get();
+          if (addExp) {
+            addExp(expReward);
+
+            // Show toast notification for quest completion
+            toast({
+              title: "Quest Completed!",
+              description: `${quest.title} completed! You earned ${expReward} XP.`,
+              variant: "default"
+            });
+          }
+        }
+
+        console.log('Quest completed:', updatedQuest.title);
       }
+
+      return updatedQuest;
     } catch (error) {
       console.error('Failed to complete quest:', error);
     }
@@ -123,33 +165,56 @@ export const createQuestSlice = (dbService: MongoDBService) => (set, get, _store
     }
   },
 
-  addQuestTask: async (questId: string, taskDescription: string) => {
+  addQuestTask: async (questId: string, taskTitle: string, taskDescription: string = '', category?: DailyWinCategory, difficulty: Difficulty = 'normal', deadline?: Date) => {
     try {
       const quest = get().quests.find(q => q.id === questId);
       if (quest) {
-        const updatedTasks = [...(quest.tasks || []), { description: taskDescription, completed: false }];
+        // Create a new task with a unique ID
+        const newTask = {
+          id: uuidv4(), // Generate a unique ID for the task
+          title: taskTitle,
+          description: taskDescription,
+          completed: false,
+          category: category || 'mental',
+          difficulty: difficulty || 'normal',
+          deadline: deadline || null
+        };
+
+        // Make sure we have an array of tasks
+        const currentTasks = Array.isArray(quest.tasks) ? quest.tasks : [];
+        const updatedTasks = [...currentTasks, newTask];
+
+        // Update the quest with the new tasks array
         const updatedQuest = await dbService.updateQuest(questId, { tasks: updatedTasks });
-        
+
         if (updatedQuest) {
+          // Update the state with the updated quest
           set((state: QuestSlice) => ({
             quests: state.quests.map(q => q.id === questId ? updatedQuest : q)
           }));
+
+          // Log success for debugging
+          console.log('Task added successfully:', newTask);
+          console.log('Updated quest tasks:', updatedTasks);
         }
+      } else {
+        console.error('Quest not found with ID:', questId);
       }
     } catch (error) {
       console.error('Failed to add quest task:', error);
     }
   },
 
-  completeQuestTask: async (questId: string, taskIndex: number) => {
+  completeQuestTask: async (questId: string, taskId: string) => {
     try {
       const quest = get().quests.find(q => q.id === questId);
-      if (quest && quest.tasks) {
-        const updatedTasks = [...quest.tasks];
-        updatedTasks[taskIndex] = { ...updatedTasks[taskIndex], completed: true };
-        
+      if (quest && Array.isArray(quest.tasks)) {
+        const updatedTasks = quest.tasks.map(task =>
+          task.id === taskId ? { ...task, completed: true } : task
+        );
+
         const updatedQuest = await dbService.updateQuest(questId, { tasks: updatedTasks });
-        
+
         if (updatedQuest) {
           set((state: QuestSlice) => ({
             quests: state.quests.map(q => q.id === questId ? updatedQuest : q)
@@ -161,21 +226,65 @@ export const createQuestSlice = (dbService: MongoDBService) => (set, get, _store
     }
   },
 
-  startQuest: (id) => {
-    set((state: QuestSlice) => ({
-      quests: state.quests.map(quest =>
-        quest.id === id ? { ...quest, started: true } : quest
-      )
-    }));
+  startQuest: async (id) => {
+    try {
+      // First update the quest in the database
+      const updatedQuest = await dbService.updateQuest(id, { started: true });
+
+      if (updatedQuest) {
+        // Get the latest quest data with all tasks
+        const latestQuest = await dbService.getQuest(id);
+
+        if (latestQuest) {
+          // Then update the state with the latest quest data
+          set((state: QuestSlice) => ({
+            quests: state.quests.map(quest =>
+              quest.id === id ? latestQuest : quest
+            )
+          }));
+
+          // Log for debugging
+          console.log('Quest started successfully:', latestQuest);
+          console.log('Tasks in started quest:', latestQuest.tasks);
+
+          return latestQuest;
+        } else {
+          // Fallback to using the updatedQuest if getQuest fails
+          set((state: QuestSlice) => ({
+            quests: state.quests.map(quest =>
+              quest.id === id ? updatedQuest : quest
+            )
+          }));
+
+          console.log('Using updatedQuest as fallback:', updatedQuest);
+          return updatedQuest;
+        }
+      }
+    } catch (error) {
+      console.error('Failed to start quest:', error);
+
+      // Fallback to just updating the state if database update fails
+      const quest = get().quests.find(q => q.id === id);
+      if (quest) {
+        const updatedQuest = { ...quest, started: true };
+        set((state: QuestSlice) => ({
+          quests: state.quests.map(q =>
+            q.id === id ? updatedQuest : q
+          )
+        }));
+
+        return updatedQuest;
+      }
+    }
   },
 
   canCompleteQuest: (id) => {
     const { quests, areSideQuestsLocked } = get();
     const quest = quests.find(q => q.id === id);
-    
+
     // Quest not found
     if (!quest) return false;
-    
+
     // Check if side quests are locked (only if this is a side quest)
     if (!quest.isMainQuest && areSideQuestsLocked()) {
       toast({
@@ -185,16 +294,16 @@ export const createQuestSlice = (dbService: MongoDBService) => (set, get, _store
       });
       return false;
     }
-    
+
     // Already completed
     if (quest.completed) return false;
-    
+
     // If quest has tasks, all tasks must be completed
     if (quest.tasks.length > 0) {
       return quest.tasks.every(task => task.completed);
     }
-    
+
     // Quest with no tasks can be completed
     return true;
   }
-}); 
+});

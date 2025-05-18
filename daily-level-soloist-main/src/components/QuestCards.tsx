@@ -23,12 +23,25 @@ export const MainQuestCard: React.FC<QuestCardProps> = ({ quest }) => {
     });
   };
 
-  const handleStart = () => {
-    startQuest(quest.id);
-    toast({
-      title: "Quest Started!",
-      description: `You've started "${quest.title}"`,
-    });
+  const handleStart = async () => {
+    try {
+      await startQuest(quest.id);
+
+      // Log for debugging
+      console.log('Quest started from QuestCards:', quest.id);
+
+      toast({
+        title: "Quest Started!",
+        description: `You've started "${quest.title}"`,
+      });
+    } catch (error) {
+      console.error('Error starting quest:', error);
+      toast({
+        title: "Error Starting Quest",
+        description: "There was an error starting the quest. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   return (
@@ -109,7 +122,7 @@ export const MainQuestCard: React.FC<QuestCardProps> = ({ quest }) => {
 
 export const DailyQuestCard: React.FC<QuestCardProps> = ({ quest }) => {
   const completeQuest = useSoloLevelingStore(state => state.completeQuest);
-  
+
   const handleComplete = () => {
     completeQuest(quest.id);
     toast({
@@ -119,34 +132,34 @@ export const DailyQuestCard: React.FC<QuestCardProps> = ({ quest }) => {
   };
 
   const categoryColors: Record<string, { bg: string, text: string, border: string }> = {
-    mental: { 
-      bg: 'bg-gradient-to-r from-blue-500/10 to-blue-600/10', 
-      text: 'text-blue-400', 
-      border: 'border-blue-500/20' 
+    mental: {
+      bg: 'bg-gradient-to-r from-blue-500/10 to-blue-600/10',
+      text: 'text-blue-400',
+      border: 'border-blue-500/20'
     },
-    physical: { 
-      bg: 'bg-gradient-to-r from-red-500/10 to-red-600/10', 
-      text: 'text-red-400', 
-      border: 'border-red-500/20' 
+    physical: {
+      bg: 'bg-gradient-to-r from-red-500/10 to-red-600/10',
+      text: 'text-red-400',
+      border: 'border-red-500/20'
     },
-    spiritual: { 
-      bg: 'bg-gradient-to-r from-purple-500/10 to-purple-600/10', 
-      text: 'text-purple-400', 
-      border: 'border-purple-500/20' 
+    spiritual: {
+      bg: 'bg-gradient-to-r from-purple-500/10 to-purple-600/10',
+      text: 'text-purple-400',
+      border: 'border-purple-500/20'
     },
-    intelligence: { 
-      bg: 'bg-gradient-to-r from-yellow-500/10 to-yellow-600/10', 
-      text: 'text-yellow-400', 
-      border: 'border-yellow-500/20' 
+    intelligence: {
+      bg: 'bg-gradient-to-r from-yellow-500/10 to-yellow-600/10',
+      text: 'text-yellow-400',
+      border: 'border-yellow-500/20'
     },
   };
 
-  const categoryStyle = quest.category ? categoryColors[quest.category] : { 
-    bg: 'bg-gray-700', 
-    text: 'text-gray-300', 
-    border: 'border-gray-500' 
+  const categoryStyle = quest.category ? categoryColors[quest.category] : {
+    bg: 'bg-gray-700',
+    text: 'text-gray-300',
+    border: 'border-gray-500'
   };
-  
+
   return (
     <div
       className={
@@ -167,7 +180,7 @@ export const DailyQuestCard: React.FC<QuestCardProps> = ({ quest }) => {
         <div className="flex flex-col items-end gap-2">
           <div className="flex items-center gap-2">
             {quest.category && (
-              <span className={`text-[10px] px-1.5 py-0.5 rounded-full border shadow-sm font-medium ${categoryStyle.bg} ${categoryStyle.text} ${categoryStyle.border}`}> 
+              <span className={`text-[10px] px-1.5 py-0.5 rounded-full border shadow-sm font-medium ${categoryStyle.bg} ${categoryStyle.text} ${categoryStyle.border}`}>
                 {quest.category.charAt(0).toUpperCase() + quest.category.slice(1)}
               </span>
             )}
@@ -214,7 +227,7 @@ export const DailyQuestCard: React.FC<QuestCardProps> = ({ quest }) => {
 
 export const SideQuestCard: React.FC<QuestCardProps> = ({ quest }) => {
   const completeQuest = useSoloLevelingStore(state => state.completeQuest);
-  
+
   const handleComplete = () => {
     completeQuest(quest.id);
     toast({
@@ -281,4 +294,4 @@ export const SideQuestCard: React.FC<QuestCardProps> = ({ quest }) => {
       )}
     </div>
   );
-}; 
+};
