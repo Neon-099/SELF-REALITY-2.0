@@ -506,17 +506,17 @@ const Character = () => {
   const currentRankInfo = rankDetails.find(r => r.rank === user.rank);
 
   return (
-    <div className="container mx-auto px-4 py-8 space-y-8">
+    <div className="container mx-auto px-2 sm:px-4 py-6 sm:py-8 space-y-6 sm:space-y-8">
       <div>
         <h1 className="text-4xl font-bold bg-gradient-to-r from-solo-primary to-blue-500 bg-clip-text text-transparent mb-2">Character Stats</h1>
         <p className="text-gray-400">Increase your stats to become stronger.</p>
       </div>
       
       {/* Character Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-6">
         <Card className="bg-solo-dark border-gray-800 hover:shadow-lg hover:shadow-solo-primary/5 transition-all duration-300 overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-solo-primary to-blue-500"></div>
-          <CardContent className="pt-6">
+          <CardContent className="pt-5 sm:pt-6 px-3 sm:px-6">
             <div className="text-center space-y-4">
               <div className="relative inline-block">
                 <div className="w-24 h-24 rounded-full bg-gradient-to-br from-solo-primary/20 to-blue-500/20 flex items-center justify-center mx-auto backdrop-blur-sm p-1 shadow-inner">
@@ -547,10 +547,10 @@ const Character = () => {
         
         <Card className="bg-solo-dark border-gray-800 md:col-span-2 hover:shadow-lg hover:shadow-solo-primary/5 transition-all duration-300 overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-solo-primary to-blue-500"></div>
-          <CardHeader>
+          <CardHeader className="px-3 sm:px-6 py-4 sm:py-6">
             <CardTitle className="text-xl font-bold bg-gradient-to-r from-solo-primary to-blue-500 bg-clip-text text-transparent">Status</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="px-3 sm:px-6">
             <div className="space-y-4">
               <div className="flex justify-between p-3 bg-gray-850/30 rounded-lg backdrop-blur-sm">
                 <div>
@@ -801,10 +801,10 @@ const Character = () => {
           <Crown className="text-yellow-400" size={24} />
           <span className="bg-gradient-to-r from-yellow-400 to-amber-500 bg-clip-text text-transparent">Rank System</span>
         </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-6">
           <Card className="bg-solo-dark border-gray-800 hover:shadow-lg hover:shadow-solo-primary/5 transition-all duration-300 overflow-hidden">
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-solo-primary to-blue-500"></div>
-            <CardHeader>
+            <CardHeader className="px-3 sm:px-6 py-4 sm:py-6">
               <CardTitle className="flex items-center gap-2 text-xl">
                 <div className="text-solo-primary animate-pulse-slow">
                   <Crown size={20} />
@@ -812,7 +812,7 @@ const Character = () => {
                 <span className="bg-gradient-to-r from-solo-primary to-blue-500 bg-clip-text text-transparent">Current Progress</span>
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="px-3 sm:px-6">
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4 p-4 bg-gray-850/30 rounded-lg border border-gray-800/50 backdrop-blur-sm">
                   <div className="space-y-2">
@@ -861,9 +861,9 @@ const Character = () => {
             </CardContent>
           </Card>
           
-          <Card className="bg-solo-dark border-gray-800 hover:shadow-lg hover:shadow-solo-primary/5 transition-all duration-300 overflow-hidden">
+          <Card className="bg-solo-dark border-gray-800 hover:shadow-lg hover:shadow-solo-primary/5 transition-all duration-300 overflow-hidden hidden md:block">
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-yellow-400 to-amber-500"></div>
-            <CardHeader>
+            <CardHeader className="px-3 sm:px-6 py-4 sm:py-6">
               <CardTitle className="flex items-center gap-2 text-xl">
                 <div className="text-yellow-400">
                   <Trophy size={20} />
@@ -871,7 +871,7 @@ const Character = () => {
                 <span className="bg-gradient-to-r from-yellow-400 to-amber-500 bg-clip-text text-transparent">Current Rank Benefits</span>
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="px-3 sm:px-6">
               <div className="space-y-4">
                 <div className="p-4 bg-gray-850/30 rounded-lg border border-gray-800/50 backdrop-blur-sm mb-4">
                   <p className="text-sm text-gray-400 mb-2 uppercase tracking-wider">Rank {user.rank} Benefits</p>
