@@ -683,7 +683,26 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
   
   // Day Navigation Styles
   const dayNavButtonClass = `rounded-full w-16 h-16 flex items-center justify-center transition-all duration-300 border-2 ${isLocked ? 'hover:bg-gray-200 dark:hover:bg-gray-700' : 'hover:bg-accent hover:scale-110'} backdrop-blur-sm`;
-  const dayTitleClass = `text-4xl font-bold ${isLocked ? 'text-gray-400' : 'bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent'} tracking-tight`;
+  
+  // Create a function for rank-specific day title styling
+  const getDayTitleStyle = (rank: Rank) => {
+    if (isLocked) return 'text-gray-400';
+    
+    switch (rank) {
+      case 'F': return 'bg-gradient-to-r from-gray-400 to-gray-600 bg-clip-text text-transparent';
+      case 'E': return 'bg-gradient-to-r from-orange-400 to-orange-600 bg-clip-text text-transparent';
+      case 'D': return 'bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent';
+      case 'C': return 'bg-gradient-to-r from-green-400 to-green-600 bg-clip-text text-transparent';
+      case 'B': return 'bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent';
+      case 'A': return 'bg-gradient-to-r from-red-400 to-red-600 bg-clip-text text-transparent';
+      case 'S': return 'bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent';
+      case 'SS': return 'bg-gradient-to-r from-emerald-400 to-emerald-600 bg-clip-text text-transparent';
+      case 'SSS': return 'bg-gradient-to-r from-indigo-400 to-indigo-600 bg-clip-text text-transparent';
+      default: return 'bg-gradient-to-r from-gray-400 to-gray-600 bg-clip-text text-transparent';
+    }
+  };
+  
+  const dayTitleClass = `text-4xl font-bold ${getDayTitleStyle(rank)} tracking-tight drop-shadow-sm`;
   
   // Add the following CSS styles above the return statement to customize the Progress indicator color
   const getProgressIndicatorStyle = (rank: Rank, difficulty: 'normal' | 'boss' = 'normal') => {

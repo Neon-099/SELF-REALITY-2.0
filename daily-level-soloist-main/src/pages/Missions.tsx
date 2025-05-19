@@ -291,6 +291,22 @@ const Missions = () => {
   };
 
   const currentRank = rankLevels[currentRankIndex];
+  
+  // Helper to get rank text colors for titles
+  const getRankTitleColor = (rank: Rank) => {
+    switch (rank) {
+      case 'F': return 'bg-gradient-to-r from-gray-400 to-gray-600 bg-clip-text text-transparent';
+      case 'E': return 'bg-gradient-to-r from-orange-400 to-orange-600 bg-clip-text text-transparent';
+      case 'D': return 'bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent';
+      case 'C': return 'bg-gradient-to-r from-green-400 to-green-600 bg-clip-text text-transparent';
+      case 'B': return 'bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent';
+      case 'A': return 'bg-gradient-to-r from-red-400 to-red-600 bg-clip-text text-transparent';
+      case 'S': return 'bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent';
+      case 'SS': return 'bg-gradient-to-r from-emerald-400 to-emerald-600 bg-clip-text text-transparent';
+      case 'SSS': return 'bg-gradient-to-r from-indigo-400 to-indigo-600 bg-clip-text text-transparent';
+      default: return 'bg-gradient-to-r from-gray-400 to-gray-600 bg-clip-text text-transparent';
+    }
+  };
 
   // Helper function to safely render recent missions
   const renderRecentMissions = () => {
@@ -578,7 +594,7 @@ const Missions = () => {
           </div>
           {/* Mission section title */}
           <div className="mt-8 mb-4">
-            <h2 className="text-2xl font-bold text-primary">
+            <h2 className={`text-2xl font-bold ${getRankTitleColor(currentRank.id)} drop-shadow-sm`}>
               {currentRank.name} Missions
             </h2>
           </div>
