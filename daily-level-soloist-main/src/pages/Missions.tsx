@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { motion } from 'framer-motion';
 
 // Utility function to convert Mission to PredefinedMission format
 const convertMissionToPredefined = (mission: Mission): PredefinedMission => {
