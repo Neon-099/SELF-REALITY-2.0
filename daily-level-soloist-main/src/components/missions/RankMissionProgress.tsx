@@ -40,6 +40,7 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
   const [showAll, setShowAll] = useState(false);
   const [taskDialogOpen, setTaskDialogOpen] = useState(false);
   const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
+  const [lockedPreviewDialogOpen, setLockedPreviewDialogOpen] = useState(false);
   const [currentMission, setCurrentMission] = useState<PredefinedMission | null>(null);
   const [completedTaskIndices, setCompletedTaskIndices] = useState<number[]>([]);
   const [isSaving, setIsSaving] = useState(false);
@@ -54,7 +55,10 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
   
   // Add this function to check day unlocked status 
   const isDayUnlocked = (dayNumber: number) => {
-    // Day 1 is always unlocked
+    // If rank is locked, all days are locked
+    if (isLocked) return false;
+    
+    // Day 1 is always unlocked (if rank isn't locked)
     if (dayNumber === 1) return true;
     
     // Check if previous day's missions are all completed
@@ -101,6 +105,13 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
         description: "This mission cannot be viewed (missing ID).",
         variant: "destructive",
       });
+      return;
+    }
+    
+    // If day is locked, show the locked preview dialog instead
+    if (!dayUnlockStatus[currentDay]) {
+      setCurrentMission(mission);
+      setLockedPreviewDialogOpen(true);
       return;
     }
     
@@ -457,13 +468,17 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
           transition={{ duration: 0.4, delay: index * 0.1 }}
         >
           <Card 
-            className={`relative overflow-hidden rounded-xl ${borderClasses} ${glassClasses} ${shadowClasses} ${glowClasses} ${completedClasses} group`}
+            className={`relative overflow-hidden rounded-xl ${borderClasses} ${glassClasses} ${shadowClasses} ${glowClasses} ${completedClasses} group cursor-pointer`}
+            onClick={() => handleViewMission(mission)}
           >
             {/* Add a lock overlay for locked days */}
             {!dayUnlockStatus[currentDay] && (
-              <div className="absolute inset-0 z-40 backdrop-blur-[1px] bg-black/30 flex items-center justify-center">
+              <div className="absolute inset-0 z-40 backdrop-blur-[1px] bg-black/20 flex flex-col items-center justify-center">
                 <div className="p-3 bg-black/60 rounded-full flex items-center justify-center">
                   <Lock className="h-6 w-6 text-white/90" />
+                </div>
+                <div className="text-xs text-white mt-2 bg-black/60 px-2 py-1 rounded-md">
+                  Click to preview
                 </div>
               </div>
             )}
@@ -631,7 +646,7 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
               </div>
               
               {/* Mission action button */}
-              <div className="h-16">
+              <div className="h-16" onClick={(e) => e.stopPropagation()}>
                 {!isCompleted && !isLocked && !isStarted ? (
                   <Button
                     className={`w-full rounded-none h-16 text-lg font-medium ${isBoss 
@@ -666,6 +681,19 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
                     <Lock className="h-5 w-5" /> 
                     <span>Locked</span>
                   </div>
+                ) : !isCompleted && !dayUnlockStatus[currentDay] ? (
+                  <Button
+                    className="w-full rounded-none h-16 text-lg font-medium bg-gradient-to-r from-gray-700 to-gray-800 text-gray-300 hover:brightness-110"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleViewMission(mission);
+                    }}
+                  >
+                    <div className="flex items-center gap-2">
+                      <Info className="h-5 w-5" /> 
+                      <span>Preview Mission</span>
+                    </div>
+                  </Button>
                 ) : isCompleted && (
                   <div className={`w-full rounded-none h-16 flex items-center justify-center gap-2 text-lg font-medium ${isBoss 
                     ? 'bg-gradient-to-r from-amber-600 to-amber-700 text-gray-100' 
@@ -828,6 +856,7 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
                   `Complete all Day ${currentDay - 1} missions and wait until ${addDays(today, currentDay - 1).toLocaleDateString()}` : 
                   'This day is not yet available'}
               </p>
+              <p className="text-xs text-blue-400 mt-1">You can still preview missions in this day</p>
             </div>
           </div>
         )}
@@ -997,6 +1026,7 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
                 <Star className={`w-32 h-32 ${currentMission.difficulty === 'boss' ? 'text-amber-400' : `text-${currentMission.rank.toLowerCase()}-400`}`} />
               </div>
             )}
+            
             {currentMission && (
               <>
                 {/* Mission description with styled background */}
@@ -1053,32 +1083,15 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
                   </div>
                 )}
                 
-                {/* Mission instructions */}
-                <div className={`p-4 rounded-md text-sm border shadow-inner mt-2
-                  ${currentMission.difficulty === 'boss'
-                    ? 'bg-gradient-to-br from-amber-500/5 to-amber-800/5 border-amber-500/20'
-                    : `bg-gradient-to-br from-${currentMission.rank.toLowerCase()}-400/5 to-${currentMission.rank.toLowerCase()}-600/5 border-${currentMission.rank.toLowerCase()}-400/20`}
-                `}>
-                  <h4 className={`font-semibold mb-2 flex items-center gap-1
+                {/* EXP Reward Badge */}
+                <div className="flex justify-center mt-4">
+                  <div className={`rounded-full px-4 py-2 flex items-center gap-2 text-sm font-semibold shadow-md
                     ${currentMission.difficulty === 'boss'
-                      ? 'text-amber-400'
-                      : getRankColorClass(currentMission.rank).split(' ')[0]}
-                  `}>
-                    <Info className="h-4 w-4" /> Instructions:
-                  </h4>
-                  <p className={`text-muted-foreground ${currentMission.difficulty !== 'boss' ? getRankColorClass(currentMission.rank).split(' ')[0] : ''}`}>
-                    {currentMission.count && currentMission.count > 1 
-                      ? `Complete all ${currentMission.count} tasks to finish this mission and earn ${currentMission.expReward} EXP.` 
-                      : `Complete this mission to earn ${currentMission.expReward} EXP.`
-                    }
-                  </p>
-                  <div className={`mt-4 rounded p-2 flex items-center gap-2 text-xs font-semibold shadow-sm
-                    ${currentMission.difficulty === 'boss'
-                      ? 'bg-amber-500/10 border border-amber-500/30 text-amber-300/90'
-                      : `bg-${currentMission.rank.toLowerCase()}-500/10 border border-${currentMission.rank.toLowerCase()}-500/30 text-${currentMission.rank.toLowerCase()}-300/90`}
+                      ? 'bg-amber-500/20 border border-amber-500/40 text-amber-400'
+                      : `bg-${currentMission.rank.toLowerCase()}-500/20 border border-${currentMission.rank.toLowerCase()}-500/40 text-${currentMission.rank.toLowerCase()}-400`}
                   `}>
                     <Trophy className="h-4 w-4" />
-                    <span>Reward: <span className="font-bold">{currentMission.expReward} EXP</span></span>
+                    <span>Reward: {currentMission.expReward} EXP</span>
                   </div>
                 </div>
               </>
@@ -1103,6 +1116,127 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
             >
               <Play className="h-4 w-4" />
               Start Mission
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Locked Mission Preview Dialog - Read Only */}
+      <Dialog open={lockedPreviewDialogOpen} onOpenChange={setLockedPreviewDialogOpen}>
+        <DialogContent 
+          variant="compact"
+          className={
+            currentMission && currentMission.difficulty !== 'boss'
+              ? `${getRankColorClass(currentMission.rank)} bg-clip-padding backdrop-blur-xl bg-opacity-80 border border-white/10 shadow-xl !rounded-xl`
+              : '!bg-gradient-to-br from-amber-700/60 to-gray-900/80 bg-clip-padding backdrop-blur-xl bg-opacity-80 border border-white/10 shadow-xl !rounded-xl'
+          }
+        >
+          <DialogHeader>
+            <DialogTitle className={`text-xl font-extrabold tracking-tight flex items-center gap-2 justify-center drop-shadow-glow
+              ${currentMission?.difficulty === 'boss'
+                ? 'bg-gradient-to-r from-amber-400 to-amber-600 bg-clip-text text-transparent'
+                : currentMission ? getRankColorClass(currentMission.rank).split(' ')[0] : ''
+              }`}>
+              {currentMission?.difficulty === 'boss' && <Trophy className="h-6 w-6 text-amber-400 drop-shadow-glow animate-pulse" />}
+              {currentMission ? currentMission.title : 'Mission Details'}
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="py-4 space-y-6 relative">
+            {/* Decorative blurred background icon */}
+            {currentMission && (
+              <div className="absolute -top-8 -right-8 opacity-10 pointer-events-none select-none">
+                <Star className={`w-32 h-32 ${currentMission.difficulty === 'boss' ? 'text-amber-400' : `text-${currentMission.rank.toLowerCase()}-400`}`} />
+              </div>
+            )}
+            
+            {/* "Locked" banner */}
+            <div className="absolute -top-1 -right-1 z-20">
+              <div className="w-24 h-24 overflow-hidden">
+                <div className="absolute transform rotate-45 bg-gray-800/90 text-xs font-bold py-1 right-[-45px] top-[15px] w-[150px] text-center text-gray-300 shadow-md border-t border-gray-700">
+                  DAY LOCKED
+                </div>
+              </div>
+            </div>
+            
+            {currentMission && (
+              <>
+                {/* Mission description with styled background */}
+                <div className={`p-4 rounded-md border shadow-inner relative overflow-hidden
+                  ${currentMission.difficulty === 'boss'
+                    ? 'bg-gradient-to-br from-amber-500/10 to-amber-800/10 border-amber-500/40'
+                    : `bg-gradient-to-br from-${currentMission.rank.toLowerCase()}-400/10 to-${currentMission.rank.toLowerCase()}-600/10 border-${currentMission.rank.toLowerCase()}-400/40`}
+                `}>
+                  <div className="flex items-center gap-2 mb-2">
+                    <Star className={`h-5 w-5 ${currentMission.difficulty === 'boss' ? 'text-amber-400' : `text-${currentMission.rank.toLowerCase()}-400`}`} />
+                    <span className={`font-semibold text-base ${currentMission.difficulty === 'boss' ? 'text-foreground' : getRankColorClass(currentMission.rank).split(' ')[0]}`}>Description</span>
+                  </div>
+                  <p className={`text-sm leading-relaxed font-medium ${currentMission.difficulty === 'boss' ? 'text-foreground/90' : getRankColorClass(currentMission.rank).split(' ')[0]}`}> 
+                    {currentMission.description}
+                  </p>
+                </div>
+                
+                {/* Mission tasks preview */}
+                {currentMission.count && currentMission.count > 1 && (
+                  <div className="space-y-2">
+                    <h4 className={`font-semibold text-sm flex items-center gap-1 mb-1
+                      ${currentMission.difficulty === 'boss'
+                        ? 'text-amber-500'
+                        : `text-${currentMission.rank.toLowerCase()}-500`}
+                    `}>
+                      <Activity className="h-4 w-4" />
+                      This mission contains {currentMission.count} tasks:
+                    </h4>
+                    <div className={`max-h-48 overflow-y-auto border rounded-md p-3 space-y-2 bg-background/60 shadow-sm
+                      ${currentMission.difficulty === 'boss'
+                        ? 'border-amber-500/20 bg-amber-500/5'
+                        : `border-${currentMission.rank.toLowerCase()}-400/20 bg-${currentMission.rank.toLowerCase()}-500/5`}
+                    `}>
+                      {currentMission.taskNames && currentMission.taskNames.map((task, idx) => (
+                        <div 
+                          key={idx} 
+                          className={`flex items-center gap-2 p-2 text-sm border-b last:border-0 rounded transition-colors duration-200
+                            ${currentMission.difficulty === 'boss'
+                              ? 'border-amber-500/20 hover:bg-amber-500/10'
+                              : `border-${currentMission.rank.toLowerCase()}-400/20 hover:bg-${currentMission.rank.toLowerCase()}-500/10`}
+                          `}
+                        >
+                          <span className={`inline-flex items-center justify-center h-5 w-5 rounded-full text-xs font-bold
+                            ${currentMission.difficulty === 'boss'
+                              ? 'bg-amber-500/20 text-amber-500'
+                              : `bg-${currentMission.rank.toLowerCase()}-500/20 text-${currentMission.rank.toLowerCase()}-500`}
+                          `}>
+                            {idx + 1}
+                          </span>
+                          <span className="font-medium">{task}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                {/* EXP Reward Badge */}
+                <div className="flex justify-center mt-4">
+                  <div className={`rounded-full px-4 py-2 flex items-center gap-2 text-sm font-semibold shadow-md
+                    ${currentMission.difficulty === 'boss'
+                      ? 'bg-amber-500/20 border border-amber-500/40 text-amber-400'
+                      : `bg-${currentMission.rank.toLowerCase()}-500/20 border border-${currentMission.rank.toLowerCase()}-500/40 text-${currentMission.rank.toLowerCase()}-400`}
+                  `}>
+                    <Trophy className="h-4 w-4" />
+                    <span>Reward: {currentMission.expReward} EXP</span>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+          
+          <DialogFooter className="flex items-center justify-center pt-2">
+            <Button
+              variant="outline"
+              onClick={() => setLockedPreviewDialogOpen(false)}
+              className="w-full text-center"
+            >
+              Close
             </Button>
           </DialogFooter>
         </DialogContent>
