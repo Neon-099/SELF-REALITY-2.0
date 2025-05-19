@@ -34,7 +34,6 @@ interface RankLevel {
   isLocked: boolean;
   missions: PredefinedMission[];
 }
-
 // Define all rank levels with their UI properties
 const createRankLevels = (): RankLevel[] => [
   {
