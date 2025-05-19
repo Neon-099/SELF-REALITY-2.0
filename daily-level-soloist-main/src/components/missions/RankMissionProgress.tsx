@@ -371,7 +371,7 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
   const renderMissionCards = () => {
     if (isLoading) {
       return (
-        <div className="col-span-full flex justify-center py-12">
+        <div className="col-span-2 flex justify-center py-12">
           <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
         </div>
       );
@@ -379,7 +379,7 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
     
     if (!dayMissions || !Array.isArray(dayMissions) || dayMissions.length === 0) {
       return (
-        <div className="col-span-full text-center py-16 my-8 bg-muted/10 rounded-2xl border border-border flex flex-col items-center justify-center gap-4">
+        <div className="col-span-2 text-center py-16 my-8 bg-muted/10 rounded-2xl border border-border flex flex-col items-center justify-center gap-4">
           <div className="p-4 rounded-full bg-muted/20">
             <Calendar className="h-10 w-10 text-muted-foreground opacity-70" />
           </div>
@@ -563,7 +563,7 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
                 </div>
                 
                 {/* Mission title with rank gradient */}
-                <div className="flex items-center gap-2 mt-3 relative z-10">
+                <div className="flex items-center gap-2 mt-3 relative z-10 min-h-[2.5rem]">
                   <h3 
                     className={`font-extrabold text-2xl ${isBoss 
                       ? 'bg-gradient-to-r from-amber-400 to-amber-600 bg-clip-text text-transparent drop-shadow-glow animate-pulse-slow' 
@@ -576,14 +576,14 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
                   </h3>
                   {isCompleted && (
                     <div className="relative">
-                      {/* Remove CheckCircle icon */}
+                      {/* CheckCircle icon removed */}
                     </div>
                   )}
                 </div>
               </div>
               
               {/* Mission description */}
-              <div className={`p-5 relative ${rankBg} border-t border-white/10`}>
+              <div className={`p-5 relative ${rankBg} border-t border-white/10 min-h-[10rem] flex flex-col`}>
                 {/* Subtle background pattern for boss missions */}
                 {isBoss && (
                   <div className="absolute inset-0 opacity-5">
@@ -592,7 +592,7 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
                 )}
                 
                 {isCompleted ? (
-                  <p className={`${isBoss 
+                  <p className={`flex-grow ${isBoss 
                     ? 'text-amber-400/70' 
                     : `text-${mission.rank.toLowerCase()}-400/70`} relative z-10 leading-relaxed`}>
                     {mission.description}
@@ -600,56 +600,18 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
                 ) : (
                   <>
                     {!isStarted && (
-                      <p className={`${getRankTextStyle(mission.rank as Rank)} relative z-10 leading-relaxed`}>
+                      <p className={`flex-grow ${getRankTextStyle(mission.rank as Rank)} relative z-10 leading-relaxed`}>
                         {mission.description}
                       </p>
                     )}
 
-                    {/* Task Count */}
-                    {mission.count && mission.count > 1 && (
-                      <div className={`mt-4 flex items-center gap-2 ${isCompleted ? 'text-gray-400' : 'text-muted-foreground'}`}>
-                        <Badge variant="outline" className={`px-2 py-1 ${isCompleted ? 'opacity-60' : ''}`}>
-                          {mission.count} Tasks
-                        </Badge>
-                        <span className="text-xs">Complete all tasks to finish this mission</span>
-                      </div>
-                    )}
-
-                    {/* Task Progress for started missions */}
+                    {/* Task Progress for started missions - simplified to just show %, no task count */}
                     {isStarted && mission.count && mission.count > 1 && (
-                      <div className="mt-4 space-y-2">
-                        <div className="flex justify-between items-center text-xs">
-                          <span>Progress: {completedTaskCount}/{totalTaskCount} tasks</span>
-                          <span>{taskProgress}%</span>
+                      <div className="mt-auto pt-4 space-y-2">
+                        <div className="flex justify-center items-center text-xs">
+                          <span className="text-sm font-medium">Progress: {taskProgress}%</span>
                         </div>
                         <Progress value={taskProgress} className="h-2" />
-                      </div>
-                    )}
-
-                    {/* Task Names */}
-                    {mission.taskNames && mission.taskNames.length > 1 && (
-                      <div className={`mt-3 rounded-md border p-2 ${isCompleted ? 'opacity-60' : ''}`}>
-                        <div className="text-xs mb-1 font-medium">Task List:</div>
-                        <div className="space-y-1 max-h-24 overflow-y-auto">
-                          {mission.taskNames.map((task, idx) => (
-                            <div key={idx} className="flex items-start gap-1.5 text-sm">
-                              {isStarted && (
-                                <Checkbox 
-                                  checked={mission.completedTaskIndices?.includes(idx)} 
-                                  className="mt-0.5"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleTaskToggle(idx);
-                                  }}
-                                />
-                              )}
-                              <span className="text-xs mt-0.5">{!isStarted && `${idx + 1}.`}</span>
-                              <span className={`flex-1 ${isStarted && mission.completedTaskIndices?.includes(idx) ? 'line-through text-muted-foreground' : ''}`}>
-                                {task}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
                       </div>
                     )}
                   </>
@@ -657,7 +619,7 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
                 
                 {/* Completed mission experience earned */}
                 {isCompleted && (
-                  <div className="text-blue-500 text-sm font-semibold mt-4 flex items-center bg-blue-500/10 p-2 rounded-lg relative z-10">
+                  <div className="text-blue-500 text-sm font-semibold mt-auto pt-4 flex items-center bg-blue-500/10 p-2 rounded-lg relative z-10">
                     <Star className="h-4 w-4 mr-2 fill-blue-500" />
                     {completedMission ? (
                       <>+{completedMission.expEarned} EXP (earned)</>
@@ -669,56 +631,49 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
               </div>
               
               {/* Mission action button */}
-              {!isCompleted && !isLocked && !isStarted && (
-                <Button
-                  className={`w-full rounded-none h-16 text-lg font-medium ${isBoss 
-                    ? 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-gray-900' 
-                    : `${rankSolid} hover:brightness-110`}`}
-                  onClick={() => handleViewMission(mission)}
-                >
-                  {isBoss ? (
+              <div className="h-16">
+                {!isCompleted && !isLocked && !isStarted ? (
+                  <Button
+                    className={`w-full rounded-none h-16 text-lg font-medium ${isBoss 
+                      ? 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-gray-900' 
+                      : `${rankSolid} hover:brightness-110`}`}
+                    onClick={() => handleViewMission(mission)}
+                  >
+                    {isBoss ? (
+                      <div className="flex items-center gap-2">
+                        <div className="animate-bounce">⚔️</div> 
+                        <span>View Boss Battle</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <Play className="h-5 w-5" /> 
+                        <span>View Mission</span>
+                      </div>
+                    )}
+                  </Button>
+                ) : isStarted ? (
+                  <Button
+                    className={`w-full rounded-none h-16 text-lg font-medium bg-blue-600 hover:bg-blue-700 text-white`}
+                    onClick={() => handleViewMission(mission)}
+                  >
                     <div className="flex items-center gap-2">
-                      <div className="animate-bounce">⚔️</div> 
-                      <span>View Boss Battle</span>
+                      <Activity className="h-5 w-5" /> 
+                      <span>Continue Mission</span>
                     </div>
-                  ) : (
-                    <div className="flex items-center gap-2">
-                      <Play className="h-5 w-5" /> 
-                      <span>View Mission</span>
-                    </div>
-                  )}
-                </Button>
-              )}
-              
-              {/* Continue Mission button */}
-              {isStarted && (
-                <Button
-                  className={`w-full rounded-none h-16 text-lg font-medium bg-blue-600 hover:bg-blue-700 text-white`}
-                  onClick={() => handleViewMission(mission)}
-                >
-                  <div className="flex items-center gap-2">
-                    <Activity className="h-5 w-5" /> 
-                    <span>Continue Mission</span>
+                  </Button>
+                ) : !isCompleted && isLocked ? (
+                  <div className="w-full rounded-none h-16 flex items-center justify-center gap-2 text-lg font-medium bg-gradient-to-r from-gray-600 to-gray-700 text-gray-300">
+                    <Lock className="h-5 w-5" /> 
+                    <span>Locked</span>
                   </div>
-                </Button>
-              )}
-              
-              {/* Locked mission button */}
-              {!isCompleted && isLocked && (
-                <div className="w-full rounded-none h-16 flex items-center justify-center gap-2 text-lg font-medium bg-gradient-to-r from-gray-600 to-gray-700 text-gray-300">
-                  <Lock className="h-5 w-5" /> 
-                  <span>Locked</span>
-                </div>
-              )}
-              
-              {/* Completed mission indicator */}
-              {isCompleted && (
-                <div className={`w-full rounded-none h-16 flex items-center justify-center gap-2 text-lg font-medium ${isBoss 
-                  ? 'bg-gradient-to-r from-amber-600 to-amber-700 text-gray-100' 
-                  : `bg-gradient-to-r from-${mission.rank.toLowerCase()}-600 to-${mission.rank.toLowerCase()}-700 text-white`}`}>
-                  <span>Completed</span>
-                </div>
-              )}
+                ) : isCompleted && (
+                  <div className={`w-full rounded-none h-16 flex items-center justify-center gap-2 text-lg font-medium ${isBoss 
+                    ? 'bg-gradient-to-r from-amber-600 to-amber-700 text-gray-100' 
+                    : `bg-gradient-to-r from-${mission.rank.toLowerCase()}-600 to-${mission.rank.toLowerCase()}-700 text-white`}`}>
+                    <span>Completed</span>
+                  </div>
+                )}
+              </div>
             </CardContent>
           </Card>
         </motion.div>
@@ -859,13 +814,15 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
         )}
         
         {/* Always render mission cards but with locked overlay if needed */}
-        <div className={`relative ${!dayUnlockStatus[currentDay] ? "opacity-70" : ""}`}>
+        <div className={`relative col-span-full ${!dayUnlockStatus[currentDay] ? "opacity-70" : ""}`}>
           {!dayUnlockStatus[currentDay] && (
             <div className="absolute inset-0 z-30 bg-black/20 backdrop-blur-[1px] flex items-center justify-center pointer-events-none">
               {/* This empty div ensures the overlay works correctly */}
             </div>
           )}
-          {renderMissionCards()}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {renderMissionCards()}
+          </div>
         </div>
       </div>
 
@@ -924,15 +881,7 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
                   {currentMission.description}
                 </div>
                 
-                {/* Saving indicator */}
-                {isSaving && (
-                  <div className="flex items-center justify-center gap-2 text-sm text-blue-400 animate-pulse w-full">
-                    <div className="animate-spin h-4 w-4 border-2 border-blue-400 border-t-transparent rounded-full"></div>
-                    <span>Saving progress...</span>
-                  </div>
-                )}
-                
-                {/* Task list with checkboxes */}
+                {/* Task list with checkboxes - was mistakenly removed, should be added back */}
                 {currentMission.taskNames && currentMission.taskNames.length > 0 && (
                   <div className="space-y-2 mt-4 w-full">
                     <div className={`font-semibold text-sm ${currentMission.difficulty === 'boss' ? 'text-amber-400' : getRankColorClass(currentMission.rank).split(' ')[0]}`}>Check off completed tasks:</div>
