@@ -12,8 +12,17 @@ import SideQuestCard from '../components/SideQuestCard';
 import DailyQuestCard from '../components/DailyQuestCard';
 import MainQuestCard from '../components/MainQuestCard';
 import { CustomDialogContent } from '@/components/ui/custom-dialog';
-// Import quests from our database file
-import { mainQuests, sideQuests, allQuests } from '@/data/quests-database';
+// Import quests with error handling
+let mainQuests = [], sideQuests = [], allQuests = [];
+try {
+  const questsDb = require('@/data/quests-database');
+  mainQuests = questsDb.mainQuests || [];
+  sideQuests = questsDb.sideQuests || [];
+  allQuests = questsDb.allQuests || [];
+} catch (error) {
+  console.error("Failed to load quests database:", error);
+  // Keep the default empty arrays
+}
 
 // Define experience reward values by difficulty
 const expRewards: { [key in Difficulty]: number } = {
@@ -38,7 +47,7 @@ const AddQuestDialog = ({ onClose }: { onClose: () => void }) => {
   const [category, setCategory] = useState<DailyWinCategory | ''>('mental');
   const [taskCount, setTaskCount] = useState<number>(1);
   const [tasks, setTasks] = useState<Array<{title: string, completed: boolean}>>([]);
-
+  
   // Generate empty tasks when taskCount changes
   useEffect(() => {
     if (questType === 'main') {
@@ -59,13 +68,13 @@ const AddQuestDialog = ({ onClose }: { onClose: () => void }) => {
       });
       return;
     }
-
+    
     // Set quest type flags
     const isMainQuest = questType === 'main';
     const isDaily = questType === 'daily';
-
+    
     let deadlineDate: Date | undefined;
-
+    
     if (isDaily) {
       // For daily quests, set deadline to end of current day (11:59:59 PM)
       const today = new Date();
@@ -79,34 +88,34 @@ const AddQuestDialog = ({ onClose }: { onClose: () => void }) => {
       // Convert deadline string to Date object if provided for non-daily quests
       deadlineDate = deadline ? new Date(deadline) : undefined;
     }
-
+    
     // Use quest DailyWinCategory or default value based on quest type
     const questCategory = isDaily ? (category || 'mental') as DailyWinCategory : category as DailyWinCategory;
-
+    
     // Use a default difficulty since the API still requires it, but we're using custom EXP
     const defaultDifficulty: Difficulty = 'normal';
-
+    
     // Add the quest with proper isDaily flag
     addQuest(title, description, isMainQuest, expPoints, deadlineDate, defaultDifficulty, questCategory, isDaily);
-
+    
     // For daily quests, make sure the category is set
     if (isDaily) {
       setTimeout(() => {
         // Find the quest we just added by matching title, description and deadline
         const quests = useSoloLevelingStore.getState().quests;
-        const newQuest = quests.find(q =>
-          q.title === title &&
-          q.description === description &&
-          q.deadline?.getTime() === deadlineDate?.getTime() &&
+        const newQuest = quests.find(q => 
+          q.title === title && 
+          q.description === description && 
+          q.deadline?.getTime() === deadlineDate?.getTime() && 
           q.isDaily === true
         );
-
+        
         if (newQuest) {
           // Update with daily quest properties if category was provided
           if (category) {
             updateQuest(newQuest.id, { category: questCategory });
           }
-
+          
           toast({
             title: "Daily Quest Added",
             description: "Complete this quest by the end of today to avoid Shadow Penalty.",
@@ -118,26 +127,26 @@ const AddQuestDialog = ({ onClose }: { onClose: () => void }) => {
       // For main quests with tasks, find the newly added quest and add tasks
       setTimeout(() => {
         const quests = useSoloLevelingStore.getState().quests;
-        const newQuest = quests.find(q =>
-          q.title === title &&
-          q.description === description &&
+        const newQuest = quests.find(q => 
+          q.title === title && 
+          q.description === description && 
           q.isMainQuest === true
         );
-
+        
         if (newQuest) {
           // Add empty tasks for the main quest
           const addQuestTask = useSoloLevelingStore.getState().addQuestTask;
-
+          
           tasks.forEach((task, index) => {
             addQuestTask(
-              newQuest.id,
-              task.title,
+              newQuest.id, 
+              task.title, 
               '', // No description for pre-generated tasks
               'mental', // Default category
               'normal' // Default difficulty
             );
           });
-
+          
           toast({
             title: "Main Quest Added",
             description: `Your new main quest has been added with ${tasks.length} tasks!`,
@@ -150,7 +159,7 @@ const AddQuestDialog = ({ onClose }: { onClose: () => void }) => {
         description: `Your new ${questType} quest has been added!`,
       });
     }
-
+    
     // Reset form
     setTitle('');
     setDescription('');
@@ -189,7 +198,7 @@ const AddQuestDialog = ({ onClose }: { onClose: () => void }) => {
           placeholder="Quest title"
         />
       </div>
-
+      
       <div className="space-y-2">
         <label className="text-sm font-medium">Quest Type</label>
         <div className="grid grid-cols-3 gap-2">
@@ -225,7 +234,7 @@ const AddQuestDialog = ({ onClose }: { onClose: () => void }) => {
           </Button>
         </div>
       </div>
-
+      
       <div className="space-y-2">
         <label className="text-sm font-medium">Description</label>
         <textarea
@@ -235,7 +244,7 @@ const AddQuestDialog = ({ onClose }: { onClose: () => void }) => {
           placeholder="Quest description"
         />
       </div>
-
+      
       <div className="space-y-2">
         <label className="text-sm font-medium">Experience Points (XP)</label>
         <div className="flex items-center gap-2">
@@ -247,27 +256,27 @@ const AddQuestDialog = ({ onClose }: { onClose: () => void }) => {
             className="w-24 px-3 py-2 rounded-md border border-gray-800 bg-solo-dark"
           />
           <div className="flex gap-2">
-            <Button
-              type="button"
-              size="sm"
+            <Button 
+              type="button" 
+              size="sm" 
               variant="outline"
               onClick={() => setExpPoints(15)}
               className={expPoints === 15 ? "bg-blue-500/20" : ""}
             >
               15 XP
             </Button>
-            <Button
-              type="button"
-              size="sm"
+            <Button 
+              type="button" 
+              size="sm" 
               variant="outline"
               onClick={() => setExpPoints(30)}
               className={expPoints === 30 ? "bg-blue-500/20" : ""}
             >
               30 XP
             </Button>
-            <Button
-              type="button"
-              size="sm"
+            <Button 
+              type="button" 
+              size="sm" 
               variant="outline"
               onClick={() => setExpPoints(60)}
               className={expPoints === 60 ? "bg-blue-500/20" : ""}
@@ -278,7 +287,7 @@ const AddQuestDialog = ({ onClose }: { onClose: () => void }) => {
         </div>
         <p className="text-xs text-gray-400">Set the experience reward for completing this quest</p>
       </div>
-
+      
       {questType === 'main' && (
         <div className="space-y-4">
           <div className="space-y-2">
@@ -295,7 +304,7 @@ const AddQuestDialog = ({ onClose }: { onClose: () => void }) => {
               <span className="text-sm text-gray-400">Tasks to complete this quest</span>
             </div>
           </div>
-
+          
           <div className="space-y-2">
             <label className="text-sm font-medium">Task Names</label>
             <div className="space-y-2 max-h-[200px] overflow-y-auto pr-2">
@@ -314,7 +323,7 @@ const AddQuestDialog = ({ onClose }: { onClose: () => void }) => {
           </div>
         </div>
       )}
-
+      
       {questType === 'daily' && (
         <div className="space-y-2">
           <div className="flex justify-between items-center">
@@ -332,7 +341,7 @@ const AddQuestDialog = ({ onClose }: { onClose: () => void }) => {
             <option value="spiritual">Spiritual</option>
             <option value="intelligence">Intelligence</option>
           </select>
-
+          
           <div className="flex items-center justify-between mb-2 mt-3">
             <div className="text-xs text-amber-300 flex items-center">
               <Clock className="h-3 w-3 mr-1" /> Automated Deadline
@@ -349,7 +358,7 @@ const AddQuestDialog = ({ onClose }: { onClose: () => void }) => {
           </div>
         </div>
       )}
-
+      
       {questType !== 'daily' && (
         <div className="space-y-2">
           <label className="text-sm font-medium">Deadline (optional)</label>
@@ -361,7 +370,7 @@ const AddQuestDialog = ({ onClose }: { onClose: () => void }) => {
           />
         </div>
       )}
-
+      
       <Button onClick={handleAddQuest} className="w-full">
         Add Quest
       </Button>
@@ -391,7 +400,7 @@ const AddTaskDialog = ({ questId, onClose }: { questId: string; onClose: () => v
     setTaskTitle('');
     setTaskDescription('');
     onClose();
-
+    
     toast({
       title: "Task added",
       description: "Your new task has been added to the quest!",
@@ -452,8 +461,8 @@ const AddTaskDialog = ({ questId, onClose }: { questId: string; onClose: () => v
             <CalendarClock className="h-3 w-3 mr-1" /> Automatic deadline enforcement
           </div>
         </div>
-
-        <DateTimePicker
+        
+        <DateTimePicker 
           date={deadline}
           setDate={setDeadline}
           className="mt-2"
@@ -491,13 +500,13 @@ const QuestTasks = ({ quest }: { quest: Quest }) => {
           </DialogContent>
         </Dialog>
       </div>
-
+      
       {quest.tasks?.length === 0 ? (
         <p className="text-sm text-gray-500 italic">No tasks added yet. Break down your quest into smaller tasks.</p>
       ) : (
         <div className="space-y-2">
           {quest.tasks?.map((task: QuestTask) => (
-            <div
+            <div 
               key={task.id}
               className="flex items-center justify-between p-2 bg-gray-800/50 rounded-md"
             >
@@ -508,8 +517,8 @@ const QuestTasks = ({ quest }: { quest: Quest }) => {
                 </span>
               </div>
               {!task.completed && (
-                <Button
-                  variant="ghost"
+                <Button 
+                  variant="ghost" 
                   size="sm"
                   onClick={() => completeQuestTask(quest.id, task.id)}
                 >
@@ -527,9 +536,9 @@ const QuestTasks = ({ quest }: { quest: Quest }) => {
 const Quests = () => {
   const [quests, completeQuest, startQuest, canCompleteQuest, addGold, addExp] = useSoloLevelingStore(
     state => [
-      state.quests,
-      state.completeQuest,
-      state.startQuest,
+      state.quests, 
+      state.completeQuest, 
+      state.startQuest, 
       state.canCompleteQuest,
       state.addGold,
       state.addExp
@@ -567,7 +576,7 @@ const Quests = () => {
     // Combine user quests with database quests
     const combined = [...questsData, ...databaseQuests];
     // Remove duplicates based on title
-    const uniqueCombined = combined.filter((quest, index, self) =>
+    const uniqueCombined = combined.filter((quest, index, self) => 
       index === self.findIndex((q) => q.title === quest.title)
     );
     setCombinedQuests(uniqueCombined);
@@ -583,18 +592,18 @@ const Quests = () => {
     try {
       setIsLoadingDb(true);
       const db = await getDB();
-
+      
       const storeData = await db.get('store', 'soloist-store');
-
+      
       let fetchedQuestsFromDB: Quest[] = [];
       try {
         const questStore = db.transaction('quests').objectStore('quests');
-        const rawFetchedQuests = await questStore.getAll();
+        const rawFetchedQuests = await questStore.getAll(); 
         fetchedQuestsFromDB = rawFetchedQuests.map((q: any): Quest => ({
           id: q.id || String(Date.now() + Math.random()),
           title: q.title || 'Untitled Quest',
           description: q.description,
-          isMainQuest: q.isMainQuest !== undefined ? q.isMainQuest : false,
+          isMainQuest: q.isMainQuest !== undefined ? q.isMainQuest : false, 
           difficulty: q.difficulty !== undefined ? q.difficulty : 'easy',
           createdAt: q.createdAt ? new Date(q.createdAt) : new Date(),
           completed: q.completed !== undefined ? q.completed : false,
@@ -615,7 +624,7 @@ const Quests = () => {
           console.error('An unknown error occurred fetching quests directly from DB:', error);
         }
       }
-
+      
       let questsToSet: Quest[] = fetchedQuestsFromDB;
 
       if (storeData && storeData.state && Array.isArray(storeData.state.quests)) {
@@ -643,9 +652,9 @@ const Quests = () => {
 
       setDbContents({
         zustandStore: storeData ? JSON.parse(storeData) : null,
-        directQuests: fetchedQuestsFromDB
+        directQuests: fetchedQuestsFromDB 
       });
-
+      
       toast({
         title: "Database Loaded",
         description: "IndexedDB data has been retrieved successfully.",
@@ -683,10 +692,10 @@ const Quests = () => {
   const activeQuests = combinedQuests.filter(quest => {
     // Skip completed quests
     if (quest.completed) return false;
-
+    
     // Skip daily quests (they're handled separately)
     if (quest.isDaily === true) return false;
-
+    
     // For side quests, only show if they're scheduled for today or have no deadline
     if (!quest.isMainQuest) {
       if (quest.deadline) {
@@ -695,22 +704,22 @@ const Quests = () => {
       // Show quests with no deadline (backward compatibility)
       return true;
     }
-
+    
     // Show all active main quests
     return true;
   });
 
   // Get daily quests - use combinedQuests instead of questsData
-  const dailyQuests = combinedQuests.filter(quest =>
-    quest.isDaily === true &&
-    !quest.completed && // Skip completed daily quests
+  const dailyQuests = combinedQuests.filter(quest => 
+    quest.isDaily === true && 
+    !quest.completed && // Skip completed daily quests 
     (!quest.completedAt || isSameDay(new Date(quest.completedAt), new Date()))
   );
 
   // Filter completed quests - use combinedQuests instead of questsData
-  const completedQuests = combinedQuests.filter(quest =>
-    quest.completed &&
-    quest.completedAt &&
+  const completedQuests = combinedQuests.filter(quest => 
+    quest.completed && 
+    quest.completedAt && 
     isSameDay(new Date(quest.completedAt), new Date())
   );
 
@@ -731,7 +740,7 @@ const Quests = () => {
   // Main Quests Dialog Component
   const MainQuestsDialog = () => {
     const mainQuestsList = activeQuests.filter(quest => quest.isMainQuest);
-
+    
     return (
       <Dialog open={isMainQuestsDialogOpen} onOpenChange={setIsMainQuestsDialogOpen}>
         <DialogTrigger asChild>
@@ -746,7 +755,7 @@ const Quests = () => {
               <Swords className="h-5 w-5 mr-2 text-yellow-500" />
               All Main Quests
             </DialogTitle>
-            <button
+            <button 
               type="button"
               className="absolute right-0 top-0 h-5 w-5 rounded-full bg-gradient-to-r from-amber-600/30 to-yellow-700/30 hover:from-amber-600/50 hover:to-yellow-700/50 transition-all p-0.5 border border-yellow-500/20 flex items-center justify-center cursor-pointer z-10"
               onClick={() => setIsMainQuestsDialogOpen(false)}
@@ -758,10 +767,10 @@ const Quests = () => {
           <div className="py-2 flex-1 overflow-y-auto pr-2 custom-scrollbar">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {mainQuestsList.map((quest) => (
-                <MainQuestCard
-                  key={quest.id}
-                  quest={quest}
-                  onComplete={handleCompleteQuest}
+                <MainQuestCard 
+                  key={quest.id} 
+                  quest={quest} 
+                  onComplete={handleCompleteQuest} 
                   onStart={startQuest}
                   canComplete={canCompleteQuest}
                 />
@@ -782,7 +791,7 @@ const Quests = () => {
   // Side Quests Dialog Component
   const SideQuestsDialog = () => {
     const sideQuestsList = activeQuests.filter(quest => !quest.isMainQuest && !quest.isDaily);
-
+    
     return (
       <Dialog open={isSideQuestsDialogOpen} onOpenChange={setIsSideQuestsDialogOpen}>
         <DialogTrigger asChild>
@@ -797,7 +806,7 @@ const Quests = () => {
               <Sword className="h-5 w-5 mr-2 text-solo-primary" />
               All Side Quests
             </DialogTitle>
-            <button
+            <button 
               type="button"
               className="absolute right-0 top-0 h-5 w-5 rounded-full bg-gradient-to-r from-indigo-600/30 to-purple-700/30 hover:from-indigo-600/50 hover:to-purple-700/50 transition-all p-0.5 border border-indigo-500/20 flex items-center justify-center cursor-pointer z-10"
               onClick={() => setIsSideQuestsDialogOpen(false)}
@@ -810,8 +819,8 @@ const Quests = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {sideQuestsList.map((quest) => (
                 quest.isRecoveryQuest ? (
-                  <div
-                    key={quest.id}
+                  <div 
+                    key={quest.id} 
                     className="bg-slate-900 border-2 border-amber-600/80 rounded-lg overflow-hidden transition-all"
                   >
                     <div className="p-4">
@@ -828,13 +837,13 @@ const Quests = () => {
                           <div className="bg-amber-950/50 text-xs text-amber-500 ml-1 px-1.5 py-0.5 rounded-sm">Recovery Quest</div>
                         </div>
                       </div>
-
+                      
                       {quest.description && (
                         <p className="text-gray-300/90 mb-3 text-sm">
                           {quest.description}
                         </p>
                       )}
-
+                      
                       {quest.deadline && (
                         <div className="flex items-center gap-2 my-3 p-2 bg-amber-950/30 rounded-md border border-amber-800/30">
                           <Clock size={16} className="text-amber-500" />
@@ -847,8 +856,8 @@ const Quests = () => {
                         </div>
                       )}
                     </div>
-
-                    <button
+                    
+                    <button 
                       onClick={() => handleCompleteSideQuest(quest.id)}
                       className="w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 py-3 text-center text-white flex items-center justify-center gap-2 transition-colors"
                     >
@@ -889,7 +898,7 @@ const Quests = () => {
               <ListTodo className="h-5 w-5 mr-2 text-green-500" />
               All Daily Quests
             </DialogTitle>
-            <button
+            <button 
               type="button"
               className="absolute right-0 top-0 h-5 w-5 rounded-full bg-gradient-to-r from-green-600/30 to-emerald-700/30 hover:from-green-600/50 hover:to-emerald-700/50 transition-all p-0.5 border border-green-500/20 flex items-center justify-center cursor-pointer z-10"
               onClick={() => setIsDailyQuestsDialogOpen(false)}
@@ -931,10 +940,10 @@ const Quests = () => {
                 .filter(quest => quest.isMainQuest)
                 .slice(0, 3) // Show only 3 quests
                 .map((quest) => (
-                  <MainQuestCard
-                    key={quest.id}
-                    quest={quest}
-                    onComplete={handleCompleteQuest}
+                  <MainQuestCard 
+                    key={quest.id} 
+                    quest={quest} 
+                    onComplete={handleCompleteQuest} 
                     onStart={startQuest}
                     canComplete={canCompleteQuest}
                   />
@@ -963,8 +972,8 @@ const Quests = () => {
                 .slice(0, 3) // Show only 3 quests
                 .map((quest) => (
                   quest.isRecoveryQuest ? (
-                    <div
-                      key={quest.id}
+                    <div 
+                      key={quest.id} 
                       className="bg-slate-900 border-2 border-amber-600/80 rounded-lg overflow-hidden transition-all"
                     >
                       <div className="p-4">
@@ -981,13 +990,13 @@ const Quests = () => {
                             <div className="bg-amber-950/50 text-xs text-amber-500 ml-1 px-1.5 py-0.5 rounded-sm">Recovery Quest</div>
                           </div>
                         </div>
-
+                        
                         {quest.description && (
                           <p className="text-gray-300/90 mb-3 text-sm">
                             {quest.description}
                           </p>
                         )}
-
+                        
                         {quest.deadline && (
                           <div className="flex items-center gap-2 my-3 p-2 bg-amber-950/30 rounded-md border border-amber-800/30">
                             <Clock size={16} className="text-amber-500" />
@@ -1000,8 +1009,8 @@ const Quests = () => {
                           </div>
                         )}
                       </div>
-
-                      <button
+                      
+                      <button 
                         onClick={() => handleCompleteSideQuest(quest.id)}
                         className="w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 py-3 text-center text-white flex items-center justify-center gap-2 transition-colors"
                       >
@@ -1069,10 +1078,10 @@ const Quests = () => {
                   .filter(quest => quest.isMainQuest)
                   .slice(0, 3) // Show only 3 quests
                   .map((quest) => (
-                    <MainQuestCard
-                      key={quest.id}
-                      quest={quest}
-                      onComplete={handleCompleteQuest}
+                    <MainQuestCard 
+                      key={quest.id} 
+                      quest={quest} 
+                      onComplete={handleCompleteQuest} 
                       onStart={startQuest}
                       canComplete={canCompleteQuest}
                     />
@@ -1100,8 +1109,8 @@ const Quests = () => {
                   .slice(0, 3) // Show only 3 quests
                   .map((quest) => (
                     quest.isRecoveryQuest ? (
-                      <div
-                        key={quest.id}
+                      <div 
+                        key={quest.id} 
                         className="bg-slate-900 border-2 border-amber-600/80 rounded-lg overflow-hidden transition-all"
                       >
                         <div className="p-4">
@@ -1118,13 +1127,13 @@ const Quests = () => {
                               <div className="bg-amber-950/50 text-xs text-amber-500 ml-1 px-1.5 py-0.5 rounded-sm">Recovery Quest</div>
                             </div>
                           </div>
-
+                          
                           {quest.description && (
                             <p className="text-gray-300/90 mb-3 text-sm">
                               {quest.description}
                             </p>
                           )}
-
+                          
                           {quest.deadline && (
                             <div className="flex items-center gap-2 my-3 p-2 bg-amber-950/30 rounded-md border border-amber-800/30">
                               <Clock size={16} className="text-amber-500" />
@@ -1137,8 +1146,8 @@ const Quests = () => {
                             </div>
                           )}
                         </div>
-
-                        <button
+                        
+                        <button 
                           onClick={() => handleCompleteSideQuest(quest.id)}
                           className="w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 py-3 text-center text-white flex items-center justify-center gap-2 transition-colors"
                         >
@@ -1160,14 +1169,14 @@ const Quests = () => {
                 </div>
               )}
             </div>
-
+            
             {/* Daily Quests Section */}
             <div className="space-y-4">
               <h2 className="text-xl font-bold text-solo-text mb-4 flex items-center gap-2">
                 <ListTodo className="text-green-500" size={20} />
                 Daily Quests
               </h2>
-
+                
               {dailyQuests.length > 0 ? (
                 <div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1209,14 +1218,14 @@ const Quests = () => {
                 Add Quest
               </Button>
             </DialogTrigger>
-            <CustomDialogContent
+            <CustomDialogContent 
               className="w-[85vw] max-w-[380px] p-3 sm:p-4 max-h-[85vh] overflow-hidden flex flex-col"
             >
               <DialogHeader className="border-b border-indigo-500/20 pb-2 mb-2 relative">
                 <DialogTitle className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 to-violet-400 drop-shadow-sm text-base">
                   Add New Quest
                 </DialogTitle>
-                <button
+                <button 
                   type="button"
                   className="absolute right-0 top-0 h-5 w-5 rounded-full bg-gradient-to-r from-indigo-600/30 to-violet-700/30 hover:from-indigo-600/50 hover:to-violet-700/50 transition-all p-0.5 border border-indigo-500/20 flex items-center justify-center cursor-pointer z-10"
                   onClick={(e) => {
@@ -1239,36 +1248,36 @@ const Quests = () => {
 
       {/* Quest type filter buttons */}
       <div className="flex flex-wrap gap-2 mt-2">
-        <Button
-          variant={activeFilter === 'all' ? 'default' : 'outline'}
-          size="sm"
+        <Button 
+          variant={activeFilter === 'all' ? 'default' : 'outline'} 
+          size="sm" 
           onClick={() => setActiveFilter('all')}
           className={`flex items-center gap-1 font-bold ${activeFilter === 'all' ? 'bg-gradient-to-r from-solo-primary to-solo-secondary text-white drop-shadow-glow' : ''}`}
         >
           <Filter className="h-4 w-4" />
           All Quests
         </Button>
-        <Button
-          variant={activeFilter === 'main' ? 'default' : 'outline'}
-          size="sm"
+        <Button 
+          variant={activeFilter === 'main' ? 'default' : 'outline'} 
+          size="sm" 
           onClick={() => setActiveFilter('main')}
           className={`flex items-center gap-1 font-bold ${activeFilter === 'main' ? 'bg-gradient-to-r from-yellow-400 to-amber-500 text-white drop-shadow-glow' : ''}`}
         >
           <Swords className="h-4 w-4 text-yellow-500" />
           Main Quests
         </Button>
-        <Button
-          variant={activeFilter === 'side' ? 'default' : 'outline'}
-          size="sm"
+        <Button 
+          variant={activeFilter === 'side' ? 'default' : 'outline'} 
+          size="sm" 
           onClick={() => setActiveFilter('side')}
           className={`flex items-center gap-1 font-bold ${activeFilter === 'side' ? 'bg-gradient-to-r from-solo-primary to-solo-secondary text-white drop-shadow-glow' : ''}`}
         >
           <Sword className="h-4 w-4 text-solo-primary" />
           Side Quests
         </Button>
-        <Button
-          variant={activeFilter === 'daily' ? 'default' : 'outline'}
-          size="sm"
+        <Button 
+          variant={activeFilter === 'daily' ? 'default' : 'outline'} 
+          size="sm" 
           onClick={() => setActiveFilter('daily')}
           className={`flex items-center gap-1 font-bold ${activeFilter === 'daily' ? 'bg-gradient-to-r from-green-400 to-emerald-400 text-white drop-shadow-glow' : ''}`}
         >
@@ -1314,8 +1323,8 @@ const Quests = () => {
                     {completedQuests
                       .filter(quest => quest.isMainQuest)
                       .map((quest) => (
-                        <div
-                          key={quest.id}
+                        <div 
+                          key={quest.id} 
                           className="bg-solo-dark border-2 border-yellow-500/30 rounded-lg p-4 opacity-70"
                         >
                           <div className="flex justify-between items-start mb-2">
@@ -1327,11 +1336,11 @@ const Quests = () => {
                             </div>
                             <span className="text-yellow-500/70 font-bold">+{quest.expReward} EXP</span>
                           </div>
-
+                          
                           {quest.description && (
                             <p className="text-gray-400/70 mb-2">{quest.description}</p>
                           )}
-
+                          
                           <div className="text-green-500/70 text-sm flex items-center">
                             <CheckCircle size={14} className="mr-1" />
                             Completed {quest.completedAt && format(new Date(quest.completedAt), 'h:mm a')}
@@ -1353,8 +1362,8 @@ const Quests = () => {
                     {completedQuests
                       .filter(quest => !quest.isMainQuest && !quest.isDaily)
                       .map((quest) => (
-                        <div
-                          key={quest.id}
+                        <div 
+                          key={quest.id} 
                           className="bg-solo-dark border border-gray-800 rounded-lg p-4 opacity-70"
                         >
                           <div className="flex justify-between items-start mb-2">
@@ -1366,11 +1375,11 @@ const Quests = () => {
                             </div>
                             <span className="text-solo-primary/70 font-bold">+{quest.expReward} EXP</span>
                           </div>
-
+                          
                           {quest.description && (
                             <p className="text-gray-400/70 mb-2">{quest.description}</p>
                           )}
-
+                          
                           <div className="text-green-500/70 text-sm flex items-center">
                             <CheckCircle size={14} className="mr-1" />
                             Completed {quest.completedAt && format(new Date(quest.completedAt), 'h:mm a')}
@@ -1392,8 +1401,8 @@ const Quests = () => {
                     {completedQuests
                       .filter(quest => quest.isDaily)
                       .map((quest) => (
-                        <div
-                          key={quest.id}
+                        <div 
+                          key={quest.id} 
                           className="bg-solo-dark border border-green-500/30 rounded-lg p-4 opacity-70"
                         >
                           <div className="flex justify-between items-start mb-2">
@@ -1405,26 +1414,26 @@ const Quests = () => {
                                 <h3 className="font-medium text-lg line-through">{quest.title}</h3>
                                 {quest.category && (
                                   <span className={`text-xs px-2 py-0.5 rounded-full opacity-70 ${
-                                    quest.category === 'mental'
-                                      ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
+                                    quest.category === 'mental' 
+                                      ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' 
                                       : quest.category === 'physical'
                                       ? 'bg-red-500/10 text-red-400 border border-red-500/20'
                                       : quest.category === 'spiritual'
                                       ? 'bg-purple-500/10 text-purple-400 border border-purple-500/20'
                                       : 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20'
                                   }`}>
-                                    {quest.category}
+                                    {quest.category.charAt(0).toUpperCase() + quest.category.slice(1)}
                                   </span>
                                 )}
                               </div>
                             </div>
                             <span className="text-green-500/70 font-bold">+{quest.expReward} EXP</span>
                           </div>
-
+                          
                           {quest.description && (
                             <p className="text-gray-400/70 mb-2">{quest.description}</p>
                           )}
-
+                          
                           <div className="text-green-500/70 text-sm flex items-center">
                             <CheckCircle size={14} className="mr-1" />
                             Completed {quest.completedAt && format(new Date(quest.completedAt), 'h:mm a')}
@@ -1435,8 +1444,8 @@ const Quests = () => {
                 </div>
               )}
             </div>
-          )
-        )}
+          )}
+        </div>
       </div>
     </div>
   );
