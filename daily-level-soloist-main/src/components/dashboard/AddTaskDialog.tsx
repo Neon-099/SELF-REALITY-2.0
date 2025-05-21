@@ -179,7 +179,7 @@ export const AddTaskDialog = ({ children }: AddTaskDialogProps) => {
       <DialogContent
         className="
           glassmorphism
-          text-solo-text sm:max-w-[380px] w-[90%] p-3 sm:p-4 max-h-[80vh] overflow-y-auto rounded-xl
+          text-solo-text sm:max-w-[320px] w-[85vw] p-2.5 sm:p-3 max-h-[80vh] overflow-y-auto rounded-xl
           before:!absolute before:!inset-0 before:!rounded-xl
           before:!bg-gradient-to-br before:!from-indigo-500/10 before:!to-purple-500/5
           before:!backdrop-blur-xl before:!-z-10
@@ -189,37 +189,37 @@ export const AddTaskDialog = ({ children }: AddTaskDialogProps) => {
           <DialogTitle className="font-semibold text-white/90 tracking-wide text-base">Add New Task</DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-2.5 sm:space-y-3 pt-2 sm:pt-3 relative z-10">
-          <div className="space-y-1 sm:space-y-1.5">
+        <form onSubmit={handleSubmit} className="space-y-1.5 sm:space-y-2 pt-1 sm:pt-1.5 relative z-10">
+          <div className="space-y-0.5 sm:space-y-1">
             <Label htmlFor="title" className="text-white/80 font-medium text-sm">Title</Label>
             <Input
               id="title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Enter task title"
-              className="border-indigo-500/20 bg-gray-800/90 h-8 sm:h-9 focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all"
+              className="border-indigo-500/20 bg-gray-800/90 h-7 sm:h-8 focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all text-sm"
             />
           </div>
 
-          <div className="space-y-1 sm:space-y-1.5">
+          <div className="space-y-0.5 sm:space-y-1">
             <Label htmlFor="description" className="text-white/80 font-medium text-sm">Description (optional)</Label>
             <Textarea
               id="description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Enter task description"
-              className="border-indigo-500/20 bg-gray-800/90 min-h-[60px] focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all"
+              className="border-indigo-500/20 bg-gray-800/90 min-h-[50px] focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all text-sm"
             />
           </div>
 
-          <div className="space-y-1 sm:space-y-1.5">
+          <div className="space-y-0.5 sm:space-y-1">
             <Label className="text-white/80 font-medium text-sm">Category</Label>
             <div className="grid grid-cols-2 gap-0 rounded-md overflow-hidden border border-indigo-500/20 bg-gray-800/80">
               <button
                 type="button"
                 onClick={() => setCategoryType('attribute')}
                 className={cn(
-                  "py-1.5 px-3 text-center transition-all duration-200 text-sm",
+                  "py-1 px-2 text-center transition-all duration-200 text-xs",
                   categoryType === 'attribute'
                     ? "bg-indigo-500/10 border-b-2 border-indigo-500 font-medium text-indigo-300"
                     : "text-gray-400 hover:bg-gray-800/50 border-b-2 border-transparent"
@@ -232,7 +232,7 @@ export const AddTaskDialog = ({ children }: AddTaskDialogProps) => {
                 onClick={() => !allDailyWinsCompleted && setCategoryType('dailyWin')}
                 disabled={allDailyWinsCompleted && categoryType !== 'dailyWin'}
                 className={cn(
-                  "py-1.5 px-3 text-center transition-all duration-200 text-sm",
+                  "py-1 px-2 text-center transition-all duration-200 text-xs",
                   categoryType === 'dailyWin'
                     ? "bg-indigo-500/10 border-b-2 border-indigo-500 font-medium text-indigo-300"
                     : "text-gray-400 hover:bg-gray-800/50 border-b-2 border-transparent",
@@ -244,24 +244,22 @@ export const AddTaskDialog = ({ children }: AddTaskDialogProps) => {
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1 sm:space-y-1.5">
+            <div className="space-y-0.5 sm:space-y-1">
               <Label htmlFor="difficulty" className="text-white/80 font-medium text-sm">Difficulty</Label>
               <Select
                 value={difficulty}
                 onValueChange={(value: Difficulty) => setDifficulty(value)}
               >
-                <SelectTrigger id="difficulty" className="border-indigo-500/20 bg-gray-800/90 h-8 focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all">
+                <SelectTrigger id="difficulty" className="border-indigo-500/20 bg-gray-800/90 h-7 text-xs focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all">
                   <SelectValue placeholder="Select difficulty" />
                 </SelectTrigger>
                 <SelectContent className="border-indigo-500/20 bg-gray-800/90">
                   <SelectItem value="easy">Easy</SelectItem>
                   <SelectItem value="medium">Medium</SelectItem>
-                  <SelectItem value="hard">Hard</SelectItem>
-                  <SelectItem value="boss">Boss</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-1 sm:space-y-1.5">
+            <div className="space-y-0.5 sm:space-y-1">
               <Label htmlFor="category" className="text-white/80 font-medium text-sm">Type</Label>
               <Select
                 value={category}
@@ -270,7 +268,7 @@ export const AddTaskDialog = ({ children }: AddTaskDialogProps) => {
                 <SelectTrigger
                   id="category"
                   className={cn(
-                    "border-indigo-500/20 bg-gray-800/90 h-8 focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all",
+                    "border-indigo-500/20 bg-gray-800/90 h-7 text-xs focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all",
                     isSelectedCategoryCompleted && "border-orange-500/30 text-orange-400"
                   )}
                 >
@@ -313,7 +311,7 @@ export const AddTaskDialog = ({ children }: AddTaskDialogProps) => {
               </Select>
             </div>
           </div>
-          <div className="space-y-1 sm:space-y-1.5">
+          <div className="space-y-0.5 sm:space-y-1">
             <Label className="text-white/80 font-medium text-sm">Deadline</Label>
             <div className="flex items-center justify-between mb-1">
               <div className="text-xs text-indigo-300 flex items-center">
@@ -331,7 +329,7 @@ export const AddTaskDialog = ({ children }: AddTaskDialogProps) => {
           </div>
 
           <div className="pt-1.5">
-            <Button type="submit" className="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-medium h-8 text-sm">
+            <Button type="submit" className="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-medium h-7 text-xs">
               Create Task
             </Button>
           </div>

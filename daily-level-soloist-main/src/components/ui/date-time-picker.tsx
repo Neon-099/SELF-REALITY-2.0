@@ -40,7 +40,7 @@ export function DateTimePicker({
   // Handle time selection
   const handleTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setTime(e.target.value);
-    
+
     if (date) {
       const [hours, minutes] = e.target.value.split(':').map(Number);
       const newDate = new Date(date);
@@ -56,7 +56,7 @@ export function DateTimePicker({
       setDate(undefined);
       return;
     }
-    
+
     // Keep the time from the existing date if there is one, or use the current time
     if (date) {
       newDate.setHours(date.getHours());
@@ -66,7 +66,7 @@ export function DateTimePicker({
       newDate.setHours(hours);
       newDate.setMinutes(minutes);
     }
-    
+
     setDate(newDate);
   };
 
@@ -77,7 +77,7 @@ export function DateTimePicker({
           <Button
             variant="outline"
             className={cn(
-              "justify-start text-left font-normal w-full",
+              "justify-start text-left font-normal w-full bg-gray-900 border-gray-700",
               !date && "text-muted-foreground",
               disabled && "opacity-50 cursor-not-allowed"
             )}
@@ -87,27 +87,27 @@ export function DateTimePicker({
             {date ? format(date, "PPP") : <span>Pick a date</span>}
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-auto p-0 bg-solo-dark border-gray-800" align="start">
+        <PopoverContent className="w-auto p-0 bg-gray-900 border-gray-700" align="start">
           <Calendar
             mode="single"
             selected={date}
             onSelect={handleDateSelect}
             initialFocus
-            className="border-gray-800"
+            className="border-gray-700"
           />
         </PopoverContent>
       </Popover>
-      
+
       <div className="relative">
         <Clock className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
         <Input
           type="time"
           value={time}
           onChange={handleTimeChange}
-          className="pl-9 w-[130px] bg-solo-dark border-gray-800 focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all"
+          className="pl-9 w-[130px] bg-gray-900 border-gray-700 focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all"
           disabled={disabled || !date}
         />
       </div>
     </div>
   );
-} 
+}

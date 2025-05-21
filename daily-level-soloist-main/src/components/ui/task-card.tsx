@@ -342,8 +342,6 @@ export function TaskCard({ task }: TaskCardProps) {
                   <SelectContent className="border-indigo-500/20 bg-gray-800/90">
                     <SelectItem value="easy">Easy</SelectItem>
                     <SelectItem value="medium">Medium</SelectItem>
-                    <SelectItem value="hard">Hard</SelectItem>
-                    <SelectItem value="boss">Boss</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
