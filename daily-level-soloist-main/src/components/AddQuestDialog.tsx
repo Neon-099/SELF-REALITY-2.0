@@ -25,7 +25,7 @@ const AddQuestDialog: React.FC<AddQuestDialogProps> = ({ onClose }) => {
   
   // Generate empty tasks when taskCount changes
   useEffect(() => {
-    if (questType === 'main') {
+    if (questType === 'main' || questType === 'side') {
       const newTasks = Array(taskCount).fill(null).map((_, index) => ({
         title: `Task ${index + 1}`,
         completed: false
@@ -98,18 +98,18 @@ const AddQuestDialog: React.FC<AddQuestDialogProps> = ({ onClose }) => {
           });
         }
       }, 100);
-    } else if (questType === 'main' && tasks.length > 0) {
-      // For main quests with tasks, find the newly added quest and add tasks
+    } else if ((questType === 'main' || questType === 'side') && tasks.length > 0) {
+      // For main or side quests with tasks, find the newly added quest and add tasks
       setTimeout(() => {
         const quests = useSoloLevelingStore.getState().quests;
         const newQuest = quests.find(q => 
           q.title === title && 
           q.description === description && 
-          q.isMainQuest === true
+          (questType === 'main' ? q.isMainQuest === true : q.isMainQuest === false)
         );
         
         if (newQuest) {
-          // Add empty tasks for the main quest
+          // Add empty tasks for the quest
           const addQuestTask = useSoloLevelingStore.getState().addQuestTask;
           
           tasks.forEach((task, index) => {
@@ -123,8 +123,8 @@ const AddQuestDialog: React.FC<AddQuestDialogProps> = ({ onClose }) => {
           });
           
           toast({
-            title: "Main Quest Added",
-            description: `Your new main quest has been added with ${tasks.length} tasks!`,
+            title: `${questType.charAt(0).toUpperCase() + questType.slice(1)} Quest Added`,
+            description: `Your new ${questType} quest has been added with ${tasks.length} tasks!`,
           });
         }
       }, 100);
@@ -299,8 +299,8 @@ const AddQuestDialog: React.FC<AddQuestDialogProps> = ({ onClose }) => {
         </div>
       )}
       
-      {/* Task count for main quests */}
-      {questType === 'main' && (
+      {/* Task count for main and side quests */}
+      {(questType === 'main' || questType === 'side') && (
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Number of Tasks</label>
           <input
