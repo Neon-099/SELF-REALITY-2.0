@@ -402,7 +402,26 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
       );
     }
 
-    return dayMissions.map((mission, index) => {
+    // Sort missions so that in-progress missions appear at the top,
+    // followed by not-started missions, and completed missions at the bottom
+    const sortedMissions = [...dayMissions].sort((a, b) => {
+      const aCompleted = a.completed || completedMissionHistory.some(cm => cm.id === a.id);
+      const bCompleted = b.completed || completedMissionHistory.some(cm => cm.id === b.id);
+      const aStarted = a.started && !aCompleted;
+      const bStarted = b.started && !bCompleted;
+
+      // First priority: completed missions go to the bottom
+      if (aCompleted && !bCompleted) return 1; // a is completed, b is not, so a goes after b
+      if (!aCompleted && bCompleted) return -1; // a is not completed, b is, so a goes before b
+
+      // Second priority: started (in-progress) missions go to the top
+      if (aStarted && !bStarted) return -1; // a is started, b is not, so a goes before b
+      if (!aStarted && bStarted) return 1; // a is not started, b is, so a goes after b
+
+      return 0; // both have the same status, maintain original order
+    });
+
+    return sortedMissions.map((mission, index) => {
       const isCompleted = mission.completed || completedMissionHistory.some(cm => cm.id === mission.id);
       const isStarted = mission.started && !isCompleted;
       // Try to find the completed mission in history to get actual EXP earned
@@ -1051,7 +1070,7 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
                 </div>
 
                 {/* Mission tasks preview */}
-                {currentMission.count && currentMission.count > 1 && (
+                {currentMission.count && currentMission.count > 0 && (
                   <div className="space-y-2">
                     <h4 className={`font-semibold text-sm flex items-center gap-1 mb-1
                       ${currentMission.difficulty === 'boss'
@@ -1059,7 +1078,7 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
                         : `text-${currentMission.rank.toLowerCase()}-500`}
                     `}>
                       <Activity className="h-4 w-4" />
-                      This mission contains {currentMission.count} tasks:
+                      This mission contains {currentMission.count} {currentMission.count === 1 ? 'task' : 'tasks'}:
                     </h4>
                     <div className={`max-h-48 overflow-y-auto border rounded-md p-3 space-y-2 bg-background/60 shadow-sm
                       ${currentMission.difficulty === 'boss'
@@ -1069,13 +1088,13 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
                       {currentMission.taskNames && currentMission.taskNames.map((task, idx) => (
                         <div
                           key={idx}
-                          className={`flex items-center gap-2 p-2 text-sm border-b last:border-0 rounded transition-colors duration-200
+                          className={`flex items-start gap-3 p-3 text-sm border-b last:border-0 rounded transition-colors duration-200
                             ${currentMission.difficulty === 'boss'
                               ? 'border-amber-500/20 hover:bg-amber-500/10'
                               : `border-${currentMission.rank.toLowerCase()}-400/20 hover:bg-${currentMission.rank.toLowerCase()}-500/10`}
                           `}
                         >
-                          <span className={`inline-flex items-center justify-center h-5 w-5 rounded-full text-xs font-bold
+                          <span className={`inline-flex items-center justify-center h-6 w-6 rounded-full text-xs font-bold mt-0.5
                             ${currentMission.difficulty === 'boss'
                               ? 'bg-amber-500/20 text-amber-500'
                               : `bg-${currentMission.rank.toLowerCase()}-500/20 text-${currentMission.rank.toLowerCase()}-500`}
@@ -1183,7 +1202,7 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
                 </div>
 
                 {/* Mission tasks preview */}
-                {currentMission.count && currentMission.count > 1 && (
+                {currentMission.count && currentMission.count > 0 && (
                   <div className="space-y-2">
                     <h4 className={`font-semibold text-sm flex items-center gap-1 mb-1
                       ${currentMission.difficulty === 'boss'
@@ -1191,7 +1210,7 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
                         : `text-${currentMission.rank.toLowerCase()}-500`}
                     `}>
                       <Activity className="h-4 w-4" />
-                      This mission contains {currentMission.count} tasks:
+                      This mission contains {currentMission.count} {currentMission.count === 1 ? 'task' : 'tasks'}:
                     </h4>
                     <div className={`max-h-48 overflow-y-auto border rounded-md p-3 space-y-2 bg-background/60 shadow-sm
                       ${currentMission.difficulty === 'boss'
@@ -1201,13 +1220,13 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
                       {currentMission.taskNames && currentMission.taskNames.map((task, idx) => (
                         <div
                           key={idx}
-                          className={`flex items-center gap-2 p-2 text-sm border-b last:border-0 rounded transition-colors duration-200
+                          className={`flex items-start gap-3 p-3 text-sm border-b last:border-0 rounded transition-colors duration-200
                             ${currentMission.difficulty === 'boss'
                               ? 'border-amber-500/20 hover:bg-amber-500/10'
                               : `border-${currentMission.rank.toLowerCase()}-400/20 hover:bg-${currentMission.rank.toLowerCase()}-500/10`}
                           `}
                         >
-                          <span className={`inline-flex items-center justify-center h-5 w-5 rounded-full text-xs font-bold
+                          <span className={`inline-flex items-center justify-center h-6 w-6 rounded-full text-xs font-bold mt-0.5
                             ${currentMission.difficulty === 'boss'
                               ? 'bg-amber-500/20 text-amber-500'
                               : `bg-${currentMission.rank.toLowerCase()}-500/20 text-${currentMission.rank.toLowerCase()}-500`}
