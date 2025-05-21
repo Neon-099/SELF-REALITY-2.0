@@ -147,6 +147,7 @@ const SideQuestCard: React.FC<SideQuestCardProps> = ({ quest, onComplete, onStar
 
   return (
     <div
+      id={`side-quest-${quest.id}`}
       className={
         `relative bg-gradient-to-br from-solo-dark via-gray-900 to-solo-dark border-2 rounded-xl p-5 shadow-lg transition-all duration-200
         ${quest.completed ? 'border-green-400/60 opacity-60' : 'border-solo-primary/40 hover:border-solo-primary/80 hover:scale-[1.025]'}

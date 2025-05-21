@@ -40,6 +40,7 @@ const DailyQuestCard: React.FC<DailyQuestCardProps> = ({ quest, onComplete }) =>
 
   return (
     <div
+      id={`daily-quest-${quest.id}`}
       className={
         `relative bg-gradient-to-br from-solo-dark via-gray-900 to-solo-dark border-2 rounded-xl p-5 shadow-lg transition-all duration-200
         ${quest.completed ? 'border-green-400/60 opacity-60' : 'border-green-500/40 hover:border-green-500/80 hover:scale-[1.025]'}

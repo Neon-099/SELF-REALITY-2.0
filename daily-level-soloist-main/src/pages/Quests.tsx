@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSoloLevelingStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
 import { CheckCircle, Swords, Star, ListTodo, ChevronDown, ChevronUp, Sword, Coins, Filter, Database, X, CalendarClock, Shield, Clock, Eye, EyeOff } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from '@/components/ui/dialog';
 import { toast } from '@/hooks/use-toast';
 import { DailyWinCategory, Difficulty, Quest, Task as QuestTask } from '@/lib/types';
 import { isSameDay, format } from 'date-fns';
@@ -706,10 +706,73 @@ const Quests = () => {
       case 'main':
         return (
           <div>
-            <h2 className="text-xl font-bold text-solo-text mb-4 flex items-center gap-2">
-              <Swords className="text-yellow-500" size={20} />
-              Main Quests
-            </h2>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold text-solo-text flex items-center gap-2">
+                <Swords className="text-yellow-500" size={20} />
+                Main Quests
+              </h2>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex items-center gap-1 border-yellow-500/30 hover:border-yellow-500/60 text-yellow-500"
+                  >
+                    <Eye size={14} />
+                    View All
+                  </Button>
+                </DialogTrigger>
+                <CustomDialogContent className="w-[90vw] max-w-[600px] p-4 max-h-[80vh] overflow-hidden flex flex-col">
+                  <DialogHeader className="border-b border-yellow-500/20 pb-2 mb-3 relative">
+                    <DialogTitle className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-amber-500 drop-shadow-sm text-lg">
+                      All Main Quests
+                    </DialogTitle>
+                    <DialogClose className="absolute right-0 top-0 h-6 w-6 rounded-full bg-gradient-to-r from-yellow-600/30 to-amber-700/30 hover:from-yellow-600/50 hover:to-amber-700/50 transition-all p-0.5 border border-yellow-500/20 flex items-center justify-center cursor-pointer z-10">
+                      <X className="h-4 w-4 text-yellow-300" />
+                    </DialogClose>
+                  </DialogHeader>
+                  <div className="py-2 flex-1 overflow-y-auto pr-2 custom-scrollbar">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {questsData
+                        .filter(quest => quest.isMainQuest && !quest.completed)
+                        .map((quest) => (
+                          <div
+                            key={quest.id}
+                            className="bg-gray-900 border border-yellow-500/20 rounded-lg p-3 hover:border-yellow-500/40 transition-all"
+                          >
+                            <div className="flex justify-between items-start mb-2">
+                              <h3 className="font-medium text-yellow-400">{quest.title}</h3>
+                              <div className="flex items-center gap-1 text-xs">
+                                <Star size={12} className="text-yellow-400" />
+                                <span className="text-yellow-500">+{quest.expReward} XP</span>
+                              </div>
+                            </div>
+                            {quest.description && (
+                              <p className="text-gray-400 text-sm mb-2 line-clamp-2">{quest.description}</p>
+                            )}
+                            <div className="flex justify-between items-center text-xs text-gray-500">
+                              <span className="flex items-center gap-1">
+                                <Clock size={10} />
+                                {quest.started ? 'Started' : 'Not started'}
+                              </span>
+                              {quest.tasks && quest.tasks.length > 0 && (
+                                <span>
+                                  {quest.tasks.filter(t => t.completed).length}/{quest.tasks.length} Tasks
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                    {questsData.filter(quest => quest.isMainQuest && !quest.completed).length === 0 && (
+                      <div className="text-center py-8">
+                        <p className="text-gray-400">No active main quests available.</p>
+                      </div>
+                    )}
+                  </div>
+                </CustomDialogContent>
+              </Dialog>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {activeQuests
                 .filter(quest => quest.isMainQuest)
@@ -734,10 +797,73 @@ const Quests = () => {
       case 'side':
         return (
           <div>
-            <h2 className="text-xl font-bold text-solo-text mb-4 flex items-center gap-2">
-              <Sword className="text-solo-primary" size={20} />
-              Side Quests
-            </h2>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold text-solo-text flex items-center gap-2">
+                <Sword className="text-solo-primary" size={20} />
+                Side Quests
+              </h2>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex items-center gap-1 border-indigo-500/30 hover:border-indigo-500/60 text-indigo-500"
+                  >
+                    <Eye size={14} />
+                    View All
+                  </Button>
+                </DialogTrigger>
+                <CustomDialogContent className="w-[90vw] max-w-[600px] p-4 max-h-[80vh] overflow-hidden flex flex-col">
+                  <DialogHeader className="border-b border-indigo-500/20 pb-2 mb-3 relative">
+                    <DialogTitle className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 to-purple-500 drop-shadow-sm text-lg">
+                      All Side Quests
+                    </DialogTitle>
+                    <DialogClose className="absolute right-0 top-0 h-6 w-6 rounded-full bg-gradient-to-r from-indigo-600/30 to-purple-700/30 hover:from-indigo-600/50 hover:to-purple-700/50 transition-all p-0.5 border border-indigo-500/20 flex items-center justify-center cursor-pointer z-10">
+                      <X className="h-4 w-4 text-indigo-300" />
+                    </DialogClose>
+                  </DialogHeader>
+                  <div className="py-2 flex-1 overflow-y-auto pr-2 custom-scrollbar">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {questsData
+                        .filter(quest => !quest.isMainQuest && !quest.isDaily && !quest.completed)
+                        .map((quest) => (
+                          <div
+                            key={quest.id}
+                            className="bg-gray-900 border border-indigo-500/20 rounded-lg p-3 hover:border-indigo-500/40 transition-all"
+                          >
+                            <div className="flex justify-between items-start mb-2">
+                              <h3 className="font-medium text-indigo-400">{quest.title}</h3>
+                              <div className="flex items-center gap-1 text-xs">
+                                <Star size={12} className="text-yellow-400" />
+                                <span className="text-indigo-500">+{quest.expReward} XP</span>
+                              </div>
+                            </div>
+                            {quest.description && (
+                              <p className="text-gray-400 text-sm mb-2 line-clamp-2">{quest.description}</p>
+                            )}
+                            <div className="flex justify-between items-center text-xs text-gray-500">
+                              <span className="flex items-center gap-1">
+                                <Clock size={10} />
+                                {quest.started ? 'Started' : 'Not started'}
+                              </span>
+                              {quest.tasks && quest.tasks.length > 0 && (
+                                <span>
+                                  {quest.tasks.filter(t => t.completed).length}/{quest.tasks.length} Tasks
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                    {questsData.filter(quest => !quest.isMainQuest && !quest.isDaily && !quest.completed).length === 0 && (
+                      <div className="text-center py-8">
+                        <p className="text-gray-400">No active side quests available.</p>
+                      </div>
+                    )}
+                  </div>
+                </CustomDialogContent>
+              </Dialog>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {activeQuests
                 .filter(quest => !quest.isMainQuest && !quest.isDaily)
@@ -805,18 +931,91 @@ const Quests = () => {
       case 'daily':
         return (
           <div className="space-y-4">
-            <h2 className="text-xl font-bold text-solo-text mb-4 flex items-center gap-2">
-              <ListTodo className="text-green-500" size={20} />
-              Daily Quests
-            </h2>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold text-solo-text flex items-center gap-2">
+                <ListTodo className="text-green-500" size={20} />
+                Daily Quests
+              </h2>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex items-center gap-1 border-green-500/30 hover:border-green-500/60 text-green-500"
+                  >
+                    <Eye size={14} />
+                    View All
+                  </Button>
+                </DialogTrigger>
+                <CustomDialogContent className="w-[90vw] max-w-[600px] p-4 max-h-[80vh] overflow-hidden flex flex-col">
+                  <DialogHeader className="border-b border-green-500/20 pb-2 mb-3 relative">
+                    <DialogTitle className="text-transparent bg-clip-text bg-gradient-to-r from-green-300 to-emerald-500 drop-shadow-sm text-lg">
+                      All Daily Quests
+                    </DialogTitle>
+                    <DialogClose className="absolute right-0 top-0 h-6 w-6 rounded-full bg-gradient-to-r from-green-600/30 to-emerald-700/30 hover:from-green-600/50 hover:to-emerald-700/50 transition-all p-0.5 border border-green-500/20 flex items-center justify-center cursor-pointer z-10">
+                      <X className="h-4 w-4 text-green-300" />
+                    </DialogClose>
+                  </DialogHeader>
+                  <div className="py-2 flex-1 overflow-y-auto pr-2 custom-scrollbar">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {questsData
+                        .filter(quest => quest.isDaily && !quest.completed)
+                        .map((quest) => (
+                          <div
+                            key={quest.id}
+                            className="bg-gray-900 border border-green-500/20 rounded-lg p-3 hover:border-green-500/40 transition-all"
+                          >
+                            <div className="flex justify-between items-start mb-2">
+                              <h3 className="font-medium text-green-400">{quest.title}</h3>
+                              <div className="flex items-center gap-1 text-xs">
+                                {quest.category && (
+                                  <span className={`text-[10px] px-1.5 py-0.5 rounded-full border shadow-sm font-medium ${
+                                    quest.category === 'mental'
+                                      ? 'bg-blue-500/10 text-blue-400 border-blue-500/20'
+                                      : quest.category === 'physical'
+                                      ? 'bg-red-500/10 text-red-400 border-red-500/20'
+                                      : quest.category === 'spiritual'
+                                      ? 'bg-purple-500/10 text-purple-400 border-purple-500/20'
+                                      : 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20'
+                                  }`}>
+                                    {quest.category.charAt(0).toUpperCase() + quest.category.slice(1)}
+                                  </span>
+                                )}
+                                <div className="flex items-center gap-1">
+                                  <Star size={12} className="text-yellow-400" />
+                                  <span className="text-green-500">+{quest.expReward} XP</span>
+                                </div>
+                              </div>
+                            </div>
+                            {quest.description && (
+                              <p className="text-gray-400 text-sm mb-2 line-clamp-2">{quest.description}</p>
+                            )}
+                            <div className="flex justify-between items-center text-xs text-gray-500">
+                              <span className="flex items-center gap-1">
+                                <CalendarClock size={10} />
+                                Due today
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                    {questsData.filter(quest => quest.isDaily && !quest.completed).length === 0 && (
+                      <div className="text-center py-8">
+                        <p className="text-gray-400">No active daily quests available.</p>
+                      </div>
+                    )}
+                  </div>
+                </CustomDialogContent>
+              </Dialog>
+            </div>
             <div className="bg-solo-dark border border-green-500/20 rounded-lg p-4">
               <div className="mb-4">
                 <p className="text-gray-400">Daily quests reset every day. Complete them to earn rewards and maintain your streak.</p>
               </div>
 
               {dailyQuests.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {dailyQuests.map((quest) => (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {dailyQuests.slice(0, 4).map((quest) => (
                     <DailyQuestCard key={quest.id} quest={quest} onComplete={handleCompleteDailyQuest} />
                   ))}
                 </div>
@@ -835,13 +1034,282 @@ const Quests = () => {
           <div className="space-y-8">
             {/* Main Quests Section */}
             <div>
-              <h2 className="text-xl font-bold text-solo-text mb-4 flex items-center gap-2">
-                <Swords className="text-yellow-500" size={20} />
-                Main Quests
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold text-solo-text flex items-center gap-2">
+                  <Swords className="text-yellow-500" size={20} />
+                  Main Quests
+                </h2>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center gap-1 border-yellow-500/30 hover:border-yellow-500/60 text-yellow-500"
+                    >
+                      <Eye size={14} />
+                      View All
+                    </Button>
+                  </DialogTrigger>
+                  <CustomDialogContent className="w-[90vw] max-w-[600px] p-4 max-h-[80vh] overflow-hidden flex flex-col">
+                    <DialogHeader className="border-b border-yellow-500/20 pb-2 mb-3 relative">
+                      <DialogTitle className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-amber-500 drop-shadow-sm text-lg">
+                        All Main Quests
+                      </DialogTitle>
+                      <DialogClose className="absolute right-0 top-0 h-6 w-6 rounded-full bg-gradient-to-r from-yellow-600/30 to-amber-700/30 hover:from-yellow-600/50 hover:to-amber-700/50 transition-all p-0.5 border border-yellow-500/20 flex items-center justify-center cursor-pointer z-10">
+                        <X className="h-4 w-4 text-yellow-300" />
+                      </DialogClose>
+                    </DialogHeader>
+                    <div className="py-2 flex-1 overflow-y-auto pr-2 custom-scrollbar">
+                      {/* In Progress Quests */}
+                      {questsData.filter(quest => quest.isMainQuest && !quest.completed && quest.started).length > 0 && (
+                        <div className="mb-4">
+                          <h3 className="text-yellow-400 font-medium mb-2 flex items-center gap-1">
+                            <Clock size={14} className="text-yellow-500" />
+                            In Progress
+                          </h3>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            {questsData
+                              .filter(quest => quest.isMainQuest && !quest.completed && quest.started)
+                              .map((quest) => (
+                                <div
+                                  key={quest.id}
+                                  className="bg-gray-900 border border-yellow-500/20 rounded-lg p-3 hover:border-yellow-500/40 transition-all"
+                                >
+                                  <div className="flex justify-between items-start mb-2">
+                                    <h3 className="font-medium text-yellow-400">{quest.title}</h3>
+                                    <div className="flex items-center gap-1 text-xs">
+                                      <Star size={12} className="text-yellow-400" />
+                                      <span className="text-yellow-500">+{quest.expReward} XP</span>
+                                    </div>
+                                  </div>
+                                  {quest.description && (
+                                    <p className="text-gray-400 text-sm mb-2 line-clamp-2">{quest.description}</p>
+                                  )}
+                                  <div className="flex justify-between items-center text-xs text-gray-500 mb-2">
+                                    <span className="flex items-center gap-1 bg-green-900/20 text-green-400 px-1.5 py-0.5 rounded-full border border-green-500/20">
+                                      <Clock size={10} />
+                                      In Progress
+                                    </span>
+                                    {quest.tasks && quest.tasks.length > 0 && (
+                                      <span>
+                                        {quest.tasks.filter(t => t.completed).length}/{quest.tasks.length} Tasks
+                                      </span>
+                                    )}
+                                  </div>
+                                  <Dialog>
+                                    <DialogTrigger asChild>
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="w-full border-yellow-500/30 hover:border-yellow-500/60 text-yellow-500 text-xs"
+                                      >
+                                        <Eye size={12} className="mr-1" />
+                                        View Quest
+                                      </Button>
+                                    </DialogTrigger>
+                                    <CustomDialogContent className="w-[90vw] max-w-[400px] p-4 max-h-[80vh] overflow-hidden flex flex-col">
+                                      <DialogHeader className="border-b border-yellow-500/20 pb-2 mb-3 relative">
+                                        <DialogTitle className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-amber-500 drop-shadow-sm text-lg">
+                                          {quest.title}
+                                        </DialogTitle>
+                                        <DialogClose className="absolute right-0 top-0 h-6 w-6 rounded-full bg-gradient-to-r from-yellow-600/30 to-amber-700/30 hover:from-yellow-600/50 hover:to-amber-700/50 transition-all p-0.5 border border-yellow-500/20 flex items-center justify-center cursor-pointer z-10">
+                                          <X className="h-4 w-4 text-yellow-300" />
+                                        </DialogClose>
+                                      </DialogHeader>
+                                      <div className="py-2 flex-1 overflow-y-auto pr-2 custom-scrollbar">
+                                        {quest.description && (
+                                          <div className="mb-4 p-3 bg-gray-800/30 rounded-md">
+                                            <p className="text-gray-300/90 text-sm">{quest.description}</p>
+                                          </div>
+                                        )}
+
+                                        {/* Quest Tasks */}
+                                        <div className="mb-4">
+                                          <h4 className="text-sm font-semibold text-yellow-400 mb-2">Tasks:</h4>
+                                          {quest.tasks && quest.tasks.length > 0 ? (
+                                            <div className="space-y-1.5">
+                                              {quest.tasks.map((task, index) => (
+                                                <div
+                                                  key={task.id}
+                                                  className="flex items-center p-2 rounded-lg bg-gradient-to-r from-gray-800/60 to-gray-800/40 border border-gray-700/30"
+                                                >
+                                                  <span className="text-yellow-400 text-xs font-medium w-5 text-center flex-shrink-0">
+                                                    {index + 1}.
+                                                  </span>
+                                                  <div className="ml-2">
+                                                    <span className="text-sm font-medium text-gray-200">
+                                                      {task.title}
+                                                    </span>
+                                                  </div>
+                                                </div>
+                                              ))}
+                                            </div>
+                                          ) : (
+                                            <p className="text-sm text-gray-400 italic">No tasks added yet.</p>
+                                          )}
+                                        </div>
+
+                                        {/* Start Quest Button */}
+                                        {!quest.started ? (
+                                          <Button
+                                            variant="default"
+                                            onClick={() => {
+                                              startQuest(quest.id);
+                                              toast({
+                                                title: "Quest Started!",
+                                                description: `You've started the quest "${quest.title}"`,
+                                              });
+                                            }}
+                                            className="w-full bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-600 hover:to-amber-600 text-black"
+                                          >
+                                            Start Quest
+                                          </Button>
+                                        ) : (
+                                          <div className="bg-green-900/20 p-2 rounded-md border border-green-500/20 text-center text-green-400 text-sm">
+                                            <Clock className="inline-block h-4 w-4 mr-1" />
+                                            Quest in progress
+                                          </div>
+                                        )}
+                                      </div>
+                                    </CustomDialogContent>
+                                  </Dialog>
+                                </div>
+                              ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Not Started Quests */}
+                      {questsData.filter(quest => quest.isMainQuest && !quest.completed && !quest.started).length > 0 && (
+                        <div>
+                          <h3 className="text-yellow-400 font-medium mb-2 flex items-center gap-1">
+                            <ListTodo size={14} className="text-yellow-500" />
+                            Not Started
+                          </h3>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            {questsData
+                              .filter(quest => quest.isMainQuest && !quest.completed && !quest.started)
+                              .map((quest) => (
+                                <div
+                                  key={quest.id}
+                                  className="bg-gray-900 border border-yellow-500/20 rounded-lg p-3 hover:border-yellow-500/40 transition-all"
+                                >
+                                  <div className="flex justify-between items-start mb-2">
+                                    <h3 className="font-medium text-yellow-400">{quest.title}</h3>
+                                    <div className="flex items-center gap-1 text-xs">
+                                      <Star size={12} className="text-yellow-400" />
+                                      <span className="text-yellow-500">+{quest.expReward} XP</span>
+                                    </div>
+                                  </div>
+                                  {quest.description && (
+                                    <p className="text-gray-400 text-sm mb-2 line-clamp-2">{quest.description}</p>
+                                  )}
+                                  <div className="flex justify-between items-center text-xs text-gray-500 mb-2">
+                                    <span className="flex items-center gap-1">
+                                      <Clock size={10} />
+                                      Not Started
+                                    </span>
+                                    {quest.tasks && quest.tasks.length > 0 && (
+                                      <span>
+                                        {quest.tasks.length} Tasks
+                                      </span>
+                                    )}
+                                  </div>
+                                  <Dialog>
+                                    <DialogTrigger asChild>
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="w-full border-yellow-500/30 hover:border-yellow-500/60 text-yellow-500 text-xs"
+                                      >
+                                        <Eye size={12} className="mr-1" />
+                                        View Quest
+                                      </Button>
+                                    </DialogTrigger>
+                                    <CustomDialogContent className="w-[90vw] max-w-[400px] p-4 max-h-[80vh] overflow-hidden flex flex-col">
+                                      <DialogHeader className="border-b border-yellow-500/20 pb-2 mb-3 relative">
+                                        <DialogTitle className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-amber-500 drop-shadow-sm text-lg">
+                                          {quest.title}
+                                        </DialogTitle>
+                                        <DialogClose className="absolute right-0 top-0 h-6 w-6 rounded-full bg-gradient-to-r from-yellow-600/30 to-amber-700/30 hover:from-yellow-600/50 hover:to-amber-700/50 transition-all p-0.5 border border-yellow-500/20 flex items-center justify-center cursor-pointer z-10">
+                                          <X className="h-4 w-4 text-yellow-300" />
+                                        </DialogClose>
+                                      </DialogHeader>
+                                      <div className="py-2 flex-1 overflow-y-auto pr-2 custom-scrollbar">
+                                        {quest.description && (
+                                          <div className="mb-4 p-3 bg-gray-800/30 rounded-md">
+                                            <p className="text-gray-300/90 text-sm">{quest.description}</p>
+                                          </div>
+                                        )}
+
+                                        {/* Quest Tasks */}
+                                        <div className="mb-4">
+                                          <h4 className="text-sm font-semibold text-yellow-400 mb-2">Tasks:</h4>
+                                          {quest.tasks && quest.tasks.length > 0 ? (
+                                            <div className="space-y-1.5">
+                                              {quest.tasks.map((task, index) => (
+                                                <div
+                                                  key={task.id}
+                                                  className="flex items-center p-2 rounded-lg bg-gradient-to-r from-gray-800/60 to-gray-800/40 border border-gray-700/30"
+                                                >
+                                                  <span className="text-yellow-400 text-xs font-medium w-5 text-center flex-shrink-0">
+                                                    {index + 1}.
+                                                  </span>
+                                                  <div className="ml-2">
+                                                    <span className="text-sm font-medium text-gray-200">
+                                                      {task.title}
+                                                    </span>
+                                                  </div>
+                                                </div>
+                                              ))}
+                                            </div>
+                                          ) : (
+                                            <p className="text-sm text-gray-400 italic">No tasks added yet.</p>
+                                          )}
+                                        </div>
+
+                                        {/* Start Quest Button */}
+                                        {!quest.started ? (
+                                          <Button
+                                            variant="default"
+                                            onClick={() => {
+                                              startQuest(quest.id);
+                                              toast({
+                                                title: "Quest Started!",
+                                                description: `You've started the quest "${quest.title}"`,
+                                              });
+                                            }}
+                                            className="w-full bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-600 hover:to-amber-600 text-black"
+                                          >
+                                            Start Quest
+                                          </Button>
+                                        ) : (
+                                          <div className="bg-green-900/20 p-2 rounded-md border border-green-500/20 text-center text-green-400 text-sm">
+                                            <Clock className="inline-block h-4 w-4 mr-1" />
+                                            Quest in progress
+                                          </div>
+                                        )}
+                                      </div>
+                                    </CustomDialogContent>
+                                  </Dialog>
+                                </div>
+                              ))}
+                          </div>
+                        </div>
+                      )}
+                      {questsData.filter(quest => quest.isMainQuest && !quest.completed).length === 0 && (
+                        <div className="text-center py-8">
+                          <p className="text-gray-400">No active main quests available.</p>
+                        </div>
+                      )}
+                    </div>
+                  </CustomDialogContent>
+                </Dialog>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {activeQuests
                   .filter(quest => quest.isMainQuest)
+                  .slice(0, 4)
                   .map((quest) => (
                     <MainQuestCard
                       key={quest.id}
@@ -862,13 +1330,282 @@ const Quests = () => {
 
             {/* Side Quests Section */}
             <div>
-              <h2 className="text-xl font-bold text-solo-text mb-4 flex items-center gap-2">
-                <Sword className="text-solo-primary" size={20} />
-                Side Quests
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold text-solo-text flex items-center gap-2">
+                  <Sword className="text-solo-primary" size={20} />
+                  Side Quests
+                </h2>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center gap-1 border-indigo-500/30 hover:border-indigo-500/60 text-indigo-500"
+                    >
+                      <Eye size={14} />
+                      View All
+                    </Button>
+                  </DialogTrigger>
+                  <CustomDialogContent className="w-[90vw] max-w-[600px] p-4 max-h-[80vh] overflow-hidden flex flex-col">
+                    <DialogHeader className="border-b border-indigo-500/20 pb-2 mb-3 relative">
+                      <DialogTitle className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 to-purple-500 drop-shadow-sm text-lg">
+                        All Side Quests
+                      </DialogTitle>
+                      <DialogClose className="absolute right-0 top-0 h-6 w-6 rounded-full bg-gradient-to-r from-indigo-600/30 to-purple-700/30 hover:from-indigo-600/50 hover:to-purple-700/50 transition-all p-0.5 border border-indigo-500/20 flex items-center justify-center cursor-pointer z-10">
+                        <X className="h-4 w-4 text-indigo-300" />
+                      </DialogClose>
+                    </DialogHeader>
+                    <div className="py-2 flex-1 overflow-y-auto pr-2 custom-scrollbar">
+                      {/* In Progress Quests */}
+                      {questsData.filter(quest => !quest.isMainQuest && !quest.isDaily && !quest.completed && quest.started).length > 0 && (
+                        <div className="mb-4">
+                          <h3 className="text-indigo-400 font-medium mb-2 flex items-center gap-1">
+                            <Clock size={14} className="text-indigo-500" />
+                            In Progress
+                          </h3>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            {questsData
+                              .filter(quest => !quest.isMainQuest && !quest.isDaily && !quest.completed && quest.started)
+                              .map((quest) => (
+                                <div
+                                  key={quest.id}
+                                  className="bg-gray-900 border border-indigo-500/20 rounded-lg p-3 hover:border-indigo-500/40 transition-all"
+                                >
+                                  <div className="flex justify-between items-start mb-2">
+                                    <h3 className="font-medium text-indigo-400">{quest.title}</h3>
+                                    <div className="flex items-center gap-1 text-xs">
+                                      <Star size={12} className="text-yellow-400" />
+                                      <span className="text-indigo-500">+{quest.expReward} XP</span>
+                                    </div>
+                                  </div>
+                                  {quest.description && (
+                                    <p className="text-gray-400 text-sm mb-2 line-clamp-2">{quest.description}</p>
+                                  )}
+                                  <div className="flex justify-between items-center text-xs text-gray-500 mb-2">
+                                    <span className="flex items-center gap-1 bg-green-900/20 text-green-400 px-1.5 py-0.5 rounded-full border border-green-500/20">
+                                      <Clock size={10} />
+                                      In Progress
+                                    </span>
+                                    {quest.tasks && quest.tasks.length > 0 && (
+                                      <span>
+                                        {quest.tasks.filter(t => t.completed).length}/{quest.tasks.length} Tasks
+                                      </span>
+                                    )}
+                                  </div>
+                                  <Dialog>
+                                    <DialogTrigger asChild>
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="w-full border-indigo-500/30 hover:border-indigo-500/60 text-indigo-500 text-xs"
+                                      >
+                                        <Eye size={12} className="mr-1" />
+                                        View Quest
+                                      </Button>
+                                    </DialogTrigger>
+                                    <CustomDialogContent className="w-[90vw] max-w-[400px] p-4 max-h-[80vh] overflow-hidden flex flex-col">
+                                      <DialogHeader className="border-b border-indigo-500/20 pb-2 mb-3 relative">
+                                        <DialogTitle className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 to-purple-500 drop-shadow-sm text-lg">
+                                          {quest.title}
+                                        </DialogTitle>
+                                        <DialogClose className="absolute right-0 top-0 h-6 w-6 rounded-full bg-gradient-to-r from-indigo-600/30 to-purple-700/30 hover:from-indigo-600/50 hover:to-purple-700/50 transition-all p-0.5 border border-indigo-500/20 flex items-center justify-center cursor-pointer z-10">
+                                          <X className="h-4 w-4 text-indigo-300" />
+                                        </DialogClose>
+                                      </DialogHeader>
+                                      <div className="py-2 flex-1 overflow-y-auto pr-2 custom-scrollbar">
+                                        {quest.description && (
+                                          <div className="mb-4 p-3 bg-gray-800/30 rounded-md">
+                                            <p className="text-gray-300/90 text-sm">{quest.description}</p>
+                                          </div>
+                                        )}
+
+                                        {/* Quest Tasks */}
+                                        <div className="mb-4">
+                                          <h4 className="text-sm font-semibold text-indigo-400 mb-2">Tasks:</h4>
+                                          {quest.tasks && quest.tasks.length > 0 ? (
+                                            <div className="space-y-1.5">
+                                              {quest.tasks.map((task, index) => (
+                                                <div
+                                                  key={task.id}
+                                                  className="flex items-center p-2 rounded-lg bg-gradient-to-r from-gray-800/60 to-gray-800/40 border border-gray-700/30"
+                                                >
+                                                  <span className="text-indigo-400 text-xs font-medium w-5 text-center flex-shrink-0">
+                                                    {index + 1}.
+                                                  </span>
+                                                  <div className="ml-2">
+                                                    <span className="text-sm font-medium text-gray-200">
+                                                      {task.title}
+                                                    </span>
+                                                  </div>
+                                                </div>
+                                              ))}
+                                            </div>
+                                          ) : (
+                                            <p className="text-sm text-gray-400 italic">No tasks added yet.</p>
+                                          )}
+                                        </div>
+
+                                        {/* Start Quest Button */}
+                                        {!quest.started ? (
+                                          <Button
+                                            variant="default"
+                                            onClick={() => {
+                                              startQuest(quest.id);
+                                              toast({
+                                                title: "Quest Started!",
+                                                description: `You've started the quest "${quest.title}"`,
+                                              });
+                                            }}
+                                            className="w-full bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white"
+                                          >
+                                            Start Quest
+                                          </Button>
+                                        ) : (
+                                          <div className="bg-green-900/20 p-2 rounded-md border border-green-500/20 text-center text-green-400 text-sm">
+                                            <Clock className="inline-block h-4 w-4 mr-1" />
+                                            Quest in progress
+                                          </div>
+                                        )}
+                                      </div>
+                                    </CustomDialogContent>
+                                  </Dialog>
+                                </div>
+                              ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Not Started Quests */}
+                      {questsData.filter(quest => !quest.isMainQuest && !quest.isDaily && !quest.completed && !quest.started).length > 0 && (
+                        <div>
+                          <h3 className="text-indigo-400 font-medium mb-2 flex items-center gap-1">
+                            <ListTodo size={14} className="text-indigo-500" />
+                            Not Started
+                          </h3>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            {questsData
+                              .filter(quest => !quest.isMainQuest && !quest.isDaily && !quest.completed && !quest.started)
+                              .map((quest) => (
+                                <div
+                                  key={quest.id}
+                                  className="bg-gray-900 border border-indigo-500/20 rounded-lg p-3 hover:border-indigo-500/40 transition-all"
+                                >
+                                  <div className="flex justify-between items-start mb-2">
+                                    <h3 className="font-medium text-indigo-400">{quest.title}</h3>
+                                    <div className="flex items-center gap-1 text-xs">
+                                      <Star size={12} className="text-yellow-400" />
+                                      <span className="text-indigo-500">+{quest.expReward} XP</span>
+                                    </div>
+                                  </div>
+                                  {quest.description && (
+                                    <p className="text-gray-400 text-sm mb-2 line-clamp-2">{quest.description}</p>
+                                  )}
+                                  <div className="flex justify-between items-center text-xs text-gray-500 mb-2">
+                                    <span className="flex items-center gap-1">
+                                      <Clock size={10} />
+                                      Not Started
+                                    </span>
+                                    {quest.tasks && quest.tasks.length > 0 && (
+                                      <span>
+                                        {quest.tasks.length} Tasks
+                                      </span>
+                                    )}
+                                  </div>
+                                  <Dialog>
+                                    <DialogTrigger asChild>
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="w-full border-indigo-500/30 hover:border-indigo-500/60 text-indigo-500 text-xs"
+                                      >
+                                        <Eye size={12} className="mr-1" />
+                                        View Quest
+                                      </Button>
+                                    </DialogTrigger>
+                                    <CustomDialogContent className="w-[90vw] max-w-[400px] p-4 max-h-[80vh] overflow-hidden flex flex-col">
+                                      <DialogHeader className="border-b border-indigo-500/20 pb-2 mb-3 relative">
+                                        <DialogTitle className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 to-purple-500 drop-shadow-sm text-lg">
+                                          {quest.title}
+                                        </DialogTitle>
+                                        <DialogClose className="absolute right-0 top-0 h-6 w-6 rounded-full bg-gradient-to-r from-indigo-600/30 to-purple-700/30 hover:from-indigo-600/50 hover:to-purple-700/50 transition-all p-0.5 border border-indigo-500/20 flex items-center justify-center cursor-pointer z-10">
+                                          <X className="h-4 w-4 text-indigo-300" />
+                                        </DialogClose>
+                                      </DialogHeader>
+                                      <div className="py-2 flex-1 overflow-y-auto pr-2 custom-scrollbar">
+                                        {quest.description && (
+                                          <div className="mb-4 p-3 bg-gray-800/30 rounded-md">
+                                            <p className="text-gray-300/90 text-sm">{quest.description}</p>
+                                          </div>
+                                        )}
+
+                                        {/* Quest Tasks */}
+                                        <div className="mb-4">
+                                          <h4 className="text-sm font-semibold text-indigo-400 mb-2">Tasks:</h4>
+                                          {quest.tasks && quest.tasks.length > 0 ? (
+                                            <div className="space-y-1.5">
+                                              {quest.tasks.map((task, index) => (
+                                                <div
+                                                  key={task.id}
+                                                  className="flex items-center p-2 rounded-lg bg-gradient-to-r from-gray-800/60 to-gray-800/40 border border-gray-700/30"
+                                                >
+                                                  <span className="text-indigo-400 text-xs font-medium w-5 text-center flex-shrink-0">
+                                                    {index + 1}.
+                                                  </span>
+                                                  <div className="ml-2">
+                                                    <span className="text-sm font-medium text-gray-200">
+                                                      {task.title}
+                                                    </span>
+                                                  </div>
+                                                </div>
+                                              ))}
+                                            </div>
+                                          ) : (
+                                            <p className="text-sm text-gray-400 italic">No tasks added yet.</p>
+                                          )}
+                                        </div>
+
+                                        {/* Start Quest Button */}
+                                        {!quest.started ? (
+                                          <Button
+                                            variant="default"
+                                            onClick={() => {
+                                              startQuest(quest.id);
+                                              toast({
+                                                title: "Quest Started!",
+                                                description: `You've started the quest "${quest.title}"`,
+                                              });
+                                            }}
+                                            className="w-full bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white"
+                                          >
+                                            Start Quest
+                                          </Button>
+                                        ) : (
+                                          <div className="bg-green-900/20 p-2 rounded-md border border-green-500/20 text-center text-green-400 text-sm">
+                                            <Clock className="inline-block h-4 w-4 mr-1" />
+                                            Quest in progress
+                                          </div>
+                                        )}
+                                      </div>
+                                    </CustomDialogContent>
+                                  </Dialog>
+                                </div>
+                              ))}
+                          </div>
+                        </div>
+                      )}
+                      {questsData.filter(quest => !quest.isMainQuest && !quest.isDaily && !quest.completed).length === 0 && (
+                        <div className="text-center py-8">
+                          <p className="text-gray-400">No active side quests available.</p>
+                        </div>
+                      )}
+                    </div>
+                  </CustomDialogContent>
+                </Dialog>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {activeQuests
                       .filter(quest => !quest.isMainQuest && !quest.isDaily)
+                      .slice(0, 4)
                   .map((quest) => (
                         quest.isRecoveryQuest ? (
                     <div
@@ -926,14 +1663,151 @@ const Quests = () => {
 
             {/* Daily Quests Section */}
             <div className="space-y-4">
-              <h2 className="text-xl font-bold text-solo-text mb-4 flex items-center gap-2">
-                <ListTodo className="text-green-500" size={20} />
-                Daily Quests
-              </h2>
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold text-solo-text flex items-center gap-2">
+                  <ListTodo className="text-green-500" size={20} />
+                  Daily Quests
+                </h2>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center gap-1 border-green-500/30 hover:border-green-500/60 text-green-500"
+                    >
+                      <Eye size={14} />
+                      View All
+                    </Button>
+                  </DialogTrigger>
+                  <CustomDialogContent className="w-[90vw] max-w-[600px] p-4 max-h-[80vh] overflow-hidden flex flex-col">
+                    <DialogHeader className="border-b border-green-500/20 pb-2 mb-3 relative">
+                      <DialogTitle className="text-transparent bg-clip-text bg-gradient-to-r from-green-300 to-emerald-500 drop-shadow-sm text-lg">
+                        All Daily Quests
+                      </DialogTitle>
+                      <DialogClose className="absolute right-0 top-0 h-6 w-6 rounded-full bg-gradient-to-r from-green-600/30 to-emerald-700/30 hover:from-green-600/50 hover:to-emerald-700/50 transition-all p-0.5 border border-green-500/20 flex items-center justify-center cursor-pointer z-10">
+                        <X className="h-4 w-4 text-green-300" />
+                      </DialogClose>
+                    </DialogHeader>
+                    <div className="py-2 flex-1 overflow-y-auto pr-2 custom-scrollbar">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {questsData
+                          .filter(quest => quest.isDaily && !quest.completed)
+                          .map((quest) => (
+                            <div
+                              key={quest.id}
+                              className="bg-gray-900 border border-green-500/20 rounded-lg p-3 hover:border-green-500/40 transition-all"
+                            >
+                              <div className="flex justify-between items-start mb-2">
+                                <h3 className="font-medium text-green-400">{quest.title}</h3>
+                                <div className="flex items-center gap-1 text-xs">
+                                  {quest.category && (
+                                    <span className={`text-[10px] px-1.5 py-0.5 rounded-full border shadow-sm font-medium ${
+                                      quest.category === 'mental'
+                                        ? 'bg-blue-500/10 text-blue-400 border-blue-500/20'
+                                        : quest.category === 'physical'
+                                        ? 'bg-red-500/10 text-red-400 border-red-500/20'
+                                        : quest.category === 'spiritual'
+                                        ? 'bg-purple-500/10 text-purple-400 border-purple-500/20'
+                                        : 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20'
+                                    }`}>
+                                      {quest.category.charAt(0).toUpperCase() + quest.category.slice(1)}
+                                    </span>
+                                  )}
+                                  <div className="flex items-center gap-1">
+                                    <Star size={12} className="text-yellow-400" />
+                                    <span className="text-green-500">+{quest.expReward} XP</span>
+                                  </div>
+                                </div>
+                              </div>
+                              {quest.description && (
+                                <p className="text-gray-400 text-sm mb-2 line-clamp-2">{quest.description}</p>
+                              )}
+                              <div className="flex justify-between items-center text-xs text-gray-500 mb-2">
+                                <span className="flex items-center gap-1">
+                                  <CalendarClock size={10} />
+                                  Due today
+                                </span>
+                              </div>
+                              <Dialog>
+                                <DialogTrigger asChild>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="w-full border-green-500/30 hover:border-green-500/60 text-green-500 text-xs"
+                                  >
+                                    <Eye size={12} className="mr-1" />
+                                    View Quest
+                                  </Button>
+                                </DialogTrigger>
+                                <CustomDialogContent className="w-[90vw] max-w-[400px] p-4 max-h-[80vh] overflow-hidden flex flex-col">
+                                  <DialogHeader className="border-b border-green-500/20 pb-2 mb-3 relative">
+                                    <DialogTitle className="text-transparent bg-clip-text bg-gradient-to-r from-green-300 to-emerald-500 drop-shadow-sm text-lg">
+                                      {quest.title}
+                                    </DialogTitle>
+                                    <DialogClose className="absolute right-0 top-0 h-6 w-6 rounded-full bg-gradient-to-r from-green-600/30 to-emerald-700/30 hover:from-green-600/50 hover:to-emerald-700/50 transition-all p-0.5 border border-green-500/20 flex items-center justify-center cursor-pointer z-10">
+                                      <X className="h-4 w-4 text-green-300" />
+                                    </DialogClose>
+                                  </DialogHeader>
+                                  <div className="py-2 flex-1 overflow-y-auto pr-2 custom-scrollbar">
+                                    {quest.description && (
+                                      <div className="mb-4 p-3 bg-gray-800/30 rounded-md">
+                                        <p className="text-gray-300/90 text-sm">{quest.description}</p>
+                                      </div>
+                                    )}
+
+                                    {/* Category */}
+                                    {quest.category && (
+                                      <div className="mb-4">
+                                        <h4 className="text-sm font-semibold text-green-400 mb-2">Category:</h4>
+                                        <div className="flex items-center">
+                                          <span className={`text-xs px-2 py-1 rounded-full border shadow-sm font-medium ${
+                                            quest.category === 'mental'
+                                              ? 'bg-blue-500/10 text-blue-400 border-blue-500/20'
+                                              : quest.category === 'physical'
+                                              ? 'bg-red-500/10 text-red-400 border-red-500/20'
+                                              : quest.category === 'spiritual'
+                                              ? 'bg-purple-500/10 text-purple-400 border-purple-500/20'
+                                              : 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20'
+                                          }`}>
+                                            {quest.category.charAt(0).toUpperCase() + quest.category.slice(1)}
+                                          </span>
+                                        </div>
+                                      </div>
+                                    )}
+
+                                    {/* Complete Quest Button */}
+                                    <Button
+                                      variant="default"
+                                      onClick={() => {
+                                        handleCompleteDailyQuest(quest.id);
+                                        const closeButton = document.querySelector('[aria-label="Close dialog"]');
+                                        if (closeButton) {
+                                          (closeButton as HTMLElement).click();
+                                        }
+                                      }}
+                                      className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white"
+                                    >
+                                      Complete Quest
+                                    </Button>
+                                  </div>
+                                </CustomDialogContent>
+                              </Dialog>
+                            </div>
+                          ))}
+                      </div>
+                      {questsData.filter(quest => quest.isDaily && !quest.completed).length === 0 && (
+                        <div className="text-center py-8">
+                          <p className="text-gray-400">No active daily quests available.</p>
+                        </div>
+                      )}
+                    </div>
+                  </CustomDialogContent>
+                </Dialog>
+              </div>
 
               {dailyQuests.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {dailyQuests.map((quest) => (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {dailyQuests.slice(0, 4).map((quest) => (
                     <DailyQuestCard key={quest.id} quest={quest} onComplete={handleCompleteDailyQuest} />
                   ))}
                 </div>

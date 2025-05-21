@@ -185,6 +185,7 @@ const MainQuestCard: React.FC<MainQuestCardProps> = ({ quest, onComplete, onStar
 
   return (
     <div
+      id={`main-quest-${quest.id}`}
       className={
         `relative bg-gradient-to-br from-solo-dark via-gray-900 to-solo-dark border-2 rounded-xl p-5 shadow-lg transition-all duration-200
         ${quest.completed ? 'border-yellow-400/60 opacity-60' : 'border-yellow-500/40 hover:border-yellow-500/80 hover:scale-[1.025]'}
