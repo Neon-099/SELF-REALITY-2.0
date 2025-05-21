@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSoloLevelingStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, Swords, Star, ListTodo, ChevronDown, ChevronUp, Sword, Coins, Filter, Database, X, CalendarClock, Shield, Clock, Eye, EyeOff, Layers } from 'lucide-react';
+import { CheckCircle, Swords, Star, ListTodo, ChevronDown, ChevronUp, Sword, Coins, Filter, Database, X, CalendarClock, Shield, Clock, Eye, EyeOff } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from '@/hooks/use-toast';
 import { DailyWinCategory, Difficulty, Quest, Task as QuestTask } from '@/lib/types';
@@ -12,8 +12,6 @@ import SideQuestCard from '../components/SideQuestCard';
 import DailyQuestCard from '../components/DailyQuestCard';
 import MainQuestCard from '../components/MainQuestCard';
 import { CustomDialogContent } from '@/components/ui/custom-dialog';
-// Import quests from our database file
-import { mainQuests, sideQuests, allQuests } from '@/data/quests-database';
 
 // Define experience reward values by difficulty
 const expRewards: { [key in Difficulty]: number } = {
@@ -41,7 +39,7 @@ const AddQuestDialog = ({ onClose }: { onClose: () => void }) => {
 
   // Generate empty tasks when taskCount changes
   useEffect(() => {
-    if (questType === 'main') {
+    if (questType === 'main' || questType === 'side') {
       const newTasks = Array(taskCount).fill(null).map((_, index) => ({
         title: `Task ${index + 1}`,
         completed: false
@@ -114,18 +112,18 @@ const AddQuestDialog = ({ onClose }: { onClose: () => void }) => {
           });
         }
       }, 100);
-    } else if (questType === 'main' && tasks.length > 0) {
-      // For main quests with tasks, find the newly added quest and add tasks
+    } else if ((questType === 'main' || questType === 'side') && tasks.length > 0) {
+      // For main or side quests with tasks, find the newly added quest and add tasks
       setTimeout(() => {
         const quests = useSoloLevelingStore.getState().quests;
         const newQuest = quests.find(q =>
           q.title === title &&
           q.description === description &&
-          q.isMainQuest === true
+          (questType === 'main' ? q.isMainQuest === true : q.isMainQuest === false)
         );
 
         if (newQuest) {
-          // Add empty tasks for the main quest
+          // Add empty tasks for the quest
           const addQuestTask = useSoloLevelingStore.getState().addQuestTask;
 
           tasks.forEach((task, index) => {
@@ -139,8 +137,8 @@ const AddQuestDialog = ({ onClose }: { onClose: () => void }) => {
           });
 
           toast({
-            title: "Main Quest Added",
-            description: `Your new main quest has been added with ${tasks.length} tasks!`,
+            title: `${questType.charAt(0).toUpperCase() + questType.slice(1)} Quest Added`,
+            description: `Your new ${questType} quest has been added with ${tasks.length} tasks!`,
           });
         }
       }, 100);
@@ -279,7 +277,7 @@ const AddQuestDialog = ({ onClose }: { onClose: () => void }) => {
         <p className="text-xs text-gray-400">Set the experience reward for completing this quest</p>
       </div>
 
-      {questType === 'main' && (
+      {(questType === 'main' || questType === 'side') && (
         <div className="space-y-4">
           <div className="space-y-2">
             <label className="text-sm font-medium">Number of Tasks</label>
@@ -542,36 +540,11 @@ const Quests = () => {
   const [isLoadingDb, setIsLoadingDb] = useState(false);
   const [dbContents, setDbContents] = useState<any>(null);
   const [questsData, setQuestsData] = useState<Quest[]>([]);
-  // State for database quests
-  const [databaseQuests, setDatabaseQuests] = useState<Quest[]>([]);
-  // State for combined quests
-  const [combinedQuests, setCombinedQuests] = useState<Quest[]>([]);
-  // State for dialog visibility
-  const [isMainQuestsDialogOpen, setIsMainQuestsDialogOpen] = useState(false);
-  const [isSideQuestsDialogOpen, setIsSideQuestsDialogOpen] = useState(false);
-  const [isDailyQuestsDialogOpen, setIsDailyQuestsDialogOpen] = useState(false);
 
-  // Load database quests
-  useEffect(() => {
-    const formattedQuests = [...allQuests];
-    setDatabaseQuests(formattedQuests);
-  }, []);
-
-  // Update questsData when quests from the store change
+  // Add useEffect to update questsData when quests from the store change
   useEffect(() => {
     setQuestsData(quests);
   }, [quests]);
-
-  // Combine database quests with user quests
-  useEffect(() => {
-    // Combine user quests with database quests
-    const combined = [...questsData, ...databaseQuests];
-    // Remove duplicates based on title
-    const uniqueCombined = combined.filter((quest, index, self) =>
-      index === self.findIndex((q) => q.title === quest.title)
-    );
-    setCombinedQuests(uniqueCombined);
-  }, [questsData, databaseQuests]);
 
   // Load data from database on component mount
   useEffect(() => {
@@ -679,8 +652,8 @@ const Quests = () => {
     // No need to add them again here
   };
 
-  // Filter active quests - use combinedQuests instead of questsData
-  const activeQuests = combinedQuests.filter(quest => {
+  // Filter active quests
+  const activeQuests = questsData.filter(quest => {
     // Skip completed quests
     if (quest.completed) return false;
 
@@ -700,15 +673,15 @@ const Quests = () => {
     return true;
   });
 
-  // Get daily quests - use combinedQuests instead of questsData
-  const dailyQuests = combinedQuests.filter(quest =>
+  // Get daily quests (if any have the isDaily flag)
+  const dailyQuests = questsData.filter(quest =>
     quest.isDaily === true &&
     !quest.completed && // Skip completed daily quests
     (!quest.completedAt || isSameDay(new Date(quest.completedAt), new Date()))
   );
 
-  // Filter completed quests - use combinedQuests instead of questsData
-  const completedQuests = combinedQuests.filter(quest =>
+  // Filter completed quests for today only
+  const completedQuests = questsData.filter(quest =>
     quest.completed &&
     quest.completedAt &&
     isSameDay(new Date(quest.completedAt), new Date())
@@ -728,195 +701,6 @@ const Quests = () => {
     }
   };
 
-  // Main Quests Dialog Component
-  const MainQuestsDialog = () => {
-    const mainQuestsList = activeQuests.filter(quest => quest.isMainQuest);
-
-    return (
-      <Dialog open={isMainQuestsDialogOpen} onOpenChange={setIsMainQuestsDialogOpen}>
-        <DialogTrigger asChild>
-          <Button variant="outline" className="mt-4 w-full">
-            <Layers className="h-4 w-4 mr-2" />
-            View All Main Quests ({mainQuestsList.length})
-          </Button>
-        </DialogTrigger>
-        <CustomDialogContent className="w-[90vw] max-w-[800px] p-3 sm:p-4 max-h-[85vh] overflow-hidden flex flex-col">
-          <DialogHeader className="border-b border-yellow-500/20 pb-2 mb-2 relative">
-            <DialogTitle className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-amber-400 drop-shadow-sm text-base flex items-center">
-              <Swords className="h-5 w-5 mr-2 text-yellow-500" />
-              All Main Quests
-            </DialogTitle>
-            <button
-              type="button"
-              className="absolute right-0 top-0 h-5 w-5 rounded-full bg-gradient-to-r from-amber-600/30 to-yellow-700/30 hover:from-amber-600/50 hover:to-yellow-700/50 transition-all p-0.5 border border-yellow-500/20 flex items-center justify-center cursor-pointer z-10"
-              onClick={() => setIsMainQuestsDialogOpen(false)}
-              aria-label="Close dialog"
-            >
-              <X className="h-3 w-3 text-yellow-300" />
-            </button>
-          </DialogHeader>
-          <div className="py-2 flex-1 overflow-y-auto pr-2 custom-scrollbar">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {mainQuestsList.map((quest) => (
-                <MainQuestCard
-                  key={quest.id}
-                  quest={quest}
-                  onComplete={handleCompleteQuest}
-                  onStart={startQuest}
-                  canComplete={canCompleteQuest}
-                />
-              ))}
-            </div>
-            {mainQuestsList.length === 0 && (
-              <div className="bg-solo-dark border border-yellow-500/20 rounded-lg p-4 text-center">
-                <p className="text-gray-400">No active main quests available.</p>
-                <p className="text-gray-400 text-sm mt-2">Click "Add Quest" to create a main quest.</p>
-              </div>
-            )}
-          </div>
-        </CustomDialogContent>
-      </Dialog>
-    );
-  };
-
-  // Side Quests Dialog Component
-  const SideQuestsDialog = () => {
-    const sideQuestsList = activeQuests.filter(quest => !quest.isMainQuest && !quest.isDaily);
-
-    return (
-      <Dialog open={isSideQuestsDialogOpen} onOpenChange={setIsSideQuestsDialogOpen}>
-        <DialogTrigger asChild>
-          <Button variant="outline" className="mt-4 w-full">
-            <Layers className="h-4 w-4 mr-2" />
-            View All Side Quests ({sideQuestsList.length})
-          </Button>
-        </DialogTrigger>
-        <CustomDialogContent className="w-[90vw] max-w-[800px] p-3 sm:p-4 max-h-[85vh] overflow-hidden flex flex-col">
-          <DialogHeader className="border-b border-indigo-500/20 pb-2 mb-2 relative">
-            <DialogTitle className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 to-purple-400 drop-shadow-sm text-base flex items-center">
-              <Sword className="h-5 w-5 mr-2 text-solo-primary" />
-              All Side Quests
-            </DialogTitle>
-            <button
-              type="button"
-              className="absolute right-0 top-0 h-5 w-5 rounded-full bg-gradient-to-r from-indigo-600/30 to-purple-700/30 hover:from-indigo-600/50 hover:to-purple-700/50 transition-all p-0.5 border border-indigo-500/20 flex items-center justify-center cursor-pointer z-10"
-              onClick={() => setIsSideQuestsDialogOpen(false)}
-              aria-label="Close dialog"
-            >
-              <X className="h-3 w-3 text-indigo-300" />
-            </button>
-          </DialogHeader>
-          <div className="py-2 flex-1 overflow-y-auto pr-2 custom-scrollbar">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {sideQuestsList.map((quest) => (
-                quest.isRecoveryQuest ? (
-                  <div
-                    key={quest.id}
-                    className="bg-slate-900 border-2 border-amber-600/80 rounded-lg overflow-hidden transition-all"
-                  >
-                    <div className="p-4">
-                      <div className="flex justify-between items-start mb-3">
-                        <div className="flex items-center gap-2">
-                          <Shield size={20} className="text-amber-500" />
-                          <h3 className="font-medium text-lg text-amber-400">
-                            {quest.title}
-                          </h3>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Star size={16} className="text-yellow-400" />
-                          <span className="text-amber-400 font-bold">+{quest.expReward} EXP</span>
-                          <div className="bg-amber-950/50 text-xs text-amber-500 ml-1 px-1.5 py-0.5 rounded-sm">Recovery Quest</div>
-                        </div>
-                      </div>
-
-                      {quest.description && (
-                        <p className="text-gray-300/90 mb-3 text-sm">
-                          {quest.description}
-                        </p>
-                      )}
-
-                      {quest.deadline && (
-                        <div className="flex items-center gap-2 my-3 p-2 bg-amber-950/30 rounded-md border border-amber-800/30">
-                          <Clock size={16} className="text-amber-500" />
-                          <div className="flex flex-col">
-                            <span className="text-xs text-amber-300 font-medium">Complete by end of day</span>
-                            <span className="text-xs text-amber-400/80">
-                              {format(new Date(quest.deadline), "MMMM d, yyyy")}
-                            </span>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    <button
-                      onClick={() => handleCompleteSideQuest(quest.id)}
-                      className="w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 py-3 text-center text-white flex items-center justify-center gap-2 transition-colors"
-                    >
-                      <CheckCircle size={18} />
-                      <span>Complete Recovery Quest</span>
-                    </button>
-                  </div>
-                ) : (
-                  <SideQuestCard key={quest.id} quest={quest} onComplete={handleCompleteSideQuest} />
-                )
-              ))}
-            </div>
-            {sideQuestsList.length === 0 && (
-              <div className="bg-solo-dark border border-gray-800 rounded-lg p-4 text-center">
-                <p className="text-gray-400">No active side quests available.</p>
-                <p className="text-gray-400 text-sm mt-2">Click "Add Quest" to create a side quest.</p>
-              </div>
-            )}
-          </div>
-        </CustomDialogContent>
-      </Dialog>
-    );
-  };
-
-  // Daily Quests Dialog Component
-  const DailyQuestsDialog = () => {
-    return (
-      <Dialog open={isDailyQuestsDialogOpen} onOpenChange={setIsDailyQuestsDialogOpen}>
-        <DialogTrigger asChild>
-          <Button variant="outline" className="mt-4 w-full">
-            <Layers className="h-4 w-4 mr-2" />
-            View All Daily Quests ({dailyQuests.length})
-          </Button>
-        </DialogTrigger>
-        <CustomDialogContent className="w-[90vw] max-w-[800px] p-3 sm:p-4 max-h-[85vh] overflow-hidden flex flex-col">
-          <DialogHeader className="border-b border-green-500/20 pb-2 mb-2 relative">
-            <DialogTitle className="text-transparent bg-clip-text bg-gradient-to-r from-green-300 to-emerald-400 drop-shadow-sm text-base flex items-center">
-              <ListTodo className="h-5 w-5 mr-2 text-green-500" />
-              All Daily Quests
-            </DialogTitle>
-            <button
-              type="button"
-              className="absolute right-0 top-0 h-5 w-5 rounded-full bg-gradient-to-r from-green-600/30 to-emerald-700/30 hover:from-green-600/50 hover:to-emerald-700/50 transition-all p-0.5 border border-green-500/20 flex items-center justify-center cursor-pointer z-10"
-              onClick={() => setIsDailyQuestsDialogOpen(false)}
-              aria-label="Close dialog"
-            >
-              <X className="h-3 w-3 text-green-300" />
-            </button>
-          </DialogHeader>
-          <div className="py-2 flex-1 overflow-y-auto pr-2 custom-scrollbar">
-            {dailyQuests.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {dailyQuests.map((quest) => (
-                  <DailyQuestCard key={quest.id} quest={quest} onComplete={handleCompleteDailyQuest} />
-                ))}
-              </div>
-            ) : (
-              <div className="bg-solo-dark border border-gray-800 rounded-lg p-4 text-center">
-                <p className="text-gray-400">No active daily quests available.</p>
-                <p className="text-gray-400 text-sm mt-2">Click "Add Quest" to create a daily quest.</p>
-              </div>
-            )}
-          </div>
-        </CustomDialogContent>
-      </Dialog>
-    );
-  };
-
   const renderQuests = () => {
     switch (activeFilter) {
       case 'main':
@@ -929,7 +713,6 @@ const Quests = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {activeQuests
                 .filter(quest => quest.isMainQuest)
-                .slice(0, 3) // Show only 3 quests
                 .map((quest) => (
                   <MainQuestCard
                     key={quest.id}
@@ -940,9 +723,7 @@ const Quests = () => {
                   />
                 ))}
             </div>
-            {activeQuests.filter(quest => quest.isMainQuest).length > 0 ? (
-              <MainQuestsDialog />
-            ) : (
+            {activeQuests.filter(quest => quest.isMainQuest).length === 0 && (
               <div className="bg-solo-dark border border-yellow-500/20 rounded-lg p-4 text-center">
                 <p className="text-gray-400">No active main quests available.</p>
                 <p className="text-gray-400 text-sm mt-2">Click "Add Quest" to create a main quest.</p>
@@ -960,7 +741,6 @@ const Quests = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {activeQuests
                 .filter(quest => !quest.isMainQuest && !quest.isDaily)
-                .slice(0, 3) // Show only 3 quests
                 .map((quest) => (
                   quest.isRecoveryQuest ? (
                     <div
@@ -1010,13 +790,11 @@ const Quests = () => {
                       </button>
                     </div>
                   ) : (
-                    <SideQuestCard key={quest.id} quest={quest} onComplete={handleCompleteSideQuest} />
+                    <SideQuestCard key={quest.id} quest={quest} onComplete={handleCompleteSideQuest} onStart={startQuest} />
                   )
                 ))}
             </div>
-            {activeQuests.filter(quest => !quest.isMainQuest && !quest.isDaily).length > 0 ? (
-              <SideQuestsDialog />
-            ) : (
+            {activeQuests.filter(quest => !quest.isMainQuest && !quest.isDaily).length === 0 && (
               <div className="bg-solo-dark border border-gray-800 rounded-lg p-4 text-center">
                 <p className="text-gray-400">No active side quests available.</p>
                 <p className="text-gray-400 text-sm mt-2">Click "Add Quest" to create a side quest.</p>
@@ -1037,13 +815,10 @@ const Quests = () => {
               </div>
 
               {dailyQuests.length > 0 ? (
-                <div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {dailyQuests.slice(0, 3).map((quest) => (
-                      <DailyQuestCard key={quest.id} quest={quest} onComplete={handleCompleteDailyQuest} />
-                    ))}
-                  </div>
-                  {dailyQuests.length > 3 && <DailyQuestsDialog />}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {dailyQuests.map((quest) => (
+                    <DailyQuestCard key={quest.id} quest={quest} onComplete={handleCompleteDailyQuest} />
+                  ))}
                 </div>
               ) : (
                 <div className="bg-solo-dark border border-gray-800 rounded-lg p-4 text-center">
@@ -1067,7 +842,6 @@ const Quests = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {activeQuests
                   .filter(quest => quest.isMainQuest)
-                  .slice(0, 3) // Show only 3 quests
                   .map((quest) => (
                     <MainQuestCard
                       key={quest.id}
@@ -1078,9 +852,7 @@ const Quests = () => {
                     />
                   ))}
               </div>
-              {activeQuests.filter(quest => quest.isMainQuest).length > 0 ? (
-                <MainQuestsDialog />
-              ) : (
+              {activeQuests.filter(quest => quest.isMainQuest).length === 0 && (
                 <div className="bg-solo-dark border border-yellow-500/20 rounded-lg p-4 text-center">
                   <p className="text-gray-400">No active main quests available.</p>
                   <p className="text-gray-400 text-sm mt-2">Click "Add Quest" to create a main quest.</p>
@@ -1096,69 +868,60 @@ const Quests = () => {
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {activeQuests
-                  .filter(quest => !quest.isMainQuest && !quest.isDaily)
-                  .slice(0, 3) // Show only 3 quests
+                      .filter(quest => !quest.isMainQuest && !quest.isDaily)
                   .map((quest) => (
-                    quest.isRecoveryQuest ? (
-                      <div
-                        key={quest.id}
-                        className="bg-slate-900 border-2 border-amber-600/80 rounded-lg overflow-hidden transition-all"
-                      >
-                        <div className="p-4">
-                          <div className="flex justify-between items-start mb-3">
-                            <div className="flex items-center gap-2">
-                              <Shield size={20} className="text-amber-500" />
-                              <h3 className="font-medium text-lg text-amber-400">
-                                {quest.title}
-                              </h3>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Star size={16} className="text-yellow-400" />
-                              <span className="text-amber-400 font-bold">+{quest.expReward} EXP</span>
-                              <div className="bg-amber-950/50 text-xs text-amber-500 ml-1 px-1.5 py-0.5 rounded-sm">Recovery Quest</div>
-                            </div>
+                        quest.isRecoveryQuest ? (
+                    <div
+                      key={quest.id}
+                            className="bg-slate-900 border-2 border-amber-600/80 rounded-lg overflow-hidden transition-all"
+                    >
+                            <div className="p-4">
+                              <div className="flex justify-between items-start mb-3">
+                        <div className="flex items-center gap-2">
+                                  <Shield size={20} className="text-amber-500" />
+                                  <h3 className="font-medium text-lg text-amber-400">
+                                    {quest.title}
+                                  </h3>
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  <Star size={16} className="text-yellow-400" />
+                                  <span className="text-amber-400 font-bold">+{quest.expReward} EXP</span>
+                                  <div className="bg-amber-950/50 text-xs text-amber-500 ml-1 px-1.5 py-0.5 rounded-sm">Recovery Quest</div>
+                        </div>
+                      </div>
+
+                    {quest.description && (
+                              <p className="text-gray-300/90 mb-3 text-sm">
+                                {quest.description}
+                              </p>
+                            )}
+
+                            {quest.deadline && (
+                              <div className="flex items-center gap-2 my-3 p-2 bg-amber-950/30 rounded-md border border-amber-800/30">
+                                <Clock size={16} className="text-amber-500" />
+                                <div className="flex flex-col">
+                                  <span className="text-xs text-amber-300 font-medium">Complete by end of day</span>
+                                  <span className="text-xs text-amber-400/80">
+                                    {format(new Date(quest.deadline), "MMMM d, yyyy")}
+                                  </span>
+                                </div>
+                              </div>
+                            )}
                           </div>
 
-                          {quest.description && (
-                            <p className="text-gray-300/90 mb-3 text-sm">
-                              {quest.description}
-                            </p>
-                          )}
-
-                          {quest.deadline && (
-                            <div className="flex items-center gap-2 my-3 p-2 bg-amber-950/30 rounded-md border border-amber-800/30">
-                              <Clock size={16} className="text-amber-500" />
-                              <div className="flex flex-col">
-                                <span className="text-xs text-amber-300 font-medium">Complete by end of day</span>
-                                <span className="text-xs text-amber-400/80">
-                                  {format(new Date(quest.deadline), "MMMM d, yyyy")}
-                                </span>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-
-                        <button
-                          onClick={() => handleCompleteSideQuest(quest.id)}
-                          className="w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 py-3 text-center text-white flex items-center justify-center gap-2 transition-colors"
-                        >
-                          <CheckCircle size={18} />
-                          <span>Complete Recovery Quest</span>
-                        </button>
-                      </div>
-                    ) : (
-                      <SideQuestCard key={quest.id} quest={quest} onComplete={handleCompleteSideQuest} />
-                    )
+                          <button
+                            onClick={() => handleCompleteSideQuest(quest.id)}
+                            className="w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 py-3 text-center text-white flex items-center justify-center gap-2 transition-colors"
+                          >
+                            <CheckCircle size={18} />
+                            <span>Complete Recovery Quest</span>
+                          </button>
+                    </div>
+                        ) : (
+                          <SideQuestCard key={quest.id} quest={quest} onComplete={handleCompleteSideQuest} onStart={startQuest} />
+                        )
                   ))}
               </div>
-              {activeQuests.filter(quest => !quest.isMainQuest && !quest.isDaily).length > 0 ? (
-                <SideQuestsDialog />
-              ) : (
-                <div className="bg-solo-dark border border-gray-800 rounded-lg p-4 text-center">
-                  <p className="text-gray-400">No active side quests available.</p>
-                  <p className="text-gray-400 text-sm mt-2">Click "Add Quest" to create a side quest.</p>
-                </div>
-              )}
             </div>
 
             {/* Daily Quests Section */}
@@ -1169,23 +932,20 @@ const Quests = () => {
               </h2>
 
               {dailyQuests.length > 0 ? (
-                <div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {dailyQuests.slice(0, 3).map((quest) => (
-                      <DailyQuestCard key={quest.id} quest={quest} onComplete={handleCompleteDailyQuest} />
-                    ))}
-                  </div>
-                  {dailyQuests.length > 3 && <DailyQuestsDialog />}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {dailyQuests.map((quest) => (
+                    <DailyQuestCard key={quest.id} quest={quest} onComplete={handleCompleteDailyQuest} />
+                  ))}
                 </div>
               ) : (
                 <div className="bg-solo-dark border border-green-500/20 rounded-lg p-4">
                   <div className="mb-4">
                     <p className="text-gray-400">Daily quests reset every day. Complete them to earn rewards and maintain your streak.</p>
-                  </div>
+              </div>
                   <div className="bg-solo-dark border border-gray-800 rounded-lg p-4 text-center">
                     <p className="text-gray-400">No active daily quests available.</p>
                     <p className="text-gray-400 text-sm mt-2">Click "Add Quest" to create a daily quest.</p>
-                  </div>
+              </div>
                 </div>
               )}
             </div>
@@ -1413,7 +1173,7 @@ const Quests = () => {
                                       ? 'bg-purple-500/10 text-purple-400 border border-purple-500/20'
                                       : 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20'
                                   }`}>
-                                    {quest.category}
+                                    {quest.category.charAt(0).toUpperCase() + quest.category.slice(1)}
                                   </span>
                                 )}
                               </div>
@@ -1432,6 +1192,17 @@ const Quests = () => {
                         </div>
                       ))}
                   </div>
+                </div>
+              )}
+
+              {/* Show nothing if no completed quests of any type */}
+              {completedQuests.length > 0 &&
+               completedQuests.filter(quest => quest.isMainQuest).length === 0 &&
+               completedQuests.filter(quest => !quest.isMainQuest && !quest.isDaily).length === 0 &&
+               completedQuests.filter(quest => quest.isDaily).length === 0 && (
+                <div className="bg-solo-dark border border-gray-800 rounded-lg p-4 text-center">
+                  <p className="text-gray-400">No quests completed today. Complete some quests to see them here!</p>
+                  <p className="text-gray-400 text-sm mt-2">This section will reset at midnight.</p>
                 </div>
               )}
             </div>
