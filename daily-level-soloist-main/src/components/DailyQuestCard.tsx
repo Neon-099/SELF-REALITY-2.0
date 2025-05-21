@@ -1,5 +1,5 @@
 import React from 'react';
-import { Star, CheckCircle, CalendarClock, ListTodo } from 'lucide-react';
+import { Star, CheckCircle, CalendarClock, Sunrise } from 'lucide-react';
 import { Button } from './ui/button';
 import { format } from 'date-fns';
 
@@ -49,7 +49,7 @@ const DailyQuestCard: React.FC<DailyQuestCardProps> = ({ quest, onComplete }) =>
     >
       {/* Decorative Daily Icon */}
       <div className="absolute -top-4 -left-4 bg-green-500/10 rounded-full p-2 shadow-md">
-        <ListTodo className="text-green-500" size={28} />
+        <Sunrise className="text-green-500" size={28} />
       </div>
       {/* Header */}
       <div className="flex justify-between items-start mb-2">

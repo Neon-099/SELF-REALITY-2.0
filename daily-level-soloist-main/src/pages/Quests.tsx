@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useLayoutEffect } from 'react';
 import { useSoloLevelingStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, Swords, Star, ListTodo, ChevronDown, ChevronUp, Sword, Coins, Filter, Database, X, CalendarClock, Shield, Clock, Eye, EyeOff } from 'lucide-react';
+import { CheckCircle, Swords, Star, ListTodo, ChevronDown, ChevronUp, Sword, Coins, Filter, Database, X, CalendarClock, Shield, Clock, Eye, EyeOff, Sunrise, CalendarDays, Plus } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from '@/components/ui/dialog';
 import { toast } from '@/hooks/use-toast';
 import { DailyWinCategory, Difficulty, Quest, Task as QuestTask } from '@/lib/types';
@@ -218,7 +218,7 @@ const AddQuestDialog = ({ onClose }: { onClose: () => void }) => {
             onClick={() => setQuestType('daily')}
             className="flex items-center justify-center gap-1 w-full"
           >
-            <ListTodo className="h-4 w-4 text-green-500" />
+            <Sunrise className="h-4 w-4 text-green-500" />
             Daily
           </Button>
         </div>
@@ -540,6 +540,23 @@ const Quests = () => {
   const [isLoadingDb, setIsLoadingDb] = useState(false);
   const [dbContents, setDbContents] = useState<any>(null);
   const [questsData, setQuestsData] = useState<Quest[]>([]);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Check if the screen is mobile size
+  useEffect(() => {
+    const checkIfMobile = () => {
+      setIsMobile(window.innerWidth < 640);
+    };
+
+    // Initial check
+    checkIfMobile();
+
+    // Add event listener for window resize
+    window.addEventListener('resize', checkIfMobile);
+
+    // Clean up
+    return () => window.removeEventListener('resize', checkIfMobile);
+  }, []);
 
   // Add useEffect to update questsData when quests from the store change
   useEffect(() => {
@@ -722,7 +739,7 @@ const Quests = () => {
                     View All
                   </Button>
                 </DialogTrigger>
-                <CustomDialogContent className="w-[90vw] max-w-[600px] p-4 max-h-[80vh] overflow-hidden flex flex-col">
+                <CustomDialogContent className="w-[90vw] max-w-[500px] p-3 max-h-[80vh] overflow-hidden flex flex-col">
                   <DialogHeader className="border-b border-yellow-500/20 pb-2 mb-3 relative">
                     <DialogTitle className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-amber-500 drop-shadow-sm text-lg">
                       All Main Quests
@@ -732,7 +749,7 @@ const Quests = () => {
                     </DialogClose>
                   </DialogHeader>
                   <div className="py-2 flex-1 overflow-y-auto pr-2 custom-scrollbar">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 gap-2">
                       {questsData
                         .filter(quest => quest.isMainQuest && !quest.completed)
                         .map((quest) => (
@@ -813,7 +830,7 @@ const Quests = () => {
                     View All
                   </Button>
                 </DialogTrigger>
-                <CustomDialogContent className="w-[90vw] max-w-[600px] p-4 max-h-[80vh] overflow-hidden flex flex-col">
+                <CustomDialogContent className="w-[90vw] max-w-[500px] p-3 max-h-[80vh] overflow-hidden flex flex-col">
                   <DialogHeader className="border-b border-indigo-500/20 pb-2 mb-3 relative">
                     <DialogTitle className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 to-purple-500 drop-shadow-sm text-lg">
                       All Side Quests
@@ -823,7 +840,7 @@ const Quests = () => {
                     </DialogClose>
                   </DialogHeader>
                   <div className="py-2 flex-1 overflow-y-auto pr-2 custom-scrollbar">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 gap-2">
                       {questsData
                         .filter(quest => !quest.isMainQuest && !quest.isDaily && !quest.completed)
                         .map((quest) => (
@@ -933,7 +950,7 @@ const Quests = () => {
           <div className="space-y-4">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-bold text-solo-text flex items-center gap-2">
-                <ListTodo className="text-green-500" size={20} />
+                <Sunrise className="text-green-500" size={20} />
                 Daily Quests
               </h2>
               <Dialog>
@@ -947,7 +964,7 @@ const Quests = () => {
                     View All
                   </Button>
                 </DialogTrigger>
-                <CustomDialogContent className="w-[90vw] max-w-[600px] p-4 max-h-[80vh] overflow-hidden flex flex-col">
+                <CustomDialogContent className="w-[90vw] max-w-[500px] p-3 max-h-[80vh] overflow-hidden flex flex-col">
                   <DialogHeader className="border-b border-green-500/20 pb-2 mb-3 relative">
                     <DialogTitle className="text-transparent bg-clip-text bg-gradient-to-r from-green-300 to-emerald-500 drop-shadow-sm text-lg">
                       All Daily Quests
@@ -957,7 +974,7 @@ const Quests = () => {
                     </DialogClose>
                   </DialogHeader>
                   <div className="py-2 flex-1 overflow-y-auto pr-2 custom-scrollbar">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 gap-2">
                       {questsData
                         .filter(quest => quest.isDaily && !quest.completed)
                         .map((quest) => (
@@ -1015,7 +1032,7 @@ const Quests = () => {
 
               {dailyQuests.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                  {dailyQuests.slice(0, 4).map((quest) => (
+                  {dailyQuests.slice(0, isMobile ? 2 : 4).map((quest) => (
                     <DailyQuestCard key={quest.id} quest={quest} onComplete={handleCompleteDailyQuest} />
                   ))}
                 </div>
@@ -1050,7 +1067,7 @@ const Quests = () => {
                       View All
                     </Button>
                   </DialogTrigger>
-                  <CustomDialogContent className="w-[90vw] max-w-[600px] p-4 max-h-[80vh] overflow-hidden flex flex-col">
+                  <CustomDialogContent className="w-[90vw] max-w-[500px] p-3 max-h-[80vh] overflow-hidden flex flex-col">
                     <DialogHeader className="border-b border-yellow-500/20 pb-2 mb-3 relative">
                       <DialogTitle className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-amber-500 drop-shadow-sm text-lg">
                         All Main Quests
@@ -1067,7 +1084,7 @@ const Quests = () => {
                             <Clock size={14} className="text-yellow-500" />
                             In Progress
                           </h3>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <div className="grid grid-cols-1 gap-2">
                             {questsData
                               .filter(quest => quest.isMainQuest && !quest.completed && quest.started)
                               .map((quest) => (
@@ -1186,7 +1203,7 @@ const Quests = () => {
                             <ListTodo size={14} className="text-yellow-500" />
                             Not Started
                           </h3>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <div className="grid grid-cols-1 gap-2">
                             {questsData
                               .filter(quest => quest.isMainQuest && !quest.completed && !quest.started)
                               .map((quest) => (
@@ -1309,7 +1326,7 @@ const Quests = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {activeQuests
                   .filter(quest => quest.isMainQuest)
-                  .slice(0, 4)
+                  .slice(0, isMobile ? 2 : 4)
                   .map((quest) => (
                     <MainQuestCard
                       key={quest.id}
@@ -1346,7 +1363,7 @@ const Quests = () => {
                       View All
                     </Button>
                   </DialogTrigger>
-                  <CustomDialogContent className="w-[90vw] max-w-[600px] p-4 max-h-[80vh] overflow-hidden flex flex-col">
+                  <CustomDialogContent className="w-[90vw] max-w-[500px] p-3 max-h-[80vh] overflow-hidden flex flex-col">
                     <DialogHeader className="border-b border-indigo-500/20 pb-2 mb-3 relative">
                       <DialogTitle className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 to-purple-500 drop-shadow-sm text-lg">
                         All Side Quests
@@ -1363,7 +1380,7 @@ const Quests = () => {
                             <Clock size={14} className="text-indigo-500" />
                             In Progress
                           </h3>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <div className="grid grid-cols-1 gap-2">
                             {questsData
                               .filter(quest => !quest.isMainQuest && !quest.isDaily && !quest.completed && quest.started)
                               .map((quest) => (
@@ -1482,7 +1499,7 @@ const Quests = () => {
                             <ListTodo size={14} className="text-indigo-500" />
                             Not Started
                           </h3>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <div className="grid grid-cols-1 gap-2">
                             {questsData
                               .filter(quest => !quest.isMainQuest && !quest.isDaily && !quest.completed && !quest.started)
                               .map((quest) => (
@@ -1605,7 +1622,7 @@ const Quests = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {activeQuests
                       .filter(quest => !quest.isMainQuest && !quest.isDaily)
-                      .slice(0, 4)
+                      .slice(0, isMobile ? 2 : 4)
                   .map((quest) => (
                         quest.isRecoveryQuest ? (
                     <div
@@ -1665,7 +1682,7 @@ const Quests = () => {
             <div className="space-y-4">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-bold text-solo-text flex items-center gap-2">
-                  <ListTodo className="text-green-500" size={20} />
+                  <Sunrise className="text-green-500" size={20} />
                   Daily Quests
                 </h2>
                 <Dialog>
@@ -1679,7 +1696,7 @@ const Quests = () => {
                       View All
                     </Button>
                   </DialogTrigger>
-                  <CustomDialogContent className="w-[90vw] max-w-[600px] p-4 max-h-[80vh] overflow-hidden flex flex-col">
+                  <CustomDialogContent className="w-[90vw] max-w-[500px] p-3 max-h-[80vh] overflow-hidden flex flex-col">
                     <DialogHeader className="border-b border-green-500/20 pb-2 mb-3 relative">
                       <DialogTitle className="text-transparent bg-clip-text bg-gradient-to-r from-green-300 to-emerald-500 drop-shadow-sm text-lg">
                         All Daily Quests
@@ -1689,7 +1706,7 @@ const Quests = () => {
                       </DialogClose>
                     </DialogHeader>
                     <div className="py-2 flex-1 overflow-y-auto pr-2 custom-scrollbar">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div className="grid grid-cols-1 gap-2">
                         {questsData
                           .filter(quest => quest.isDaily && !quest.completed)
                           .map((quest) => (
@@ -1807,7 +1824,7 @@ const Quests = () => {
 
               {dailyQuests.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                  {dailyQuests.slice(0, 4).map((quest) => (
+                  {dailyQuests.slice(0, isMobile ? 2 : 4).map((quest) => (
                     <DailyQuestCard key={quest.id} quest={quest} onComplete={handleCompleteDailyQuest} />
                   ))}
                 </div>
@@ -1839,7 +1856,7 @@ const Quests = () => {
           <Dialog open={isAddQuestDialogOpen} onOpenChange={setIsAddQuestDialogOpen}>
             <DialogTrigger asChild>
               <Button className="gap-2">
-                <ListTodo className="h-4 w-4" />
+                <Plus className="h-4 w-4" />
                 Add Quest
               </Button>
             </DialogTrigger>
@@ -1906,7 +1923,7 @@ const Quests = () => {
           onClick={() => setActiveFilter('daily')}
           className={`flex items-center gap-1 font-bold ${activeFilter === 'daily' ? 'bg-gradient-to-r from-green-400 to-emerald-400 text-white drop-shadow-glow' : ''}`}
         >
-          <ListTodo className="h-4 w-4 text-green-500" />
+          <Sunrise className="h-4 w-4 text-green-500" />
           Daily Quests
         </Button>
       </div>
@@ -2019,7 +2036,7 @@ const Quests = () => {
               {completedQuests.filter(quest => quest.isDaily).length > 0 && (
                 <div>
                   <h3 className="text-lg font-bold text-solo-text mb-3 flex items-center gap-2 opacity-70">
-                    <ListTodo className="text-green-500" size={18} />
+                    <Sunrise className="text-green-500" size={18} />
                     Completed Daily Quests
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -2033,7 +2050,7 @@ const Quests = () => {
                           <div className="flex justify-between items-start mb-2">
                             <div className="flex items-center gap-2">
                               <div className="text-green-500/70">
-                                <ListTodo size={16} />
+                                <Sunrise size={16} />
                               </div>
                               <div>
                                 <h3 className="font-medium text-lg line-through">{quest.title}</h3>
@@ -2087,4 +2104,4 @@ const Quests = () => {
   );
 };
 
-export default Quests;
+export default Quests
