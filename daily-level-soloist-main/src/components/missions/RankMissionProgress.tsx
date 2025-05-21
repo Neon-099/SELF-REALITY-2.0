@@ -564,7 +564,7 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
                     {mission.rank} Rank {isBoss && '• BOSS'}
                   </Badge>
                   <Badge
-                    className={`flex items-center gap-1 bg-transparent border-2 font-semibold backdrop-blur-sm dark:shadow-inner group-hover:scale-110 transition-transform duration-300
+                    className={`hidden sm:flex items-center gap-1 bg-transparent border-2 font-semibold backdrop-blur-sm dark:shadow-inner group-hover:scale-110 transition-transform duration-300
                       ${isBoss
                         ? 'border-amber-500 text-amber-500'
                         : `border-${mission.rank.toLowerCase()}-400 text-${mission.rank.toLowerCase()}-400`}
@@ -598,7 +598,7 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
               </div>
 
               {/* Mission description */}
-              <div className={`p-3 sm:p-5 relative ${rankBg} border-t border-white/10 min-h-[8rem] sm:min-h-[10rem] flex flex-col`}>
+              <div className={`p-3 sm:p-5 relative ${rankBg} border-t border-white/10 min-h-[4rem] sm:min-h-[10rem] flex flex-col`}>
                 {/* Subtle background pattern for boss missions */}
                 {isBoss && (
                   <div className="absolute inset-0 opacity-5">
@@ -607,17 +607,23 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
                 )}
 
                 {isCompleted ? (
-                  <p className={`flex-grow text-sm sm:text-base ${isBoss
-                    ? 'text-amber-400/70'
-                    : `text-${mission.rank.toLowerCase()}-400/70`} relative z-10 leading-relaxed`}>
-                    {mission.description}
-                  </p>
+                  <>
+                    <p className={`hidden sm:block flex-grow text-sm sm:text-base ${isBoss
+                      ? 'text-amber-400/70'
+                      : `text-${mission.rank.toLowerCase()}-400/70`} relative z-10 leading-relaxed`}>
+                      {mission.description}
+                    </p>
+                    <div className="block sm:hidden h-4"></div>
+                  </>
                 ) : (
                   <>
                     {!isStarted && (
-                      <p className={`flex-grow text-sm sm:text-base ${getRankTextStyle(mission.rank as Rank)} relative z-10 leading-relaxed`}>
-                        {mission.description}
-                      </p>
+                      <>
+                        <p className={`hidden sm:block flex-grow text-sm sm:text-base ${getRankTextStyle(mission.rank as Rank)} relative z-10 leading-relaxed`}>
+                          {mission.description}
+                        </p>
+                        <div className="block sm:hidden h-4"></div>
+                      </>
                     )}
 
                     {/* Task Progress for started missions - simplified to just show %, no task count */}
@@ -634,7 +640,7 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
 
                 {/* Completed mission experience earned */}
                 {isCompleted && (
-                  <div className="text-blue-500 text-xs sm:text-sm font-semibold mt-auto pt-3 sm:pt-4 flex items-center bg-blue-500/10 p-2 rounded-lg relative z-10">
+                  <div className="hidden sm:flex text-blue-500 text-xs sm:text-sm font-semibold mt-auto pt-3 sm:pt-4 items-center bg-blue-500/10 p-2 rounded-lg relative z-10">
                     <Star className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 fill-blue-500" />
                     {completedMission ? (
                       <>+{completedMission.expEarned} EXP (earned)</>
