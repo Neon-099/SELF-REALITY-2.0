@@ -56,7 +56,7 @@ export const createTaskSlice: StateCreator<
       expReward: getExpForDifficulty(difficulty),
       category,
       createdAt: new Date(),
-      scheduledFor: new Date(),
+      scheduledFor: deadline || new Date(), // Use deadline date as scheduledFor if provided, otherwise use today
       deadline
     };
     get().addTask(task);
@@ -69,9 +69,9 @@ export const createTaskSlice: StateCreator<
   completeTask: (id) => {
     const { tasks, addExp, addStatExp, updateDailyWin, getExpModifier } = get();
     const task = tasks.find(t => t.id === id);
-    
+
     if (!task || task.completed) return;
-    
+
     // Check if deadline has passed (automatically apply missed deadline penalty)
     if (task.deadline && new Date(task.deadline) < new Date()) {
       // Task was completed after deadline passed
@@ -79,23 +79,23 @@ export const createTaskSlice: StateCreator<
       markTaskAsMissed(task.id);
       return;
     }
-    
+
     // Get experience modifier from punishment system
     const expModifier = getExpModifier();
-    
+
     // Calculate final exp with modifier
     const finalExpReward = Math.floor(task.expReward * expModifier);
-    
+
     // Update task status
     set((state: TaskSlice) => ({
-      tasks: state.tasks.map(t => 
+      tasks: state.tasks.map(t =>
         t.id === id ? { ...t, completed: true, completedAt: new Date() } : t
       )
     }));
-    
+
     // Add experience points with modifier applied
     addExp(finalExpReward);
-    
+
     // Add stat experience
     let stat: Stat;
     switch (task.category) {
@@ -115,10 +115,10 @@ export const createTaskSlice: StateCreator<
         stat = 'emotional';
     }
     addStatExp(stat, Math.floor(finalExpReward / 2));
-    
+
     // Update daily win progress
     updateDailyWin(task.category, task.id);
-    
+
     // Show notification with exp modifier info if applicable
     if (expModifier < 1) {
       toast({
@@ -140,24 +140,24 @@ export const createTaskSlice: StateCreator<
   markTaskAsMissed: (id) => {
     const { tasks, applyMissedDeadlinePenalty } = get();
     const task = tasks.find(t => t.id === id);
-    
+
     if (!task || task.completed) return;
-    
+
     // Apply the missed deadline penalty through the punishment system
     applyMissedDeadlinePenalty('task', id);
-    
+
     // Mark the task as completed but with a miss flag
     set((state: TaskSlice) => ({
-      tasks: state.tasks.map(t => 
-        t.id === id ? { 
-          ...t, 
-          completed: true, 
+      tasks: state.tasks.map(t =>
+        t.id === id ? {
+          ...t,
+          completed: true,
           completedAt: new Date(),
           missed: true // Add a flag to indicate it was missed
         } : t
       )
     }));
-    
+
     toast({
       title: "Task Marked as Missed",
       description: "The task has been marked as missed and penalties applied.",

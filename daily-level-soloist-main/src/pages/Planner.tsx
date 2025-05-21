@@ -3,12 +3,12 @@ import { format, startOfWeek, addDays, addWeeks, isSameDay, parseISO } from 'dat
 import { Calendar } from '@/components/ui/calendar';
 import { useSoloLevelingStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
-import { 
-  PlusCircle, 
-  CalendarDays, 
-  ChevronLeft, 
-  ChevronRight, 
-  Calendar as CalendarIcon, 
+import {
+  PlusCircle,
+  CalendarDays,
+  ChevronLeft,
+  ChevronRight,
+  Calendar as CalendarIcon,
   CheckCircle2,
   AlertCircle,
   EyeOff,
@@ -77,15 +77,15 @@ const isDailyWinCategory = (category: string): category is DailyWinCategory => {
   return ['mental', 'physical', 'spiritual', 'intelligence'].includes(category);
 };
 
-const TaskDialog = ({ 
-  isOpen, 
-  onClose, 
-  selectedDate, 
+const TaskDialog = ({
+  isOpen,
+  onClose,
+  selectedDate,
   editingTask = null,
   onDelete = null
-}: { 
-  isOpen: boolean; 
-  onClose: () => void; 
+}: {
+  isOpen: boolean;
+  onClose: () => void;
   selectedDate: Date;
   editingTask?: any;
   onDelete?: () => void;
@@ -95,18 +95,18 @@ const TaskDialog = ({
   const deleteTask = useSoloLevelingStore(state => state.deleteTask);
   const tasks = useSoloLevelingStore(state => state.tasks);
   const user = useSoloLevelingStore(state => state.user);
-  
+
   const [title, setTitle] = React.useState(editingTask?.title || '');
   const [description, setDescription] = React.useState(editingTask?.description || '');
   const [difficulty, setDifficulty] = React.useState<Difficulty>(editingTask?.difficulty || 'medium');
   const [categoryType, setCategoryType] = React.useState<'dailyWin' | 'attribute'>(
-    editingTask ? 
-      (["mental", "physical", "spiritual", "intelligence"].includes(editingTask.category) ? 'dailyWin' : 'attribute') : 
+    editingTask ?
+      (["mental", "physical", "spiritual", "intelligence"].includes(editingTask.category) ? 'dailyWin' : 'attribute') :
       'dailyWin'
   );
   const [category, setCategory] = React.useState<string>(editingTask?.category || 'mental');
-  const [deadline, setDeadline] = React.useState<Date | undefined>(editingTask?.deadline || new Date(Date.now() + 24 * 60 * 60 * 1000));
-  
+  const [deadline, setDeadline] = React.useState<Date | undefined>(editingTask?.deadline || selectedDate);
+
   // Update form values when editingTask changes or dialog opens
   React.useEffect(() => {
     if (isOpen) {
@@ -114,22 +114,22 @@ const TaskDialog = ({
       setDescription(editingTask?.description || '');
       setDifficulty(editingTask?.difficulty || 'medium');
       setCategoryType(
-        editingTask ? 
-          (["mental", "physical", "spiritual", "intelligence"].includes(editingTask.category) ? 'dailyWin' : 'attribute') : 
+        editingTask ?
+          (["mental", "physical", "spiritual", "intelligence"].includes(editingTask.category) ? 'dailyWin' : 'attribute') :
           'dailyWin'
       );
       setCategory(editingTask?.category || 'mental');
-      setDeadline(editingTask?.deadline || new Date(Date.now() + 24 * 60 * 60 * 1000));
+      setDeadline(editingTask?.deadline || selectedDate);
     }
   }, [isOpen, editingTask]);
-  
+
   // Daily win categories and attribute categories
   const dailyWinCategories = ["mental", "physical", "spiritual", "intelligence"];
   const attributeCategories = ["physical", "cognitive", "emotional", "spiritual", "social"];
-  
+
   // Check if all daily wins are completed
   const allDailyWinsCompleted = areAllDailyWinsCompleted(user.dailyWins);
-  
+
   // Inside TaskDialog component, add a new helper function to check if a date is today or in the past
   const isDateTodayOrPast = (date: Date) => {
     const today = new Date();
@@ -138,19 +138,19 @@ const TaskDialog = ({
     compareDate.setHours(0, 0, 0, 0);
     return compareDate <= today;
   };
-  
+
   // Modify the isSelectedCategoryCompleted check
   const isSelectedCategoryCompleted = (() => {
     if (categoryType !== 'dailyWin') return false;
     if (!['mental', 'physical', 'spiritual', 'intelligence'].includes(category)) return false;
-    
+
     // Check both completed daily wins and pending tasks
     const isCompleted = isDateTodayOrPast(selectedDate) && isDailyWinCompleted(user.dailyWins, category as DailyWinCategory);
     const hasPending = hasPendingDailyWinTask(tasks, category as DailyWinCategory, selectedDate);
-    
+
     return isCompleted || hasPending;
   })();
-  
+
   // Modify the toast notifications effect
   React.useEffect(() => {
     if (isOpen && isDateTodayOrPast(selectedDate)) {
@@ -173,7 +173,7 @@ const TaskDialog = ({
       }
     }
   }, [isOpen, allDailyWinsCompleted, isSelectedCategoryCompleted, category, selectedDate]);
-  
+
   // Reset category when category type changes
   React.useEffect(() => {
     if (categoryType === 'dailyWin') {
@@ -182,7 +182,7 @@ const TaskDialog = ({
       setCategory('physical');
     }
   }, [categoryType]);
-  
+
   // Modify the auto-switch to attributes effect
   React.useEffect(() => {
     // Only auto-switch for today's tasks
@@ -190,21 +190,21 @@ const TaskDialog = ({
       setCategoryType('attribute');
     }
   }, [allDailyWinsCompleted, categoryType, selectedDate]);
-  
+
   const isTaskCompleted = editingTask?.completed || false;
-  
+
   // Add a function to check if an attribute category is at its limit
   const isAttributeCategoryLimited = (cat: string) => {
     return isAttributeLimitReached(tasks, cat, selectedDate);
   };
-  
+
   const handleSave = () => {
     const formData = {
       title,
       description,
       difficulty
     };
-    
+
     if (!formData.title) {
       toast({
         title: "Error",
@@ -214,7 +214,7 @@ const TaskDialog = ({
       });
       return;
     }
-    
+
     // Check for daily win limitations
     if (categoryType === 'dailyWin') {
       if (isDateTodayOrPast(selectedDate) && isDailyWinCompleted(user.dailyWins, category as DailyWinCategory)) {
@@ -226,7 +226,7 @@ const TaskDialog = ({
         });
         return;
       }
-      
+
       if (hasPendingDailyWinTask(tasks, category as DailyWinCategory, selectedDate)) {
         toast({
           title: `${category.charAt(0).toUpperCase() + category.slice(1)} Win Already Planned`,
@@ -236,7 +236,7 @@ const TaskDialog = ({
         });
         return;
       }
-    } 
+    }
     // Check for attribute task limitations
     else if (categoryType === 'attribute') {
       if (isAttributeLimitReached(tasks, category, selectedDate)) {
@@ -249,15 +249,15 @@ const TaskDialog = ({
         return;
       }
     }
-    
+
     if (editingTask) {
       // Update the task
-      // For type compatibility, cast daily win categories to DailyWinCategory, 
+      // For type compatibility, cast daily win categories to DailyWinCategory,
       // but for attributes, we must cast to any to bypass type checking
-      const categoryToUse = categoryType === 'dailyWin' && isDailyWinCategory(category) 
-        ? category 
+      const categoryToUse = categoryType === 'dailyWin' && isDailyWinCategory(category)
+        ? category
         : category as any;
-        
+
       const updatedTask: Task = {
         id: uuidv4(), // Generate a new ID for consistency with home page editing
         title: formData.title,
@@ -272,13 +272,13 @@ const TaskDialog = ({
         deadline: deadline,
         missed: editingTask.missed
       };
-      
+
       // Delete the old task
       deleteTask(editingTask.id);
-      
+
       // Add the updated task
       addTask(updatedTask);
-      
+
       toast({
         title: "Task updated",
         description: "Your task has been updated",
@@ -286,12 +286,12 @@ const TaskDialog = ({
       });
     } else {
       // Create a new task
-      // For type compatibility, cast daily win categories to DailyWinCategory, 
+      // For type compatibility, cast daily win categories to DailyWinCategory,
       // but for attributes, we must cast to any to bypass type checking
-      const categoryToUse = categoryType === 'dailyWin' && isDailyWinCategory(category) 
-        ? category 
+      const categoryToUse = categoryType === 'dailyWin' && isDailyWinCategory(category)
+        ? category
         : category as any;
-        
+
       const newTask: Task = {
         id: uuidv4(),
         title: formData.title,
@@ -304,25 +304,25 @@ const TaskDialog = ({
         createdAt: new Date(),
         deadline: deadline
       };
-      
+
       // Add the new task
       addTask(newTask);
-      
+
       toast({
         title: "Task created",
-        description: deadline 
+        description: deadline
           ? `Your task has been created with a deadline of ${deadline.toLocaleString()}`
           : "Your task has been created successfully",
         duration: 2000
       });
     }
-    
+
     setTitle('');
     setDescription('');
     setCategoryType('dailyWin');
     setCategory('mental');
     setDifficulty('medium');
-    setDeadline(new Date(Date.now() + 24 * 60 * 60 * 1000));
+    setDeadline(selectedDate);
     onClose();
   };
 
@@ -334,7 +334,7 @@ const TaskDialog = ({
             {editingTask ? 'Edit Task' : 'Add Task'}
           </DialogTitle>
         </DialogHeader>
-        
+
         <form onSubmit={(e) => {
           e.preventDefault();
           handleSave();
@@ -350,7 +350,7 @@ const TaskDialog = ({
               disabled={isTaskCompleted}
             />
           </div>
-          
+
           <div className="space-y-1.5">
             <Label htmlFor="description" className="text-sm">Description (optional)</Label>
             <Textarea
@@ -362,12 +362,12 @@ const TaskDialog = ({
               disabled={isTaskCompleted}
             />
           </div>
-          
+
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="space-y-1.5">
               <Label htmlFor="difficulty" className="text-sm">Difficulty</Label>
-              <Select 
-                value={difficulty} 
+              <Select
+                value={difficulty}
                 onValueChange={(value: Difficulty) => setDifficulty(value)}
                 disabled={isTaskCompleted}
               >
@@ -382,7 +382,7 @@ const TaskDialog = ({
                 </SelectContent>
               </Select>
             </div>
-            
+
             <div className="space-y-1.5">
               <Label className="text-sm">Category</Label>
               <div className="grid grid-cols-2 gap-0 rounded-md overflow-hidden border">
@@ -392,8 +392,8 @@ const TaskDialog = ({
                   disabled={isTaskCompleted}
                   className={cn(
                     "py-1.5 px-2 text-sm text-center transition-all",
-                    categoryType === 'attribute' 
-                      ? "bg-indigo-500/10 border-b-2 border-indigo-500 font-medium text-indigo-300" 
+                    categoryType === 'attribute'
+                      ? "bg-indigo-500/10 border-b-2 border-indigo-500 font-medium text-indigo-300"
                       : "text-gray-400 hover:bg-gray-800/50 border-b-2 border-transparent"
                   )}
                 >
@@ -405,8 +405,8 @@ const TaskDialog = ({
                   disabled={isTaskCompleted || (allDailyWinsCompleted && categoryType !== 'dailyWin')}
                   className={cn(
                     "py-1.5 px-2 text-sm text-center transition-all",
-                    categoryType === 'dailyWin' 
-                      ? "bg-indigo-500/10 border-b-2 border-indigo-500 font-medium text-indigo-300" 
+                    categoryType === 'dailyWin'
+                      ? "bg-indigo-500/10 border-b-2 border-indigo-500 font-medium text-indigo-300"
                       : "text-gray-400 hover:bg-gray-800/50 border-b-2 border-transparent",
                     (allDailyWinsCompleted && categoryType !== 'dailyWin') && "opacity-50 cursor-not-allowed hover:bg-transparent"
                   )}
@@ -416,11 +416,11 @@ const TaskDialog = ({
               </div>
             </div>
           </div>
-          
+
           <div className="space-y-1.5">
             <Label htmlFor="category-select" className="text-sm">Type</Label>
-            <Select 
-              value={category} 
+            <Select
+              value={category}
               onValueChange={(value) => setCategory(value)}
               disabled={isTaskCompleted}
             >
@@ -430,11 +430,11 @@ const TaskDialog = ({
               <SelectContent>
                 {categoryType === 'dailyWin' ? (
                   dailyWinCategories.map(cat => (
-                    <SelectItem 
-                      key={cat} 
+                    <SelectItem
+                      key={cat}
                       value={cat}
-                      disabled={isDateTodayOrPast(selectedDate) && 
-                        (isDailyWinCompleted(user.dailyWins, cat as DailyWinCategory) || 
+                      disabled={isDateTodayOrPast(selectedDate) &&
+                        (isDailyWinCompleted(user.dailyWins, cat as DailyWinCategory) ||
                         hasPendingDailyWinTask(tasks, cat as DailyWinCategory, selectedDate))}
                     >
                       {cat.charAt(0).toUpperCase() + cat.slice(1)}
@@ -442,8 +442,8 @@ const TaskDialog = ({
                   ))
                 ) : (
                   attributeCategories.map(cat => (
-                    <SelectItem 
-                      key={cat} 
+                    <SelectItem
+                      key={cat}
                       value={cat}
                       disabled={isAttributeCategoryLimited(cat)}
                     >
@@ -454,22 +454,22 @@ const TaskDialog = ({
               </SelectContent>
             </Select>
           </div>
-          
+
           <div className="space-y-1.5">
             <Label className="text-sm">Deadline</Label>
-            <DateTimePicker 
-              date={deadline} 
+            <DateTimePicker
+              date={deadline}
               setDate={setDeadline}
               disabled={isTaskCompleted}
               className="h-9"
             />
           </div>
-          
+
           <div className="flex justify-end gap-2 pt-2">
             {editingTask && !isTaskCompleted && onDelete && (
-              <Button 
-                type="button" 
-                variant="destructive" 
+              <Button
+                type="button"
+                variant="destructive"
                 size="sm"
                 onClick={onDelete}
                 className="px-3 py-1 text-xs"
@@ -477,8 +477,8 @@ const TaskDialog = ({
                 Delete
               </Button>
             )}
-            <Button 
-              type="submit" 
+            <Button
+              type="submit"
               disabled={isTaskCompleted}
               className="px-4 py-1 text-sm"
             >
@@ -493,7 +493,7 @@ const TaskDialog = ({
 
 const TaskCard = ({ task, onClick }: { task: any; onClick: () => void }) => {
   return (
-    <div 
+    <div
       onClick={onClick}
       className={
         `relative rounded-xl border bg-solo-dark p-4 transition-all cursor-pointer flex flex-col shadow-md overflow-hidden
@@ -505,12 +505,12 @@ const TaskCard = ({ task, onClick }: { task: any; onClick: () => void }) => {
       <div className="flex flex-col gap-1">
         <div className="flex items-center gap-2 mb-1">
           {/* Difficulty badge */}
-          <span className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold uppercase ${getDifficultyColor(task.difficulty)} bg-opacity-20 bg-solo-primary/10`}> 
+          <span className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold uppercase ${getDifficultyColor(task.difficulty)} bg-opacity-20 bg-solo-primary/10`}>
             <span className="w-2 h-2 rounded-full mr-1" style={{ background: 'currentColor' }}></span>
             {task.difficulty}
           </span>
           {/* Category badge */}
-          <span className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold capitalize ${getCategoryColor(task.category)} bg-opacity-20 bg-solo-primary/10 ml-1`}> 
+          <span className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold capitalize ${getCategoryColor(task.category)} bg-opacity-20 bg-solo-primary/10 ml-1`}>
             {task.category}
           </span>
         </div>
@@ -529,10 +529,10 @@ const TaskCard = ({ task, onClick }: { task: any; onClick: () => void }) => {
           </span>
           {task.deadline && (
             <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-300 font-semibold">
-              <span className="font-bold">Due:</span> {new Date(task.deadline).toLocaleString([], { 
-                month: 'short', 
-                day: 'numeric', 
-                hour: '2-digit', 
+              <span className="font-bold">Due:</span> {new Date(task.deadline).toLocaleString([], {
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
                 minute: '2-digit',
                 hour12: window.innerWidth > 768 // Only show AM/PM on larger screens
               })}
@@ -544,14 +544,14 @@ const TaskCard = ({ task, onClick }: { task: any; onClick: () => void }) => {
   );
 };
 
-const DayDialog = ({ 
-  isOpen, 
-  onClose, 
+const DayDialog = ({
+  isOpen,
+  onClose,
   date,
   tasks,
   onAddTask,
   onEditTask
-}: { 
+}: {
   isOpen: boolean;
   onClose: () => void;
   date: Date;
@@ -571,9 +571,9 @@ const DayDialog = ({
           {tasks.length === 0 ? (
             <div className="text-center text-gray-400 py-6">
               <p>No tasks scheduled for this day.</p>
-              <Button 
-                variant="ghost" 
-                size="sm" 
+              <Button
+                variant="ghost"
+                size="sm"
                 className="mt-3"
                 onClick={onAddTask}
               >
@@ -584,7 +584,7 @@ const DayDialog = ({
           ) : (
             <div className="space-y-2">
               {tasks.map(task => (
-                <div 
+                <div
                   key={task.id}
                   className="p-2.5 rounded-lg border border-gray-800 bg-gray-900/50 hover:border-solo-primary/50 cursor-pointer transition-all"
                   onClick={() => onEditTask({...task})}
@@ -606,11 +606,11 @@ const DayDialog = ({
                       <>
                         <span>•</span>
                         <span className="text-indigo-300">
-                          Due: {new Date(task.deadline).toLocaleString([], { 
-                            month: 'short', 
-                            day: 'numeric', 
-                            hour: '2-digit', 
-                            minute: '2-digit' 
+                          Due: {new Date(task.deadline).toLocaleString([], {
+                            month: 'short',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
                           })}
                         </span>
                       </>
@@ -618,9 +618,9 @@ const DayDialog = ({
                   </div>
                 </div>
               ))}
-              <Button 
-                variant="outline" 
-                size="sm" 
+              <Button
+                variant="outline"
+                size="sm"
                 className="w-full mt-2 py-1.5 text-xs"
                 onClick={onAddTask}
               >
@@ -636,13 +636,13 @@ const DayDialog = ({
 };
 
 // Custom calendar component that doesn't highlight today
-const PlannerCalendar = ({ selected, onSelect, className }: { 
-  selected?: Date; 
+const PlannerCalendar = ({ selected, onSelect, className }: {
+  selected?: Date;
   onSelect?: (date?: Date) => void;
   className?: string;
 }) => {
   const defaultDate = new Date(); // Use the current date as default
-  
+
   return (
     <Calendar
       mode="single"
@@ -662,17 +662,17 @@ const PlannerCalendar = ({ selected, onSelect, className }: {
 const Planner = () => {
   // Use the current date as the default selected date
   const today = new Date();
-  
+
   const [selectedDate, setSelectedDate] = useState<Date>(today);
   const [weekStartDate, setWeekStartDate] = useState<Date>(startOfWeek(today, { weekStartsOn: 1 }));
   const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
   const [isDayDialogOpen, setIsDayDialogOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<any>(null);
   const [calendarOpen, setCalendarOpen] = useState(false);
-  
+
   // Initialize hiddenDays with all dates hidden by default
   const [hiddenDays, setHiddenDays] = useState<Record<string, boolean>>({});
-  
+
   // Add state for congratulation dialog
   const [showCongratulationsDialog, setShowCongratulationsDialog] = useState(false);
   const [hasShownCongratulationsForWeek, setHasShownCongratulationsForWeek] = useState(false);
@@ -697,44 +697,44 @@ const Planner = () => {
     if (hasChanges) {
       setHiddenDays(newHiddenState);
     }
-    
+
     // Reset the congratulations state when week changes
     setHasShownCongratulationsForWeek(false);
   }, [weekStartDate]);
-  
+
   // Check if all days in the week have at least one task and none of the days have completed tasks
   const checkIfAllDaysHaveTasks = () => {
     const weekDatesArray = getWeekDates();
-    
+
     // Check if all days in the week have at least one task
     const allDaysHaveTasks = weekDatesArray.every(date => {
       const dayTasks = getAllDayTasks(date);
       return dayTasks.length > 0;
     });
-    
+
     // Check if any day in the week has completed tasks
     const hasCompletedTasks = weekDatesArray.some(date => {
       const completedTasks = getCompletedDayTasks(date);
       return completedTasks.length > 0;
     });
-    
+
     // Return true only if all days have tasks AND none of the days have completed tasks
     return allDaysHaveTasks && !hasCompletedTasks;
   };
-  
+
   // Add effect to check if all days have tasks and show congratulations
   useEffect(() => {
     // Only check if we haven't shown congratulations for this week yet
     if (!hasShownCongratulationsForWeek) {
       const shouldShowCongratulations = checkIfAllDaysHaveTasks();
-      
+
       if (shouldShowCongratulations) {
         // Set timeout to show the dialog after a short delay
         const timer = setTimeout(() => {
           setShowCongratulationsDialog(true);
           setHasShownCongratulationsForWeek(true);
         }, 500);
-        
+
         return () => clearTimeout(timer);
       }
     }
@@ -758,9 +758,9 @@ const Planner = () => {
   };
 
   const navigateWeek = (direction: 'prev' | 'next') => {
-    setWeekStartDate(prevDate => 
-      direction === 'next' 
-        ? addWeeks(prevDate, 1) 
+    setWeekStartDate(prevDate =>
+      direction === 'next'
+        ? addWeeks(prevDate, 1)
         : addWeeks(prevDate, -1)
     );
   };
@@ -779,16 +779,16 @@ const Planner = () => {
 
   // Get all tasks for a specific day
   const getAllDayTasks = (date: Date) => {
-    return tasks.filter(task => 
-      task.scheduledFor && 
+    return tasks.filter(task =>
+      task.scheduledFor &&
       isSameDay(new Date(task.scheduledFor), date)
     );
   };
 
   // Get only incomplete tasks for a day
   const getIncompleteDayTasks = (date: Date) => {
-    return tasks.filter(task => 
-      task.scheduledFor && 
+    return tasks.filter(task =>
+      task.scheduledFor &&
       isSameDay(new Date(task.scheduledFor), date) &&
       !task.completed
     );
@@ -796,30 +796,30 @@ const Planner = () => {
 
   // Get only completed tasks for a day
   const getCompletedDayTasks = (date: Date) => {
-    return tasks.filter(task => 
-      task.scheduledFor && 
+    return tasks.filter(task =>
+      task.scheduledFor &&
       isSameDay(new Date(task.scheduledFor), date) &&
       task.completed
     );
   };
 
   const weekDates = getWeekDates();
-  
+
   // Format date range like "Apr 27 - May 3, 2025"
   const dateRangeFormatted = () => {
     const startDate = weekDates[0];
     const endDate = weekDates[weekDates.length - 1];
-    
+
     const startMonth = format(startDate, 'MMM');
     const startDay = format(startDate, 'd');
-    
+
     const endMonth = format(endDate, 'MMM');
     const endDay = format(endDate, 'd');
     const endYear = format(endDate, 'yyyy');
-    
+
     // Check if we're on a small screen (using window.innerWidth for client-side detection)
     const isSmallScreen = typeof window !== 'undefined' && window.innerWidth < 640; // sm breakpoint in Tailwind
-    
+
     if (isSmallScreen) {
       // More compact format for mobile: "May 12-18"
       if (startMonth === endMonth) {
@@ -841,7 +841,7 @@ const Planner = () => {
   const getDayName = (date: Date) => {
     return format(date, 'EEEE');
   };
-  
+
   // Toggle hidden state for a specific day
   const toggleDayVisibility = (dateString: string) => {
     setHiddenDays(prev => ({
@@ -849,7 +849,7 @@ const Planner = () => {
       [dateString]: !prev[dateString]
     }));
   };
-  
+
   // Check if a day's tasks are hidden
   const isDayHidden = (dateString: string) => {
     return !!hiddenDays[dateString];
@@ -865,13 +865,13 @@ const Planner = () => {
     <div className="space-y-2 w-full px-0">
       {/* Date navigation header */}
       <div className="bg-gray-900 py-2 md:py-3 px-3 md:px-4 rounded-md flex justify-between items-center overflow-hidden">
-        <button 
+        <button
           onClick={() => navigateWeek('prev')}
           className="h-7 w-7 md:h-8 md:w-8 flex items-center justify-center rounded bg-gray-800 text-gray-300"
         >
           <ChevronLeft className="h-4 w-4" />
         </button>
-        
+
         <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
           <PopoverTrigger asChild>
             <button className="flex items-center gap-1 md:gap-2 text-sm md:text-lg lg:text-2xl font-extrabold tracking-tight bg-gradient-to-r from-solo-primary to-solo-secondary bg-clip-text text-transparent drop-shadow-glow hover:scale-105 transition-transform">
@@ -903,8 +903,8 @@ const Planner = () => {
             </div>
           </PopoverContent>
         </Popover>
-        
-        <button 
+
+        <button
           onClick={() => navigateWeek('next')}
           className="h-7 w-7 md:h-8 md:w-8 flex items-center justify-center rounded bg-gray-800 text-gray-300"
         >
@@ -930,7 +930,7 @@ const Planner = () => {
             const allDayTasks = [...incompleteTasks, ...completedTasks];
             const isHidden = isDayHidden(dateString);
             const isTodayDate = isToday(date);
-              
+
               return (
               <div key={dateString} className={cn(
                 "pb-2",
@@ -955,12 +955,12 @@ const Planner = () => {
                       {isTodayDate && <span className="ml-1 text-xs bg-indigo-500/30 text-indigo-300 px-2 py-0.5 rounded-full font-semibold shadow">Today</span>}
                     </h4>
                   </div>
-                  
+
                   <div className="flex items-center gap-1">
                     {/* Add Task button for this day */}
-                    <Button 
-                      size="sm" 
-                      variant="ghost" 
+                    <Button
+                      size="sm"
+                      variant="ghost"
                       className="h-7 text-blue-400 hover:text-blue-300 hover:bg-blue-500/10"
                       onClick={() => {
                         setSelectedTask(null);
@@ -971,7 +971,7 @@ const Planner = () => {
                       <Plus className="h-4 w-4 mr-1 md:mr-1" />
                       <span className="hidden md:inline">Add Task</span>
                     </Button>
-                    
+
                     {/* Hide/Show button */}
                     {allDayTasks.length > 0 && (
                       <button
@@ -987,7 +987,7 @@ const Planner = () => {
                     )}
                   </div>
                 </div>
-          
+
                 {!isHidden && (
                   <>
                     {allDayTasks.length === 0 ? (
@@ -1004,7 +1004,7 @@ const Planner = () => {
                             </h5>
                             <div className="grid grid-cols-1 gap-1.5 md:gap-2">
                               {incompleteTasks.map(task => (
-                                <div 
+                                <div
                                   key={task.id}
                                   className="relative rounded-md border border-gray-700/50 bg-gradient-to-br from-gray-800/90 to-gray-900/80 overflow-hidden cursor-pointer hover:border-blue-400/50 hover:shadow-lg transition-all duration-200 shadow-md group"
                                   onClick={() => {
@@ -1015,37 +1015,37 @@ const Planner = () => {
                                 >
                                   {/* Colored left accent bar with gradient */}
                                   <div className={`absolute left-0 top-0 h-full w-1.5 bg-gradient-to-b ${getCategoryColorGradient(task.category)}`}></div>
-                                  
+
                                   <div className="flex flex-col p-3 pl-4 group-hover:translate-x-0.5 transition-transform duration-200">
                                     {/* Header with category and due date */}
                                     <div className="flex justify-between items-center mb-2">
                                       <span className={`text-xs font-medium capitalize ${getCategoryColor(task.category)} bg-clip-text text-transparent`}>
                                         {task.category}
                                       </span>
-                                      
+
                                       <div className="flex items-center gap-2">
                                         {task.deadline && (
                                           <span className="text-xs flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-300 font-semibold">
-                                            <span className="font-bold">Due:</span> {new Date(task.deadline).toLocaleString([], { 
-                                              day: 'numeric', 
-                                              hour: '2-digit', 
+                                            <span className="font-bold">Due:</span> {new Date(task.deadline).toLocaleString([], {
+                                              day: 'numeric',
+                                              hour: '2-digit',
                                               minute: '2-digit',
                                               hour12: false
                                             })}
                                           </span>
                                         )}
-                                        
+
                                         <span className="flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-gradient-to-r from-yellow-400 to-amber-500 text-gray-900 shadow-sm">
                                           +{task.expReward} EXP
                                         </span>
                                       </div>
                                     </div>
-                                    
+
                                     {/* Task title with improved styling */}
                                     <div className="font-bold text-lg bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent mb-1 group-hover:from-blue-300 group-hover:to-indigo-300 transition-colors duration-200">
                                       {task.title}
                                     </div>
-                                    
+
                                     {/* Description with improved styling */}
                                     {task.description && (
                                       <div className="text-sm text-gray-400 group-hover:text-gray-300 transition-colors duration-200">
@@ -1058,7 +1058,7 @@ const Planner = () => {
                             </div>
                           </div>
                         )}
-                        
+
                         {/* Completed Tasks Section */}
                         {completedTasks.length > 0 && (
                           <div>
@@ -1069,17 +1069,17 @@ const Planner = () => {
                               {completedTasks.map(task => {
                                 // Check task completion status
                                 const isMissed = task.missed === true;
-                                const isLate = task.deadline && task.completedAt 
-                                  ? new Date(task.completedAt) > new Date(task.deadline) 
+                                const isLate = task.deadline && task.completedAt
+                                  ? new Date(task.completedAt) > new Date(task.deadline)
                                   : false;
-                                
+
                                 return (
-                                  <div 
+                                  <div
                                     key={task.id}
                                     className={cn(
                                       "bg-gray-800/30 rounded-md px-2 py-1.5 md:px-3 md:py-2 transition-all",
-                                      isMissed 
-                                        ? "border border-red-500/30" 
+                                      isMissed
+                                        ? "border border-red-500/30"
                                         : isLate
                                           ? "border border-orange-500/30"
                                           : "border border-green-500/30"
@@ -1098,8 +1098,8 @@ const Planner = () => {
                                       </div>
                                       <span className={cn(
                                         "ml-1 text-xs px-1.5 py-0.5 rounded-full",
-                                        isMissed 
-                                          ? "bg-red-500/20 text-red-400" 
+                                        isMissed
+                                          ? "bg-red-500/20 text-red-400"
                                           : isLate
                                             ? "bg-orange-500/20 text-orange-400"
                                             : "bg-green-500/20 text-green-400"
@@ -1114,11 +1114,11 @@ const Planner = () => {
                                       {task.category}
                                       {task.deadline && (
                                         <span className="ml-1">
-                                          {new Date(task.deadline).toLocaleString([], { 
-                                            month: 'short', 
-                                            day: 'numeric', 
-                                            hour: '2-digit', 
-                                            minute: '2-digit' 
+                                          {new Date(task.deadline).toLocaleString([], {
+                                            month: 'short',
+                                            day: 'numeric',
+                                            hour: '2-digit',
+                                            minute: '2-digit'
                                           })}
                                         </span>
                                       )}
@@ -1165,7 +1165,7 @@ const Planner = () => {
           setIsTaskDialogOpen(true);
         }}
       />
-      
+
       {/* Congratulations Dialog */}
       <Dialog open={showCongratulationsDialog} onOpenChange={setShowCongratulationsDialog}>
         <DialogContent className="max-w-md">
@@ -1175,12 +1175,12 @@ const Planner = () => {
               Congratulations!
             </DialogTitle>
           </DialogHeader>
-          
+
           <div className="flex flex-col items-center justify-center space-y-4 py-4">
             <div className="w-20 h-20 rounded-full bg-yellow-500/20 flex items-center justify-center">
               <Trophy className="h-10 w-10 text-yellow-400" />
             </div>
-            
+
             <div className="text-center space-y-2">
               <h3 className="text-lg font-semibold text-white">Perfect Week Planning!</h3>
               <p className="text-gray-300">
@@ -1188,9 +1188,9 @@ const Planner = () => {
               </p>
             </div>
           </div>
-          
+
           <DialogFooter>
-            <Button 
+            <Button
               onClick={() => setShowCongratulationsDialog(false)}
               className="w-full bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-600 hover:to-amber-600"
             >

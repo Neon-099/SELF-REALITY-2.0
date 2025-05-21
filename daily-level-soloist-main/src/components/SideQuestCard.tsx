@@ -22,7 +22,7 @@ const AddTaskDialog = ({ questId, onClose }: { questId: string; onClose: () => v
   const [taskTitle, setTaskTitle] = useState('');
   const [taskDescription, setTaskDescription] = useState('');
   const [difficulty, setDifficulty] = useState<Difficulty>('medium');
-  const [deadline, setDeadline] = useState<Date>(new Date(Date.now() + 24 * 60 * 60 * 1000));
+  const [deadline, setDeadline] = useState<Date>(new Date());
 
   const handleAddTask = () => {
     if (!taskTitle.trim()) {

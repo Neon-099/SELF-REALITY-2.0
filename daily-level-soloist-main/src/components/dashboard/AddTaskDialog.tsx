@@ -24,13 +24,13 @@ interface AddTaskDialogProps {
 export const AddTaskDialog = ({ children }: AddTaskDialogProps) => {
   // Added this log to confirm component is refreshing
   console.log('AddTaskDialog rendered with glassmorphism styles - ' + new Date().toISOString());
-  
+
   const addTask = useSoloLevelingStore(state => state.addTask);
   const createTask = useSoloLevelingStore(state => state.createTask);
   const { toast } = useToast();
   const user = useSoloLevelingStore(state => state.user);
   const tasks = useSoloLevelingStore(state => state.tasks);
-  
+
   const [open, setOpen] = React.useState(false);
   const [title, setTitle] = React.useState('');
   const [description, setDescription] = React.useState('');
@@ -38,27 +38,27 @@ export const AddTaskDialog = ({ children }: AddTaskDialogProps) => {
   const [categoryType, setCategoryType] = React.useState<'dailyWin' | 'attribute'>('dailyWin');
   const [category, setCategory] = React.useState<string>('mental');
   const [hasDeadline, setHasDeadline] = React.useState(false);
-  const [deadline, setDeadline] = React.useState<Date | undefined>(undefined);
-  
+  const [deadline, setDeadline] = React.useState<Date | undefined>(new Date());
+
   // Daily win categories and attribute categories
   const dailyWinCategories = ["mental", "physical", "spiritual", "intelligence"];
   const attributeCategories = ["physical", "cognitive", "emotional", "spiritual", "social"];
-  
+
   // Check if all daily wins are completed
   const allDailyWinsCompleted = areAllDailyWinsCompleted(user.dailyWins);
-  
+
   // Modify the isSelectedCategoryCompleted check to include pending tasks
   const isSelectedCategoryCompleted = (() => {
     if (categoryType !== 'dailyWin') return false;
     if (!['mental', 'physical', 'spiritual', 'intelligence'].includes(category)) return false;
-    
+
     // Check both completed daily wins and pending tasks
     const isCompleted = isDailyWinCompleted(user.dailyWins, category as DailyWinCategory);
     const hasPending = hasPendingDailyWinTask(tasks, category as DailyWinCategory, new Date());
-    
+
     return isCompleted || hasPending;
   })();
-  
+
   // Reset fields when dialog opens/closes
   React.useEffect(() => {
     if (!open) {
@@ -72,7 +72,7 @@ export const AddTaskDialog = ({ children }: AddTaskDialogProps) => {
       setDeadline(undefined);
     }
   }, [open]);
-  
+
   // Reset category when category type changes
   React.useEffect(() => {
     if (categoryType === 'dailyWin') {
@@ -81,18 +81,18 @@ export const AddTaskDialog = ({ children }: AddTaskDialogProps) => {
       setCategory('physical');
     }
   }, [categoryType]);
-  
+
   // Calculate attribute task counts
   const getAttributeTaskCountText = (attributeCategory: string) => {
     const count = getAttributeTaskCount(tasks, attributeCategory, new Date());
     const max = 5;
     return `${count}/${max}`;
   };
-  
+
   // Update the handleSubmit function
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!title) {
       toast({
         title: "Error",
@@ -102,7 +102,7 @@ export const AddTaskDialog = ({ children }: AddTaskDialogProps) => {
       });
       return;
     }
-    
+
     // Check for daily win limitations
     if (categoryType === 'dailyWin') {
       if (isDailyWinCompleted(user.dailyWins, category as DailyWinCategory)) {
@@ -114,7 +114,7 @@ export const AddTaskDialog = ({ children }: AddTaskDialogProps) => {
         });
         return;
       }
-      
+
       if (hasPendingDailyWinTask(tasks, category as DailyWinCategory, new Date())) {
         toast({
           title: `${category.charAt(0).toUpperCase() + category.slice(1)} Win Already Planned`,
@@ -124,7 +124,7 @@ export const AddTaskDialog = ({ children }: AddTaskDialogProps) => {
         });
         return;
       }
-    } 
+    }
     // Check for attribute task limitations
     else if (categoryType === 'attribute') {
       if (isAttributeLimitReached(tasks, category, new Date())) {
@@ -137,7 +137,7 @@ export const AddTaskDialog = ({ children }: AddTaskDialogProps) => {
         return;
       }
     }
-    
+
     // Create the task using createTask
     createTask(
       title,
@@ -146,15 +146,15 @@ export const AddTaskDialog = ({ children }: AddTaskDialogProps) => {
       category as DailyWinCategory,
       deadline
     );
-    
+
     toast({
       title: "Task added",
-      description: deadline 
+      description: deadline
         ? `Your task has been added with a deadline of ${deadline.toLocaleString()}`
         : "Your task has been added successfully",
       duration: 2000
     });
-    
+
     // Reset form
     setTitle('');
     setDescription('');
@@ -165,7 +165,7 @@ export const AddTaskDialog = ({ children }: AddTaskDialogProps) => {
     setDeadline(undefined);
     setOpen(false);
   };
-  
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -175,20 +175,20 @@ export const AddTaskDialog = ({ children }: AddTaskDialogProps) => {
           </Button>
         )}
       </DialogTrigger>
-      
+
       <DialogContent
         className="
           glassmorphism
           text-solo-text sm:max-w-[380px] w-[90%] p-3 sm:p-4 max-h-[80vh] overflow-y-auto rounded-xl
-          before:!absolute before:!inset-0 before:!rounded-xl 
-          before:!bg-gradient-to-br before:!from-indigo-500/10 before:!to-purple-500/5 
+          before:!absolute before:!inset-0 before:!rounded-xl
+          before:!bg-gradient-to-br before:!from-indigo-500/10 before:!to-purple-500/5
           before:!backdrop-blur-xl before:!-z-10
         "
       >
         <DialogHeader>
           <DialogTitle className="font-semibold text-white/90 tracking-wide text-base">Add New Task</DialogTitle>
         </DialogHeader>
-        
+
         <form onSubmit={handleSubmit} className="space-y-2.5 sm:space-y-3 pt-2 sm:pt-3 relative z-10">
           <div className="space-y-1 sm:space-y-1.5">
             <Label htmlFor="title" className="text-white/80 font-medium text-sm">Title</Label>
@@ -200,7 +200,7 @@ export const AddTaskDialog = ({ children }: AddTaskDialogProps) => {
               className="border-indigo-500/20 bg-gray-800/90 h-8 sm:h-9 focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all"
             />
           </div>
-          
+
           <div className="space-y-1 sm:space-y-1.5">
             <Label htmlFor="description" className="text-white/80 font-medium text-sm">Description (optional)</Label>
             <Textarea
@@ -211,7 +211,7 @@ export const AddTaskDialog = ({ children }: AddTaskDialogProps) => {
               className="border-indigo-500/20 bg-gray-800/90 min-h-[60px] focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all"
             />
           </div>
-          
+
           <div className="space-y-1 sm:space-y-1.5">
             <Label className="text-white/80 font-medium text-sm">Category</Label>
             <div className="grid grid-cols-2 gap-0 rounded-md overflow-hidden border border-indigo-500/20 bg-gray-800/80">
@@ -220,8 +220,8 @@ export const AddTaskDialog = ({ children }: AddTaskDialogProps) => {
                 onClick={() => setCategoryType('attribute')}
                 className={cn(
                   "py-1.5 px-3 text-center transition-all duration-200 text-sm",
-                  categoryType === 'attribute' 
-                    ? "bg-indigo-500/10 border-b-2 border-indigo-500 font-medium text-indigo-300" 
+                  categoryType === 'attribute'
+                    ? "bg-indigo-500/10 border-b-2 border-indigo-500 font-medium text-indigo-300"
                     : "text-gray-400 hover:bg-gray-800/50 border-b-2 border-transparent"
                 )}
               >
@@ -233,8 +233,8 @@ export const AddTaskDialog = ({ children }: AddTaskDialogProps) => {
                 disabled={allDailyWinsCompleted && categoryType !== 'dailyWin'}
                 className={cn(
                   "py-1.5 px-3 text-center transition-all duration-200 text-sm",
-                  categoryType === 'dailyWin' 
-                    ? "bg-indigo-500/10 border-b-2 border-indigo-500 font-medium text-indigo-300" 
+                  categoryType === 'dailyWin'
+                    ? "bg-indigo-500/10 border-b-2 border-indigo-500 font-medium text-indigo-300"
                     : "text-gray-400 hover:bg-gray-800/50 border-b-2 border-transparent",
                   allDailyWinsCompleted && categoryType !== 'dailyWin' && "opacity-50 cursor-not-allowed hover:bg-transparent"
                 )}
@@ -246,8 +246,8 @@ export const AddTaskDialog = ({ children }: AddTaskDialogProps) => {
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1 sm:space-y-1.5">
               <Label htmlFor="difficulty" className="text-white/80 font-medium text-sm">Difficulty</Label>
-              <Select 
-                value={difficulty} 
+              <Select
+                value={difficulty}
                 onValueChange={(value: Difficulty) => setDifficulty(value)}
               >
                 <SelectTrigger id="difficulty" className="border-indigo-500/20 bg-gray-800/90 h-8 focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all">
@@ -263,12 +263,12 @@ export const AddTaskDialog = ({ children }: AddTaskDialogProps) => {
             </div>
             <div className="space-y-1 sm:space-y-1.5">
               <Label htmlFor="category" className="text-white/80 font-medium text-sm">Type</Label>
-              <Select 
-                value={category} 
+              <Select
+                value={category}
                 onValueChange={(value) => setCategory(value)}
               >
-                <SelectTrigger 
-                  id="category" 
+                <SelectTrigger
+                  id="category"
                   className={cn(
                     "border-indigo-500/20 bg-gray-800/90 h-8 focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all",
                     isSelectedCategoryCompleted && "border-orange-500/30 text-orange-400"
@@ -280,13 +280,13 @@ export const AddTaskDialog = ({ children }: AddTaskDialogProps) => {
                   {categoryType === 'dailyWin' ? (
                     // Daily Win Categories
                     dailyWinCategories.map(cat => (
-                      <SelectItem 
-                        key={cat} 
+                      <SelectItem
+                        key={cat}
                         value={cat}
-                        disabled={isDailyWinCompleted(user.dailyWins, cat as DailyWinCategory) || 
+                        disabled={isDailyWinCompleted(user.dailyWins, cat as DailyWinCategory) ||
                                  hasPendingDailyWinTask(tasks, cat as DailyWinCategory, new Date())}
                         className={cn(
-                          (isDailyWinCompleted(user.dailyWins, cat as DailyWinCategory) || 
+                          (isDailyWinCompleted(user.dailyWins, cat as DailyWinCategory) ||
                           hasPendingDailyWinTask(tasks, cat as DailyWinCategory, new Date())) &&
                           "opacity-50 line-through"
                         )}
@@ -297,8 +297,8 @@ export const AddTaskDialog = ({ children }: AddTaskDialogProps) => {
                   ) : (
                     // Attribute Categories
                     attributeCategories.map(cat => (
-                      <SelectItem 
-                        key={cat} 
+                      <SelectItem
+                        key={cat}
                         value={cat}
                         disabled={isAttributeLimitReached(tasks, cat, new Date())}
                         className={cn(
@@ -320,8 +320,8 @@ export const AddTaskDialog = ({ children }: AddTaskDialogProps) => {
                 <CalendarClock className="h-3 w-3 mr-1" /> Automatic deadline enforcement
               </div>
             </div>
-            <DateTimePicker 
-              date={deadline || new Date(Date.now() + 24 * 60 * 60 * 1000)} // Default to tomorrow
+            <DateTimePicker
+              date={deadline || new Date()} // Default to today
               setDate={setDeadline}
               className="mt-1"
             />
@@ -329,7 +329,7 @@ export const AddTaskDialog = ({ children }: AddTaskDialogProps) => {
               Missing a deadline will automatically apply Shadow Penalty, reducing EXP reward by 50%.
             </p>
           </div>
-          
+
           <div className="pt-1.5">
             <Button type="submit" className="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-medium h-8 text-sm">
               Create Task
