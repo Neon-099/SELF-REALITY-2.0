@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="180" height="180" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background gradient circle with rounded corners -->
+  <rect width="180" height="180" rx="40" fill="url(#paint0_linear)"/>
+  
+  <!-- Star shape -->
+  <path d="M90 30L105 75H150L115 105L130 150L90 120L50 150L65 105L30 75H75L90 30Z" fill="white" fill-opacity="0.9"/>
+  
+  <!-- Sparkle effects -->
+  <circle cx="45" cy="45" r="6" fill="white" fill-opacity="0.8"/>
+  <circle cx="135" cy="45" r="4" fill="white" fill-opacity="0.8"/>
+  <circle cx="135" cy="135" r="6" fill="white" fill-opacity="0.8"/>
+  <circle cx="45" cy="135" r="4" fill="white" fill-opacity="0.8"/>
+  
+  <!-- Gradient definitions -->
+  <defs>
+    <linearGradient id="paint0_linear" x1="0" y1="0" x2="180" y2="180" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#3B82F6"/> <!-- Blue (primary color) -->
+      <stop offset="1" stop-color="#7C3AED"/> <!-- Purple (secondary color) -->
+    </linearGradient>
+  </defs>
+</svg>
