@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSoloLevelingStore } from '@/lib/store';
 import { StatCard } from '@/components/ui/stat-card';
-import { DumbbellIcon, BrainIcon, HeartIcon, SmileIcon, Clock3Icon, SparklesIcon, Coins, Star, Crown, Trophy, Info, AlertCircle, CheckCircle, Database, X } from 'lucide-react';
+import { DumbbellIcon, BrainIcon, HeartIcon, SmileIcon, Clock3Icon, SparklesIcon, Coins, Star, Crown, Trophy, Info, AlertCircle, CheckCircle, Database, X, RefreshCw } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -500,6 +500,65 @@ const Character = () => {
     }
   };
 
+  // Function to reset character data and IndexedDB
+  const handleCharacterRefresh = async () => {
+    const confirmed = window.confirm(
+      "Are you sure you want to reset all character data? This will:\n\n" +
+      "• Reset your character to level 1\n" +
+      "• Clear all tasks, quests, and missions\n" +
+      "• Reset all stats and progress\n" +
+      "• Clear the entire database\n\n" +
+      "This action cannot be undone!"
+    );
+
+    if (!confirmed) return;
+
+    try {
+      // Get the database connection
+      const db = await getDB();
+
+      // Clear all object stores
+      const storeNames = ['store', 'quests', 'tasks', 'shop'];
+
+      for (const storeName of storeNames) {
+        try {
+          await db.clear(storeName);
+        } catch (error) {
+          console.warn(`Failed to clear ${storeName} store:`, error);
+        }
+      }
+
+      // Reset the Zustand store to initial state by clearing the persisted data
+      // and forcing a reload
+      localStorage.removeItem('soloist-store');
+
+      // Clear any fallback localStorage items
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith('fallback_')) {
+          localStorage.removeItem(key);
+        }
+      });
+
+      toast({
+        title: "Character Reset Complete",
+        description: "Your character has been reset to initial state. The page will reload.",
+      });
+
+      // Reload the page to reinitialize with fresh state
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
+
+    } catch (error) {
+      console.error('Error resetting character data:', error);
+      toast({
+        title: "Reset Failed",
+        description: `Failed to reset character data: ${error instanceof Error ? error.message : String(error)}`,
+        variant: "destructive"
+      });
+    }
+  };
+
   const handleDeleteShopItem = async (itemId: string) => {
     try {
       const db = await getDB();
@@ -535,7 +594,7 @@ const Character = () => {
   const currentRankInfo = rankDetails.find(r => r.rank === user.rank);
 
   return (
-    <div className="container mx-auto px-2 sm:px-4 py-6 sm:py-8 space-y-6 sm:space-y-8">
+    <div className="space-y-8">
       <div>
         <h1 className="text-4xl font-bold bg-gradient-to-r from-solo-primary to-blue-500 bg-clip-text text-transparent mb-2">Character Stats</h1>
         <p className="text-gray-400">Increase your stats to become stronger.</p>
@@ -951,203 +1010,169 @@ const Character = () => {
 
       {/* IndexedDB Debug Panel */}
       {showDbDebug && (
-        <div className="bg-gray-900 border border-gray-700 rounded-lg p-4 relative mt-4">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-bold flex items-center gap-2">
-              <Database className="h-5 w-5 text-blue-400" />
-              IndexedDB Contents
+        <div className="bg-gray-900 border border-gray-700 rounded-lg p-3 sm:p-4 relative mt-4">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 gap-3 sm:gap-0">
+            <h2 className="text-base sm:text-lg font-bold flex items-center gap-2">
+              <Database className="h-4 w-4 sm:h-5 sm:w-5 text-blue-400" />
+              <span className="text-sm sm:text-base">IndexedDB Contents</span>
             </h2>
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Button
+                variant="destructive"
+                size="sm"
+                className="flex items-center gap-1 text-xs sm:text-sm px-2 sm:px-3 py-1.5 sm:py-2"
+                onClick={handleCharacterRefresh}
+              >
+                <RefreshCw className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">Character Refresh</span>
+                <span className="sm:hidden">Reset</span>
+              </Button>
               <Button
                 variant="outline"
                 size="sm"
+                className="text-xs sm:text-sm px-2 sm:px-3 py-1.5 sm:py-2"
                 onClick={loadDbData}
                 disabled={isLoadingDb}
               >
-                Refresh Data
+                <span className="hidden sm:inline">Refresh Data</span>
+                <span className="sm:hidden">Refresh</span>
               </Button>
               <Button
                 variant="ghost"
                 size="sm"
+                className="px-2 sm:px-3 py-1.5 sm:py-2"
                 onClick={() => setShowDbDebug(false)}
               >
-                <X className="h-4 w-4" />
+                <X className="h-3 w-3 sm:h-4 sm:w-4" />
               </Button>
             </div>
           </div>
 
           {isLoadingDb ? (
             <div className="text-center py-4">
-              <p>Loading database contents...</p>
+              <p className="text-sm sm:text-base">Loading database contents...</p>
             </div>
           ) : dbContents ? (
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               <div>
-                <h3 className="text-md font-semibold mb-2">Zustand Store (from IndexedDB)</h3>
-                <div className="bg-gray-800 p-3 rounded max-h-60 overflow-auto">
+                <h3 className="text-sm sm:text-md font-semibold mb-2">Zustand Store (from IndexedDB)</h3>
+                <div className="bg-gray-800 p-2 sm:p-3 rounded max-h-48 sm:max-h-60 overflow-auto text-xs sm:text-sm">
                   {dbContents.zustandStore ? (
                     <>
                       <p className="text-green-400 mb-2">✓ IndexedDB is working correctly</p>
                       <details>
-                        <summary className="cursor-pointer text-blue-400 hover:text-blue-300">
+                        <summary className="cursor-pointer text-blue-400 hover:text-blue-300 text-xs sm:text-sm">
                           View Quests in Store (Total: {dbContents.zustandStore.state?.quests?.length || 0})
                         </summary>
                         <div className="mt-2 space-y-2 text-xs p-2 bg-gray-900 rounded">
                           {dbContents.zustandStore.state?.quests?.length > 0 ? (
                             dbContents.zustandStore.state.quests.map((quest: any, index: number) => (
                               <div key={index} className="p-2 border border-gray-700 rounded bg-gray-800/50">
-                                <div className="flex justify-between items-start mb-1">
-                                  <h4 className="text-sm text-white font-medium truncate max-w-[80%]">{quest.title}</h4>
+                                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 sm:gap-1 mb-1">
+                                  <h4 className="text-xs sm:text-sm text-white font-medium truncate">{quest.title}</h4>
                                   <Button
                                     variant="destructive"
                                     size="sm"
-                                    className="h-6 px-2 text-xs"
+                                    className="h-5 sm:h-6 px-1.5 sm:px-2 text-[10px] sm:text-xs self-start sm:self-auto"
                                     onClick={() => handleDeleteQuest(quest.id)}
                                   >
-                                    Delete
+                                    Del
                                   </Button>
                                 </div>
-                                <p className="text-xs text-gray-400">ID: {quest.id}</p>
+                                <p className="text-[10px] sm:text-xs text-gray-400">ID: {quest.id}</p>
                               </div>
                             ))
                           ) : (
-                            <p className="text-sm text-gray-400">No quests available in store.</p>
+                            <p className="text-xs sm:text-sm text-gray-400">No quests available in store.</p>
                           )}
                         </div>
                       </details>
 
                       <details className="mt-2">
-                        <summary className="cursor-pointer text-blue-400 hover:text-blue-300">
+                        <summary className="cursor-pointer text-blue-400 hover:text-blue-300 text-xs sm:text-sm">
                           View Missions in Store (Total: {dbContents.zustandStore.state?.missions?.length || 0})
                         </summary>
                         <div className="mt-2 space-y-2 text-xs p-2 bg-gray-900 rounded">
                           {dbContents.zustandStore.state?.missions?.length > 0 ? (
                             dbContents.zustandStore.state.missions.map((mission: any, index: number) => (
                               <div key={index} className="p-2 border border-gray-700 rounded bg-gray-800/50">
-                                <div className="flex justify-between items-start mb-1">
-                                  <h4 className="text-sm text-white font-medium truncate max-w-[80%]">{mission.title}</h4>
+                                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 sm:gap-1 mb-1">
+                                  <h4 className="text-xs sm:text-sm text-white font-medium truncate">{mission.title}</h4>
                                   <Button
                                     variant="destructive"
                                     size="sm"
-                                    className="h-6 px-2 text-xs"
+                                    className="h-5 sm:h-6 px-1.5 sm:px-2 text-[10px] sm:text-xs self-start sm:self-auto"
                                     onClick={() => handleDeleteMission(mission.id)}
                                   >
-                                    Delete
+                                    Del
                                   </Button>
                                 </div>
-                                <p className="text-xs text-gray-400">ID: {mission.id}</p>
+                                <p className="text-[10px] sm:text-xs text-gray-400">ID: {mission.id}</p>
                               </div>
                             ))
                           ) : (
-                            <p className="text-sm text-gray-400">No missions available in store.</p>
+                            <p className="text-xs sm:text-sm text-gray-400">No missions available in store.</p>
                           )}
                         </div>
                       </details>
 
                       <details className="mt-2">
-                        <summary className="cursor-pointer text-blue-400 hover:text-blue-300">
+                        <summary className="cursor-pointer text-blue-400 hover:text-blue-300 text-xs sm:text-sm">
                           View Completed Missions in Store (Total: {dbContents.zustandStore.state?.completedMissionHistory?.length || 0})
                         </summary>
-                        <pre className="text-xs mt-2 p-2 bg-gray-900 rounded overflow-x-auto">
+                        <pre className="text-[10px] sm:text-xs mt-2 p-2 bg-gray-900 rounded overflow-x-auto">
                           {JSON.stringify(dbContents.zustandStore.state?.completedMissionHistory || [], null, 2)}
                         </pre>
                       </details>
 
                       <details className="mt-2">
-                        <summary className="cursor-pointer text-blue-400 hover:text-blue-300">
+                        <summary className="cursor-pointer text-blue-400 hover:text-blue-300 text-xs sm:text-sm">
                           View Shop Items in Store (Total: {dbContents.zustandStore.state?.shopItems?.length || 0})
                         </summary>
                         <div className="mt-2 space-y-2 text-xs p-2 bg-gray-900 rounded">
                           {dbContents.zustandStore.state?.shopItems?.length > 0 ? (
                             dbContents.zustandStore.state.shopItems.map((item: any, index: number) => (
                               <div key={index} className="p-2 border border-gray-700 rounded bg-gray-800/50">
-                                <div className="flex justify-between items-start mb-1">
-                                  <h4 className="text-sm text-white font-medium truncate max-w-[80%]">{item.name}</h4>
+                                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 sm:gap-1 mb-1">
+                                  <h4 className="text-xs sm:text-sm text-white font-medium truncate">{item.name}</h4>
                                   <Button
                                     variant="destructive"
                                     size="sm"
-                                    className="h-6 px-2 text-xs"
+                                    className="h-5 sm:h-6 px-1.5 sm:px-2 text-[10px] sm:text-xs self-start sm:self-auto"
                                     onClick={() => handleDeleteShopItem(item.id)}
                                   >
-                                    Delete
+                                    Del
                                   </Button>
                                 </div>
-                                <p className="text-xs text-gray-400">ID: {item.id} | Cost: {item.cost}</p>
+                                <p className="text-[10px] sm:text-xs text-gray-400">ID: {item.id} | Cost: {item.cost}</p>
                               </div>
                             ))
                           ) : (
-                            <p className="text-sm text-gray-400">No shop items available in store.</p>
+                            <p className="text-xs sm:text-sm text-gray-400">No shop items available in store.</p>
                           )}
                         </div>
                       </details>
                     </>
                   ) : (
-                    <p className="text-red-400">No Zustand store data found in IndexedDB</p>
+                    <p className="text-red-400 text-xs sm:text-sm">No Zustand store data found in IndexedDB</p>
                   )}
                 </div>
               </div>
 
               <div>
-                <h3 className="text-md font-semibold mb-2">Direct Quests ObjectStore</h3>
-                <div className="bg-gray-800 p-3 rounded max-h-60 overflow-auto">
-                  {dbContents.directQuests && dbContents.directQuests.length > 0 ? (
-                    <>
-                      <p className="text-green-400 mb-2">✓ Found {dbContents.directQuests.length} quests in direct ObjectStore</p>
-                      <details>
-                        <summary className="cursor-pointer text-blue-400 hover:text-blue-300">
-                          View Direct Quest Data
-                        </summary>
-                        <pre className="text-xs mt-2 p-2 bg-gray-900 rounded overflow-x-auto">
-                          {JSON.stringify(dbContents.directQuests, null, 2)}
-                        </pre>
-                      </details>
-                    </>
-                  ) : (
-                    <p className="text-amber-400">
-                      No quests found in direct ObjectStore. This app primarily uses the 'store'
-                      ObjectStore which contains the serialized Zustand state.
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              <div>
-                <h3 className="text-md font-semibold mb-2">Direct ShopItems ObjectStore</h3>
-                <div className="bg-gray-800 p-3 rounded max-h-60 overflow-auto">
-                  {dbContents.shopItems && dbContents.shopItems.length > 0 ? (
-                    <>
-                      <p className="text-green-400 mb-2">✓ Found {dbContents.shopItems.length} items in direct ObjectStore</p>
-                      <details>
-                        <summary className="cursor-pointer text-blue-400 hover:text-blue-300">
-                          View Direct Shop Items Data
-                        </summary>
-                        <pre className="text-xs mt-2 p-2 bg-gray-900 rounded overflow-x-auto">
-                          {JSON.stringify(dbContents.shopItems, null, 2)}
-                        </pre>
-                      </details>
-                    </>
-                  ) : (
-                    <p className="text-amber-400">
-                      No shop items found in direct ObjectStore. Shop items are primarily managed via Zustand.
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              <div>
-                <h3 className="text-md font-semibold mb-2">Current State (in memory)</h3>
-                <div className="bg-gray-800 p-3 rounded max-h-60 overflow-auto">
-                  <div className="grid grid-cols-2 gap-4">
+                <h3 className="text-sm sm:text-md font-semibold mb-2">Current State (in memory)</h3>
+                <div className="bg-gray-800 p-2 sm:p-3 rounded max-h-48 sm:max-h-60 overflow-auto text-xs sm:text-sm">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                     <div>
-                      <p className="font-bold text-blue-400">Quests</p>
-                      <p className="text-sm mt-1">
+                      <p className="font-bold text-blue-400 text-xs sm:text-sm">Quests</p>
+                      <p className="text-xs sm:text-sm mt-1">
                         Total: <span className="font-bold">{quests.length}</span>
                       </p>
                       <details className="mt-2">
-                        <summary className="cursor-pointer text-blue-400 hover:text-blue-300 text-sm">
+                        <summary className="cursor-pointer text-blue-400 hover:text-blue-300 text-xs sm:text-sm">
                           View Quest Types
                         </summary>
-                        <div className="mt-2 space-y-1 text-sm">
+                        <div className="mt-2 space-y-1 text-xs sm:text-sm">
                           <p>
                             Main Quests: <span className="font-bold text-yellow-400">
                               {quests.filter(q => q.isMainQuest).length}
@@ -1173,18 +1198,18 @@ const Character = () => {
                     </div>
 
                     <div>
-                      <p className="font-bold text-blue-400">Missions</p>
-                      <p className="text-sm mt-1">
+                      <p className="font-bold text-blue-400 text-xs sm:text-sm">Missions</p>
+                      <p className="text-xs sm:text-sm mt-1">
                         Total Missions: <span className="font-bold">
                           {dbContents.zustandStore?.state?.missions?.length || 0}
                         </span>
                       </p>
-                      <p className="text-sm mt-1">
+                      <p className="text-xs sm:text-sm mt-1">
                         Completed Missions: <span className="font-bold text-green-400">
                           {dbContents.zustandStore?.state?.completedMissionHistory?.length || 0}
                         </span>
                       </p>
-                      <p className="text-xs text-green-400 mt-2">
+                      <p className="text-[10px] sm:text-xs text-green-400 mt-2">
                         ✓ Missions are now stored in the main Zustand store!
                       </p>
                     </div>
@@ -1193,8 +1218,8 @@ const Character = () => {
               </div>
             </div>
           ) : (
-            <p className="text-center py-4 text-gray-400">
-              Click "Refresh Data" to load IndexedDB contents
+            <p className="text-center py-4 text-gray-400 text-sm sm:text-base">
+              Click "Refresh" to load IndexedDB contents
             </p>
           )}
         </div>
