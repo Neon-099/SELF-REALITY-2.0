@@ -194,7 +194,16 @@ export default function ShadowPenalty() {
 
   // Gather all penalty information
   const getAllPenalties = () => {
-    const penalties = [];
+    const penalties: {
+      type: string;
+      title: string;
+      description: string;
+      deadline: string;
+      status: string;
+      category: string;
+      difficulty: string;
+      expReward: number;
+    }[] = [];
     const now = new Date();
 
     // Check for missed tasks
@@ -634,13 +643,13 @@ export default function ShadowPenalty() {
               }
 
               // Group penalties by type
-              const groupedPenalties = allPenalties.reduce((acc, penalty) => {
+              const groupedPenalties = allPenalties.reduce<Record<string, typeof allPenalties>>((acc, penalty) => {
                 if (!acc[penalty.type]) {
                   acc[penalty.type] = [];
                 }
                 acc[penalty.type].push(penalty);
                 return acc;
-              }, {} as Record<string, typeof allPenalties>);
+              }, {});
 
               return Object.entries(groupedPenalties).map(([type, penalties]) => (
                 <div key={type} className="space-y-2">

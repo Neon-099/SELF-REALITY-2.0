@@ -323,7 +323,7 @@ export const createPunishmentSlice: StateCreator<PunishmentSlice & any> = (set, 
       const now = new Date();
 
       // Mark all recovery quests as completed/failed to prevent bypass
-      activeRecoveryQuestIds.forEach(questId => {
+      activeRecoveryQuestIds.forEach((questId: string) => {
         updateQuest(questId, {
           completed: true,
           completedAt: now,

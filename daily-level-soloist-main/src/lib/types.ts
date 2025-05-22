@@ -57,6 +57,7 @@ export interface Mission {
   rank?: Rank;  // Use the Rank type instead of string
   day?: number;
   releaseDate?: Date;
+  deadline?: Date; // Add deadline property to match usage in ShadowPenalty.tsx
   missed?: boolean; // To track if the deadline was missed
   difficulty?: 'normal' | 'boss'; // Difficulty level of the mission
   expEarned?: number; // Added to track actual EXP earned (for compatibility with MissionBoard.tsx)
