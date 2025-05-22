@@ -14,6 +14,7 @@ interface SideQuestCardProps {
   onComplete: (id: string) => void;
   onStart?: (id: string) => void;
   canComplete?: (id: string) => boolean;
+  canStart?: (id: string) => boolean;
 }
 
 // Add Task Dialog Component
@@ -104,7 +105,7 @@ const AddTaskDialog = ({ questId, onClose }: { questId: string; onClose: () => v
   );
 };
 
-const SideQuestCard: React.FC<SideQuestCardProps> = ({ quest, onComplete, onStart, canComplete }) => {
+const SideQuestCard: React.FC<SideQuestCardProps> = ({ quest, onComplete, onStart, canComplete, canStart }) => {
   const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
   const [isAddTaskDialogOpen, setIsAddTaskDialogOpen] = useState(false);
   const completeQuestTask = useSoloLevelingStore(state => state.completeQuestTask);
@@ -121,7 +122,7 @@ const SideQuestCard: React.FC<SideQuestCardProps> = ({ quest, onComplete, onStar
 
   // Function to handle starting the quest
   const handleStartQuest = () => {
-    if (onStart) {
+    if (onStart && canStart && canStart(quest.id)) {
       onStart(quest.id);
       // Close the dialog after starting the quest
       setIsTaskDialogOpen(false);
@@ -313,9 +314,14 @@ const SideQuestCard: React.FC<SideQuestCardProps> = ({ quest, onComplete, onStar
                     e.stopPropagation();
                     handleStartQuest();
                   }}
-                  className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white w-full"
+                  disabled={canStart ? !canStart(quest.id) : false}
+                  className={`w-full ${
+                    canStart && !canStart(quest.id)
+                      ? 'bg-gray-600 hover:bg-gray-600 text-gray-400 cursor-not-allowed'
+                      : 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white'
+                  }`}
                 >
-                  Start Quest
+                  {canStart && !canStart(quest.id) ? 'Daily Limit Reached' : 'Start Quest'}
                 </Button>
               </div>
             </div>
