@@ -11,6 +11,7 @@ import { DateTimePicker } from '@/components/ui/date-time-picker';
 import SideQuestCard from '../components/SideQuestCard';
 import DailyQuestCard from '../components/DailyQuestCard';
 import MainQuestCard from '../components/MainQuestCard';
+import RecoveryQuestCard from '../components/RecoveryQuestCard';
 import { CustomDialogContent } from '@/components/ui/custom-dialog';
 
 // Define experience reward values by difficulty
@@ -523,14 +524,17 @@ const QuestTasks = ({ quest }: { quest: Quest }) => {
 };
 
 const Quests = () => {
-  const [quests, completeQuest, startQuest, canCompleteQuest, addGold, addExp] = useSoloLevelingStore(
+  const [quests, completeQuest, startQuest, canCompleteQuest, canStartQuest, addGold, addExp, getDailyQuestCompletionStatus, hasReachedDailyLimit] = useSoloLevelingStore(
     state => [
       state.quests,
       state.completeQuest,
       state.startQuest,
       state.canCompleteQuest,
+      state.canStartQuest,
       state.addGold,
-      state.addExp
+      state.addExp,
+      state.getDailyQuestCompletionStatus,
+      state.hasReachedDailyLimit
     ]
   );
 
@@ -718,6 +722,9 @@ const Quests = () => {
     }
   };
 
+  // Get daily completion status
+  const dailyStatus = getDailyQuestCompletionStatus();
+
   const renderQuests = () => {
     switch (activeFilter) {
       case 'main':
@@ -800,6 +807,7 @@ const Quests = () => {
                     onComplete={handleCompleteQuest}
                     onStart={startQuest}
                     canComplete={canCompleteQuest}
+                    canStart={canStartQuest}
                   />
                 ))}
             </div>
@@ -882,60 +890,28 @@ const Quests = () => {
               </Dialog>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {activeQuests
-                .filter(quest => !quest.isMainQuest && !quest.isDaily)
-                .map((quest) => (
+              {(() => {
+                const sideQuests = activeQuests.filter(quest => !quest.isMainQuest && !quest.isDaily);
+                const regularSideQuests = sideQuests.filter(quest => !quest.isRecoveryQuest);
+                const recoveryQuests = sideQuests.filter(quest => quest.isRecoveryQuest);
+
+                // Show recovery quests only if there are no ongoing regular side quests
+                const hasOngoingSideQuest = regularSideQuests.some(quest => quest.started && !quest.completed);
+                const questsToShow = hasOngoingSideQuest ? regularSideQuests : sideQuests;
+
+                return questsToShow.map((quest) => (
                   quest.isRecoveryQuest ? (
-                    <div
+                    <RecoveryQuestCard
                       key={quest.id}
-                      className="bg-slate-900 border-2 border-amber-600/80 rounded-lg overflow-hidden transition-all"
-                    >
-                      <div className="p-4">
-                        <div className="flex justify-between items-start mb-3">
-                          <div className="flex items-center gap-2">
-                            <Shield size={20} className="text-amber-500" />
-                            <h3 className="font-medium text-lg text-amber-400">
-                              {quest.title}
-                            </h3>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Star size={16} className="text-yellow-400" />
-                            <span className="text-amber-400 font-bold">+{quest.expReward} EXP</span>
-                            <div className="bg-amber-950/50 text-xs text-amber-500 ml-1 px-1.5 py-0.5 rounded-sm">Recovery Quest</div>
-                          </div>
-                        </div>
-
-                        {quest.description && (
-                          <p className="text-gray-300/90 mb-3 text-sm">
-                            {quest.description}
-                          </p>
-                        )}
-
-                        {quest.deadline && (
-                          <div className="flex items-center gap-2 my-3 p-2 bg-amber-950/30 rounded-md border border-amber-800/30">
-                            <Clock size={16} className="text-amber-500" />
-                            <div className="flex flex-col">
-                              <span className="text-xs text-amber-300 font-medium">Complete by end of day</span>
-                              <span className="text-xs text-amber-400/80">
-                                {format(new Date(quest.deadline), "MMMM d, yyyy")}
-                              </span>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-
-                      <button
-                        onClick={() => handleCompleteSideQuest(quest.id)}
-                        className="w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 py-3 text-center text-white flex items-center justify-center gap-2 transition-colors"
-                      >
-                        <CheckCircle size={18} />
-                        <span>Complete Recovery Quest</span>
-                      </button>
-                    </div>
+                      quest={quest}
+                      onComplete={handleCompleteSideQuest}
+                      canComplete={canCompleteQuest}
+                    />
                   ) : (
-                    <SideQuestCard key={quest.id} quest={quest} onComplete={handleCompleteSideQuest} onStart={startQuest} />
+                    <SideQuestCard key={quest.id} quest={quest} onComplete={handleCompleteSideQuest} onStart={startQuest} canStart={canStartQuest} />
                   )
-                ))}
+                ));
+              })()}
             </div>
             {activeQuests.filter(quest => !quest.isMainQuest && !quest.isDaily).length === 0 && (
               <div className="bg-solo-dark border border-gray-800 rounded-lg p-4 text-center">
@@ -1171,15 +1147,22 @@ const Quests = () => {
                                           <Button
                                             variant="default"
                                             onClick={() => {
-                                              startQuest(quest.id);
-                                              toast({
-                                                title: "Quest Started!",
-                                                description: `You've started the quest "${quest.title}"`,
-                                              });
+                                              if (canStartQuest(quest.id)) {
+                                                startQuest(quest.id);
+                                                toast({
+                                                  title: "Quest Started!",
+                                                  description: `You've started the quest "${quest.title}"`,
+                                                });
+                                              }
                                             }}
-                                            className="w-full bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-600 hover:to-amber-600 text-black"
+                                            disabled={!canStartQuest(quest.id)}
+                                            className={`w-full ${
+                                              !canStartQuest(quest.id)
+                                                ? 'bg-gray-600 hover:bg-gray-600 text-gray-400 cursor-not-allowed'
+                                                : 'bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-600 hover:to-amber-600 text-black'
+                                            }`}
                                           >
-                                            Start Quest
+                                            {!canStartQuest(quest.id) ? 'Daily Limit Reached' : 'Start Quest'}
                                           </Button>
                                         ) : (
                                           <div className="bg-green-900/20 p-2 rounded-md border border-green-500/20 text-center text-green-400 text-sm">
@@ -1290,15 +1273,22 @@ const Quests = () => {
                                           <Button
                                             variant="default"
                                             onClick={() => {
-                                              startQuest(quest.id);
-                                              toast({
-                                                title: "Quest Started!",
-                                                description: `You've started the quest "${quest.title}"`,
-                                              });
+                                              if (canStartQuest(quest.id)) {
+                                                startQuest(quest.id);
+                                                toast({
+                                                  title: "Quest Started!",
+                                                  description: `You've started the quest "${quest.title}"`,
+                                                });
+                                              }
                                             }}
-                                            className="w-full bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-600 hover:to-amber-600 text-black"
+                                            disabled={!canStartQuest(quest.id)}
+                                            className={`w-full ${
+                                              !canStartQuest(quest.id)
+                                                ? 'bg-gray-600 hover:bg-gray-600 text-gray-400 cursor-not-allowed'
+                                                : 'bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-600 hover:to-amber-600 text-black'
+                                            }`}
                                           >
-                                            Start Quest
+                                            {!canStartQuest(quest.id) ? 'Daily Limit Reached' : 'Start Quest'}
                                           </Button>
                                         ) : (
                                           <div className="bg-green-900/20 p-2 rounded-md border border-green-500/20 text-center text-green-400 text-sm">
@@ -1334,6 +1324,7 @@ const Quests = () => {
                       onComplete={handleCompleteQuest}
                       onStart={startQuest}
                       canComplete={canCompleteQuest}
+                      canStart={canStartQuest}
                     />
                   ))}
               </div>
@@ -1386,13 +1377,29 @@ const Quests = () => {
                               .map((quest) => (
                                 <div
                                   key={quest.id}
-                                  className="bg-gray-900 border border-indigo-500/20 rounded-lg p-3 hover:border-indigo-500/40 transition-all"
+                                  className={`rounded-lg p-3 transition-all ${
+                                    quest.isRecoveryQuest
+                                      ? 'bg-amber-950/30 border border-amber-600/40 hover:border-amber-500/60'
+                                      : 'bg-gray-900 border border-indigo-500/20 hover:border-indigo-500/40'
+                                  }`}
                                 >
                                   <div className="flex justify-between items-start mb-2">
-                                    <h3 className="font-medium text-indigo-400">{quest.title}</h3>
+                                    <div className="flex items-center gap-2">
+                                      {quest.isRecoveryQuest && <Shield size={14} className="text-amber-500" />}
+                                      <h3 className={`font-medium ${quest.isRecoveryQuest ? 'text-amber-400' : 'text-indigo-400'}`}>
+                                        {quest.title}
+                                      </h3>
+                                      {quest.isRecoveryQuest && (
+                                        <span className="bg-amber-950/50 text-xs text-amber-500 px-1.5 py-0.5 rounded-sm">
+                                          Recovery
+                                        </span>
+                                      )}
+                                    </div>
                                     <div className="flex items-center gap-1 text-xs">
                                       <Star size={12} className="text-yellow-400" />
-                                      <span className="text-indigo-500">+{quest.expReward} XP</span>
+                                      <span className={quest.isRecoveryQuest ? 'text-amber-500' : 'text-indigo-500'}>
+                                        +{quest.expReward} XP
+                                      </span>
                                     </div>
                                   </div>
                                   {quest.description && (
@@ -1467,15 +1474,22 @@ const Quests = () => {
                                           <Button
                                             variant="default"
                                             onClick={() => {
-                                              startQuest(quest.id);
-                                              toast({
-                                                title: "Quest Started!",
-                                                description: `You've started the quest "${quest.title}"`,
-                                              });
+                                              if (canStartQuest(quest.id)) {
+                                                startQuest(quest.id);
+                                                toast({
+                                                  title: "Quest Started!",
+                                                  description: `You've started the quest "${quest.title}"`,
+                                                });
+                                              }
                                             }}
-                                            className="w-full bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white"
+                                            disabled={!canStartQuest(quest.id)}
+                                            className={`w-full ${
+                                              !canStartQuest(quest.id)
+                                                ? 'bg-gray-600 hover:bg-gray-600 text-gray-400 cursor-not-allowed'
+                                                : 'bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white'
+                                            }`}
                                           >
-                                            Start Quest
+                                            {!canStartQuest(quest.id) ? 'Daily Limit Reached' : 'Start Quest'}
                                           </Button>
                                         ) : (
                                           <div className="bg-green-900/20 p-2 rounded-md border border-green-500/20 text-center text-green-400 text-sm">
@@ -1505,13 +1519,29 @@ const Quests = () => {
                               .map((quest) => (
                                 <div
                                   key={quest.id}
-                                  className="bg-gray-900 border border-indigo-500/20 rounded-lg p-3 hover:border-indigo-500/40 transition-all"
+                                  className={`rounded-lg p-3 transition-all ${
+                                    quest.isRecoveryQuest
+                                      ? 'bg-amber-950/30 border border-amber-600/40 hover:border-amber-500/60'
+                                      : 'bg-gray-900 border border-indigo-500/20 hover:border-indigo-500/40'
+                                  }`}
                                 >
                                   <div className="flex justify-between items-start mb-2">
-                                    <h3 className="font-medium text-indigo-400">{quest.title}</h3>
+                                    <div className="flex items-center gap-2">
+                                      {quest.isRecoveryQuest && <Shield size={14} className="text-amber-500" />}
+                                      <h3 className={`font-medium ${quest.isRecoveryQuest ? 'text-amber-400' : 'text-indigo-400'}`}>
+                                        {quest.title}
+                                      </h3>
+                                      {quest.isRecoveryQuest && (
+                                        <span className="bg-amber-950/50 text-xs text-amber-500 px-1.5 py-0.5 rounded-sm">
+                                          Recovery
+                                        </span>
+                                      )}
+                                    </div>
                                     <div className="flex items-center gap-1 text-xs">
                                       <Star size={12} className="text-yellow-400" />
-                                      <span className="text-indigo-500">+{quest.expReward} XP</span>
+                                      <span className={quest.isRecoveryQuest ? 'text-amber-500' : 'text-indigo-500'}>
+                                        +{quest.expReward} XP
+                                      </span>
                                     </div>
                                   </div>
                                   {quest.description && (
@@ -1586,15 +1616,22 @@ const Quests = () => {
                                           <Button
                                             variant="default"
                                             onClick={() => {
-                                              startQuest(quest.id);
-                                              toast({
-                                                title: "Quest Started!",
-                                                description: `You've started the quest "${quest.title}"`,
-                                              });
+                                              if (canStartQuest(quest.id)) {
+                                                startQuest(quest.id);
+                                                toast({
+                                                  title: "Quest Started!",
+                                                  description: `You've started the quest "${quest.title}"`,
+                                                });
+                                              }
                                             }}
-                                            className="w-full bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white"
+                                            disabled={!canStartQuest(quest.id)}
+                                            className={`w-full ${
+                                              !canStartQuest(quest.id)
+                                                ? 'bg-gray-600 hover:bg-gray-600 text-gray-400 cursor-not-allowed'
+                                                : 'bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white'
+                                            }`}
                                           >
-                                            Start Quest
+                                            {!canStartQuest(quest.id) ? 'Daily Limit Reached' : 'Start Quest'}
                                           </Button>
                                         ) : (
                                           <div className="bg-green-900/20 p-2 rounded-md border border-green-500/20 text-center text-green-400 text-sm">
@@ -1620,61 +1657,29 @@ const Quests = () => {
                 </Dialog>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                {activeQuests
-                      .filter(quest => !quest.isMainQuest && !quest.isDaily)
-                      .slice(0, isMobile ? 2 : 4)
-                  .map((quest) => (
-                        quest.isRecoveryQuest ? (
-                    <div
-                      key={quest.id}
-                            className="bg-slate-900 border-2 border-amber-600/80 rounded-lg overflow-hidden transition-all"
-                    >
-                            <div className="p-4">
-                              <div className="flex justify-between items-start mb-3">
-                        <div className="flex items-center gap-2">
-                                  <Shield size={20} className="text-amber-500" />
-                                  <h3 className="font-medium text-lg text-amber-400">
-                                    {quest.title}
-                                  </h3>
-                                </div>
-                                <div className="flex items-center gap-1">
-                                  <Star size={16} className="text-yellow-400" />
-                                  <span className="text-amber-400 font-bold">+{quest.expReward} EXP</span>
-                                  <div className="bg-amber-950/50 text-xs text-amber-500 ml-1 px-1.5 py-0.5 rounded-sm">Recovery Quest</div>
-                        </div>
-                      </div>
+                {(() => {
+                  const sideQuests = activeQuests.filter(quest => !quest.isMainQuest && !quest.isDaily);
+                  const regularSideQuests = sideQuests.filter(quest => !quest.isRecoveryQuest);
 
-                    {quest.description && (
-                              <p className="text-gray-300/90 mb-3 text-sm">
-                                {quest.description}
-                              </p>
-                            )}
+                  // Show recovery quests only if there are no ongoing regular side quests
+                  const hasOngoingSideQuest = regularSideQuests.some(quest => quest.started && !quest.completed);
+                  const questsToShow = hasOngoingSideQuest ? regularSideQuests : sideQuests;
 
-                            {quest.deadline && (
-                              <div className="flex items-center gap-2 my-3 p-2 bg-amber-950/30 rounded-md border border-amber-800/30">
-                                <Clock size={16} className="text-amber-500" />
-                                <div className="flex flex-col">
-                                  <span className="text-xs text-amber-300 font-medium">Complete by end of day</span>
-                                  <span className="text-xs text-amber-400/80">
-                                    {format(new Date(quest.deadline), "MMMM d, yyyy")}
-                                  </span>
-                                </div>
-                              </div>
-                            )}
-                          </div>
-
-                          <button
-                            onClick={() => handleCompleteSideQuest(quest.id)}
-                            className="w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 py-3 text-center text-white flex items-center justify-center gap-2 transition-colors"
-                          >
-                            <CheckCircle size={18} />
-                            <span>Complete Recovery Quest</span>
-                          </button>
-                    </div>
-                        ) : (
-                          <SideQuestCard key={quest.id} quest={quest} onComplete={handleCompleteSideQuest} onStart={startQuest} />
-                        )
-                  ))}
+                  return questsToShow
+                    .slice(0, isMobile ? 2 : 4)
+                    .map((quest) => (
+                      quest.isRecoveryQuest ? (
+                        <RecoveryQuestCard
+                          key={quest.id}
+                          quest={quest}
+                          onComplete={handleCompleteSideQuest}
+                          canComplete={canCompleteQuest}
+                        />
+                      ) : (
+                        <SideQuestCard key={quest.id} quest={quest} onComplete={handleCompleteSideQuest} onStart={startQuest} canStart={canStartQuest} />
+                      )
+                    ));
+                })()}
               </div>
             </div>
 
@@ -1926,6 +1931,63 @@ const Quests = () => {
           <Sunrise className="h-4 w-4 text-green-500" />
           Daily Quests
         </Button>
+      </div>
+
+      {/* Daily Completion Status */}
+      <div className="bg-solo-dark border border-gray-800 rounded-lg p-4">
+        <h3 className="text-lg font-semibold text-solo-text mb-3 flex items-center gap-2">
+          <CalendarClock size={20} className="text-blue-500" />
+          Today's Progress
+        </h3>
+        <div className={`grid gap-4 ${isMobile ? 'grid-cols-2' : 'grid-cols-3'}`}>
+          <div className="flex items-center justify-between p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+            <div className="flex items-center gap-2">
+              <Swords size={16} className="text-yellow-500" />
+              <span className="text-sm font-medium text-yellow-400">Main Quests</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <span className={`text-lg font-bold ${dailyStatus.mainQuestsCompleted >= 1 ? 'text-green-400' : 'text-yellow-400'}`}>
+                {dailyStatus.mainQuestsCompleted}
+              </span>
+              <span className="text-gray-400">/</span>
+              <span className="text-gray-400">1</span>
+              {dailyStatus.mainQuestsCompleted >= 1 && <CheckCircle size={16} className="text-green-400 ml-1" />}
+            </div>
+          </div>
+          <div className="flex items-center justify-between p-3 bg-indigo-500/10 border border-indigo-500/20 rounded-lg">
+            <div className="flex items-center gap-2">
+              <Sword size={16} className="text-indigo-500" />
+              <span className="text-sm font-medium text-indigo-400">Side Quests</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <span className={`text-lg font-bold ${dailyStatus.sideQuestsCompleted >= 1 ? 'text-green-400' : 'text-indigo-400'}`}>
+                {dailyStatus.sideQuestsCompleted}
+              </span>
+              <span className="text-gray-400">/</span>
+              <span className="text-gray-400">1</span>
+              {dailyStatus.sideQuestsCompleted >= 1 && <CheckCircle size={16} className="text-green-400 ml-1" />}
+            </div>
+          </div>
+          {/* Hide Daily Quests on mobile */}
+          {!isMobile && (
+            <div className="flex items-center justify-between p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
+              <div className="flex items-center gap-2">
+                <Sunrise size={16} className="text-green-500" />
+                <span className="text-sm font-medium text-green-400">Daily Quests</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <span className="text-lg font-bold text-green-400">
+                  {dailyStatus.dailyQuestsCompleted}
+                </span>
+                <span className="text-gray-400">/</span>
+                <span className="text-gray-400">∞</span>
+              </div>
+            </div>
+          )}
+        </div>
+        <div className="mt-3 text-xs text-gray-500 text-center">
+          Daily limits reset at midnight. You can only start/complete 1 main quest and 1 side quest per day.
+        </div>
       </div>
 
       {/* Active Quests */}

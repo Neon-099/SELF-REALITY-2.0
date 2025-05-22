@@ -13,6 +13,7 @@ import { predefinedMissions } from '@/data/predefined-missions';
 import { endOfDay } from 'date-fns';
 import { getDB } from '@/lib/db';
 import { Quest, ShopItem } from '@/lib/types';
+import ShadowPenalty from '@/components/punishment/ShadowPenalty';
 
 const rankDetails = [
   {
@@ -136,33 +137,33 @@ const rankDetails = [
 
 const RankCard = ({ rank, levelReq, isCurrentRank }: { rank: string; levelReq: number; isCurrentRank: boolean }) => {
   const rankInfo = rankDetails.find(r => r.rank === rank);
-  
+
   // Calculate progress towards next rank (for current rank only)
   const user = useSoloLevelingStore(state => state.user);
   const nextRank = rankDetails
     .sort((a, b) => a.levelReq - b.levelReq)
     .find(r => r.levelReq > user.level);
-  
+
   // Only calculate progress if this is the current rank
-  const progressToNextRank = isCurrentRank && nextRank ? 
+  const progressToNextRank = isCurrentRank && nextRank ?
     Math.min(100, Math.round(((user.level - levelReq) / (nextRank.levelReq - levelReq)) * 100)) : 0;
-  
+
   return (
-    <div 
+    <div
       className={cn(
         "flex flex-col p-3 rounded-lg transition-all duration-300 border cursor-pointer transform",
-        isCurrentRank 
-          ? "bg-solo-primary/10 border-solo-primary hover:bg-solo-primary/20 hover:shadow-[0_0_15px_rgba(59,130,246,0.3)] hover:scale-[1.02] relative group" 
+        isCurrentRank
+          ? "bg-solo-primary/10 border-solo-primary hover:bg-solo-primary/20 hover:shadow-[0_0_15px_rgba(59,130,246,0.3)] hover:scale-[1.02] relative group"
           : "bg-solo-dark border-gray-800 hover:border-gray-600 hover:bg-gray-800/80 hover:shadow-md hover:scale-[1.01]"
       )}
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div 
+          <div
             className={cn(
               "w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300",
-              isCurrentRank 
-                ? "bg-solo-primary text-white animate-pulse-slow" 
+              isCurrentRank
+                ? "bg-solo-primary text-white animate-pulse-slow"
                 : "bg-gray-800 text-gray-400 group-hover:scale-110"
             )}
           >
@@ -175,8 +176,8 @@ const RankCard = ({ rank, levelReq, isCurrentRank }: { rank: string; levelReq: n
           <div>
             <div className={cn(
               "font-bold transition-colors duration-300",
-              isCurrentRank 
-                ? "text-solo-primary" 
+              isCurrentRank
+                ? "text-solo-primary"
                 : "text-gray-200 group-hover:text-solo-primary/80"
             )}>
               Rank {rank}
@@ -193,7 +194,7 @@ const RankCard = ({ rank, levelReq, isCurrentRank }: { rank: string; levelReq: n
           </span>
         )}
       </div>
-      
+
       {/* Progress bar for current rank only */}
       {isCurrentRank && nextRank && (
         <div className="mt-3 space-y-1">
@@ -202,7 +203,7 @@ const RankCard = ({ rank, levelReq, isCurrentRank }: { rank: string; levelReq: n
             <span>{progressToNextRank}%</span>
           </div>
           <div className="w-full h-1.5 bg-gray-800 rounded-full overflow-hidden">
-            <div 
+            <div
               className="h-full bg-gradient-to-r from-solo-primary to-solo-secondary"
               style={{ width: `${progressToNextRank}%` }}
             />
@@ -216,7 +217,7 @@ const RankCard = ({ rank, levelReq, isCurrentRank }: { rank: string; levelReq: n
 const RankDetailsDialog = () => {
   const user = useSoloLevelingStore(state => state.user);
   const currentRank = user?.rank || 'F';
-  
+
   return (
     <Dialog>
       <DialogTrigger asChild>
@@ -230,25 +231,25 @@ const RankDetailsDialog = () => {
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="text-sm text-gray-400">Your current rank: <span className="font-bold text-solo-primary">{currentRank}</span></div>
-          
+
           <div className="space-y-6">
             {rankDetails
               .sort((a, b) => b.levelReq - a.levelReq)
               .map(rank => {
                 const isCurrentRank = rank.rank === currentRank;
                 return (
-                  <div 
+                  <div
                     key={rank.rank}
                     className={cn(
                       "p-4 rounded-lg border transition-all duration-300 cursor-pointer transform group",
-                      isCurrentRank 
-                        ? "border-solo-primary/50 bg-solo-primary/10 hover:border-solo-primary hover:shadow-[0_0_15px_rgba(99,102,241,0.4)] hover:scale-[1.02]" 
+                      isCurrentRank
+                        ? "border-solo-primary/50 bg-solo-primary/10 hover:border-solo-primary hover:shadow-[0_0_15px_rgba(99,102,241,0.4)] hover:scale-[1.02]"
                         : "border-gray-800 bg-gray-900/50 hover:border-gray-500 hover:bg-gray-800/70 hover:shadow-lg hover:scale-[1.01]"
                     )}
                   >
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
-                        <div 
+                        <div
                           className={cn(
                             "w-8 h-8 rounded-full flex items-center justify-center font-bold transition-all duration-300",
                             rank.color,
@@ -268,9 +269,9 @@ const RankDetailsDialog = () => {
                         </div>
                       )}
                     </div>
-                    
+
                     <span className="text-sm text-gray-300 mb-3">{rank.description}</span>
-                    
+
                     <div className="space-y-2">
                       <h4 className="text-sm font-medium text-gray-300">Benefits:</h4>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
@@ -294,11 +295,18 @@ const RankDetailsDialog = () => {
 
 const Character = () => {
   const [
-    user, 
-    addExp, 
-    chanceCounter, 
-    isCursed, 
-    hasShadowFatigue, 
+    user,
+    addExp,
+    chanceCounter,
+    isCursed,
+    hasShadowFatigue,
+    shadowFatigueUntil,
+    cursedUntil,
+    lockedSideQuestsUntil,
+    getExpModifier,
+    areSideQuestsLocked,
+    checkCurseStatus,
+    resetWeeklyChances,
     addQuest,
     addQuestTask,
     canUseRedemption,
@@ -306,11 +314,18 @@ const Character = () => {
     deleteQuest,
     missions
   ] = useSoloLevelingStore(state => [
-      state.user, 
-      state.addExp, 
-      state.chanceCounter, 
-      state.isCursed, 
-      state.hasShadowFatigue, 
+      state.user,
+      state.addExp,
+      state.chanceCounter,
+      state.isCursed,
+      state.hasShadowFatigue,
+      state.shadowFatigueUntil,
+      state.cursedUntil,
+      state.lockedSideQuestsUntil,
+      state.getExpModifier,
+      state.areSideQuestsLocked,
+      state.checkCurseStatus,
+      state.resetWeeklyChances,
       state.addQuest,
       state.addQuestTask,
       state.canUseRedemption,
@@ -318,7 +333,7 @@ const Character = () => {
       state.deleteQuest,
       state.missions
     ]);
-  
+
   const [lastUpdate, setLastUpdate] = useState(Date.now());
   const [animatedExp, setAnimatedExp] = useState(user?.exp || 0);
   const [expPercentage, setExpPercentage] = useState(
@@ -338,10 +353,10 @@ const Character = () => {
     try {
       setIsLoadingDb(true);
       const db = await getDB();
-      
+
       // Get the raw data from the database
       const storeData = await db.get('store', 'soloist-store');
-      
+
       // Get direct quest data if available
       let questsDataArray: Quest[] = [];
       try {
@@ -351,7 +366,7 @@ const Character = () => {
       } catch (error) {
         console.error('Error fetching quests directly:', error);
       }
-      
+
       // Get shop items data
       let shopItemsDataArray: ShopItem[] = [];
       try {
@@ -362,16 +377,16 @@ const Character = () => {
       } catch (error) {
         console.error('Error fetching shop items directly:', error);
       }
-      
+
       setQuestsData(questsDataArray);
       setShopItemsData(shopItemsDataArray);
-      
+
       setDbContents({
         zustandStore: storeData ? JSON.parse(storeData) : null,
         directQuests: questsDataArray,
         shopItems: shopItemsDataArray
       });
-      
+
       toast({
         title: "Database Loaded",
         description: "IndexedDB data has been retrieved successfully.",
@@ -406,6 +421,20 @@ const Character = () => {
     }
   }, [user]);
 
+  // Check curse status and reset weekly chances on component mount and periodically
+  useEffect(() => {
+    checkCurseStatus();
+    resetWeeklyChances();
+
+    // Set up interval to check curse status every minute
+    const interval = setInterval(() => {
+      checkCurseStatus();
+      resetWeeklyChances();
+    }, 60000); // Check every minute
+
+    return () => clearInterval(interval);
+  }, [checkCurseStatus, resetWeeklyChances]);
+
   // Function to handle quest deletion
   const handleDeleteQuest = (questId: string) => {
     try {
@@ -414,7 +443,7 @@ const Character = () => {
         title: "Quest Deleted",
         description: "The quest has been successfully removed.",
       });
-      
+
       // Refresh data to show updated state
       loadDbData();
     } catch (error) {
@@ -429,32 +458,32 @@ const Character = () => {
 
   // Function to handle mission deletion directly through IndexedDB
   // Since deleteMission isn't available in the store yet
-  // TODO: This is a temporary solution - it would be better to implement a proper deleteMission 
+  // TODO: This is a temporary solution - it would be better to implement a proper deleteMission
   // function in the mission-slice.ts file to maintain consistent architecture
   const handleDeleteMission = async (missionId: string) => {
     try {
       // Get the DB connection
       const db = await getDB();
-      
+
       // Get current store data
       const storeData = await db.get('store', 'soloist-store');
-      
+
       if (storeData) {
         // Parse store data
         const parsedStore = JSON.parse(storeData);
-        
+
         if (parsedStore.state && Array.isArray(parsedStore.state.missions)) {
           // Filter out the mission to delete
           parsedStore.state.missions = parsedStore.state.missions.filter(
             (m: any) => m.id !== missionId
           );
-          
+
           // Save the updated data back to IndexedDB
           await db.put('store', JSON.stringify(parsedStore), 'soloist-store');
-          
+
           // Now update our UI state by refreshing
           await loadDbData();
-          
+
           toast({
             title: "Mission Deleted",
             description: "The mission has been successfully removed.",
@@ -511,7 +540,7 @@ const Character = () => {
         <h1 className="text-4xl font-bold bg-gradient-to-r from-solo-primary to-blue-500 bg-clip-text text-transparent mb-2">Character Stats</h1>
         <p className="text-gray-400">Increase your stats to become stronger.</p>
       </div>
-      
+
       {/* Character Overview */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-6">
         <Card className="bg-solo-dark border-gray-800 hover:shadow-lg hover:shadow-solo-primary/5 transition-all duration-300 overflow-hidden">
@@ -528,7 +557,7 @@ const Character = () => {
                   {user.rank} Rank
                 </div>
               </div>
-              
+
               <div className="text-center">
                 <div className="bg-gray-800/80 rounded-xl p-4 backdrop-blur-sm shadow-inner">
                   <p className="text-xs text-gray-400 flex items-center justify-center gap-1 mb-2">
@@ -544,7 +573,7 @@ const Character = () => {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card className="bg-solo-dark border-gray-800 md:col-span-2 hover:shadow-lg hover:shadow-solo-primary/5 transition-all duration-300 overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-solo-primary to-blue-500"></div>
           <CardHeader className="px-3 sm:px-6 py-4 sm:py-6">
@@ -560,20 +589,20 @@ const Character = () => {
                 <div className="text-right">
                   <p className="text-sm text-gray-400 mb-1">Required EXP</p>
                   <p className="font-bold text-lg">
-                    <span className="text-solo-primary">{user.exp}</span> 
+                    <span className="text-solo-primary">{user.exp}</span>
                     <span className="text-gray-500"> / </span>
                     <span>{user.expToNextLevel}</span>
                   </p>
                 </div>
               </div>
-              
+
               <div className="w-full bg-gray-800/50 h-3 rounded-full overflow-hidden backdrop-blur-sm shadow-inner">
-                <div 
-                  className="bg-gradient-to-r from-solo-primary to-blue-500 h-full rounded-full transition-all duration-700 ease-out" 
-                  style={{ width: `${expPercentage}%` }} 
+                <div
+                  className="bg-gradient-to-r from-solo-primary to-blue-500 h-full rounded-full transition-all duration-700 ease-out"
+                  style={{ width: `${expPercentage}%` }}
                 />
               </div>
-              
+
               {/* Shadow Chance Counter */}
               <div className="mt-4 p-4 bg-gray-850/30 rounded-lg backdrop-blur-sm">
                 <div className="flex justify-between items-center mb-2">
@@ -619,7 +648,7 @@ const Character = () => {
                       chanceCounter <= 3 ? "bg-yellow-500/20 text-yellow-400" :
                       "bg-red-500/20 text-red-400"
                     )}>
-                      {chanceCounter}/5 used
+                      {Math.min(chanceCounter, 5)}/5 used
                     </p>
                     {isCursed && (
                       <span className="bg-red-500/20 text-red-400 text-xs font-semibold px-2.5 py-1 rounded-full animate-pulse">
@@ -628,12 +657,12 @@ const Character = () => {
                     )}
                   </div>
                 </div>
-                
+
                 <div className="w-full bg-gray-800/70 h-2 rounded-full overflow-hidden shadow-inner">
                   {isCursed ? (
                     <div className="h-full bg-red-500 w-full animate-pulse" />
                   ) : (
-                    <div 
+                    <div
                       className={cn(
                         "h-full transition-all duration-500",
                         chanceCounter === 0 ? "bg-gradient-to-r from-green-400 to-green-500" :
@@ -641,19 +670,29 @@ const Character = () => {
                         chanceCounter <= 3 ? "bg-gradient-to-r from-yellow-400 to-yellow-500" :
                         "bg-gradient-to-r from-red-400 to-red-500"
                       )}
-                      style={{ width: `${(chanceCounter / 5) * 100}%` }} 
+                      style={{ width: `${(chanceCounter / 5) * 100}%` }}
                     />
                   )}
                 </div>
-                
-                {hasShadowFatigue && (
-                  <div className="mt-2 text-xs text-amber-400 flex items-center gap-1 p-2 bg-amber-500/10 rounded-md">
+
+                {(hasShadowFatigue || isCursed) && (
+                  <div className={cn(
+                    "mt-2 text-xs flex items-center gap-1 p-2 rounded-md",
+                    isCursed
+                      ? "text-red-400 bg-red-500/10"
+                      : "text-amber-400 bg-amber-500/10"
+                  )}>
                     <AlertCircle size={14} />
-                    <span className="font-medium">Shadow Fatigue active: 75% EXP from tasks</span>
+                    <span className="font-medium">
+                      {isCursed
+                        ? `Cursed: ${Math.round(getExpModifier() * 100)}% EXP from all activities`
+                        : `Shadow Fatigue: ${Math.round(getExpModifier() * 100)}% EXP from all activities`
+                      }
+                    </span>
                   </div>
                 )}
               </div>
-              
+
               <div className="grid grid-cols-2 gap-4 mt-4">
                 <div className="flex items-center gap-3 p-3 bg-gray-850/30 rounded-lg backdrop-blur-sm hover:bg-gray-800/50 transition-colors duration-300">
                   <div className="w-10 h-10 rounded-full bg-gradient-to-br from-solo-primary/20 to-blue-500/20 flex items-center justify-center text-solo-primary shadow-lg shadow-solo-primary/5">
@@ -664,7 +703,7 @@ const Character = () => {
                     <p className="font-bold text-lg">{user.streakDays} days</p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-center gap-3 p-3 bg-gray-850/30 rounded-lg backdrop-blur-sm hover:bg-gray-800/50 transition-colors duration-300">
                   <div className="w-10 h-10 rounded-full bg-gradient-to-br from-solo-primary/20 to-blue-500/20 flex items-center justify-center text-solo-primary shadow-lg shadow-solo-primary/5">
                     <HeartIcon size={18} />
@@ -679,12 +718,12 @@ const Character = () => {
           </CardContent>
         </Card>
       </div>
-      
+
       {/* Mobile attributes dialog button */}
       <div className="sm:hidden flex justify-center">
         <Dialog>
           <DialogTrigger asChild>
-            <Button 
+            <Button
               className="bg-gradient-to-r from-solo-primary to-blue-500 text-white font-medium rounded-lg shadow-md hover:shadow-lg transition-all duration-300 px-4 py-2.5"
             >
               <SparklesIcon className="mr-2 h-4 w-4" />
@@ -698,7 +737,7 @@ const Character = () => {
                 Your Attributes
               </DialogTitle>
             </DialogHeader>
-            
+
             <div className="pt-3">
               <div className="grid grid-cols-1 gap-2.5">
                 {/* Physical Stat - Enhanced mobile version */}
@@ -712,12 +751,12 @@ const Character = () => {
                       <span className="text-lg font-bold text-red-400">{user.stats.physical}</span>
                     </div>
                     <div className="w-full bg-gray-900/70 h-1.5 rounded-full mt-1 overflow-hidden">
-                      <div className="bg-gradient-to-r from-red-500 to-red-700 h-full rounded-full" 
+                      <div className="bg-gradient-to-r from-red-500 to-red-700 h-full rounded-full"
                           style={{ width: `${Math.min(100, user.stats.physical)}%` }} />
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Cognitive Stat - Enhanced mobile version */}
                 <div className="flex items-center p-2.5 bg-gray-800/40 rounded-lg border border-gray-800/80 hover:bg-gray-800/60 transition-all duration-300 hover:border-gray-700">
                   <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-blue-500/20 to-blue-700/20 flex items-center justify-center shadow-inner mr-3">
@@ -729,12 +768,12 @@ const Character = () => {
                       <span className="text-lg font-bold text-blue-400">{user.stats.cognitive}</span>
                     </div>
                     <div className="w-full bg-gray-900/70 h-1.5 rounded-full mt-1 overflow-hidden">
-                      <div className="bg-gradient-to-r from-blue-500 to-blue-700 h-full rounded-full" 
+                      <div className="bg-gradient-to-r from-blue-500 to-blue-700 h-full rounded-full"
                           style={{ width: `${Math.min(100, user.stats.cognitive)}%` }} />
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Emotional Stat - Enhanced mobile version */}
                 <div className="flex items-center p-2.5 bg-gray-800/40 rounded-lg border border-gray-800/80 hover:bg-gray-800/60 transition-all duration-300 hover:border-gray-700">
                   <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-pink-500/20 to-pink-700/20 flex items-center justify-center shadow-inner mr-3">
@@ -746,12 +785,12 @@ const Character = () => {
                       <span className="text-lg font-bold text-pink-400">{user.stats.emotional}</span>
                     </div>
                     <div className="w-full bg-gray-900/70 h-1.5 rounded-full mt-1 overflow-hidden">
-                      <div className="bg-gradient-to-r from-pink-500 to-pink-700 h-full rounded-full" 
+                      <div className="bg-gradient-to-r from-pink-500 to-pink-700 h-full rounded-full"
                           style={{ width: `${Math.min(100, user.stats.emotional)}%` }} />
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Spiritual Stat - Enhanced mobile version */}
                 <div className="flex items-center p-2.5 bg-gray-800/40 rounded-lg border border-gray-800/80 hover:bg-gray-800/60 transition-all duration-300 hover:border-gray-700">
                   <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-purple-500/20 to-purple-700/20 flex items-center justify-center shadow-inner mr-3">
@@ -763,12 +802,12 @@ const Character = () => {
                       <span className="text-lg font-bold text-purple-400">{user.stats.spiritual}</span>
                     </div>
                     <div className="w-full bg-gray-900/70 h-1.5 rounded-full mt-1 overflow-hidden">
-                      <div className="bg-gradient-to-r from-purple-500 to-purple-700 h-full rounded-full" 
+                      <div className="bg-gradient-to-r from-purple-500 to-purple-700 h-full rounded-full"
                           style={{ width: `${Math.min(100, user.stats.spiritual)}%` }} />
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Social Stat - Enhanced mobile version */}
                 <div className="flex items-center p-2.5 bg-gray-800/40 rounded-lg border border-gray-800/80 hover:bg-gray-800/60 transition-all duration-300 hover:border-gray-700">
                   <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-green-500/20 to-green-700/20 flex items-center justify-center shadow-inner mr-3">
@@ -780,13 +819,13 @@ const Character = () => {
                       <span className="text-lg font-bold text-green-400">{user.stats.social}</span>
                     </div>
                     <div className="w-full bg-gray-900/70 h-1.5 rounded-full mt-1 overflow-hidden">
-                      <div className="bg-gradient-to-r from-green-500 to-green-700 h-full rounded-full" 
+                      <div className="bg-gradient-to-r from-green-500 to-green-700 h-full rounded-full"
                           style={{ width: `${Math.min(100, user.stats.social)}%` }} />
                     </div>
                   </div>
                 </div>
               </div>
-              
+
               <div className="mt-4 pt-3 border-t border-gray-800 text-center">
                 <p className="text-xs text-gray-400">Increase attributes by completing quests and missions</p>
               </div>
@@ -840,27 +879,27 @@ const Character = () => {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="space-y-2">
                   {rankDetails
                     .filter(r => ['F', 'E', 'D', 'C', 'B', 'A', 'S', 'SS', 'SSS'].includes(r.rank))
                     .sort((a, b) => b.levelReq - a.levelReq)
                     .slice(0, 4)
                     .map(rank => (
-                      <RankCard 
+                      <RankCard
                         key={rank.rank}
-                        rank={rank.rank} 
-                        levelReq={rank.levelReq} 
-                        isCurrentRank={user.rank === rank.rank} 
+                        rank={rank.rank}
+                        levelReq={rank.levelReq}
+                        isCurrentRank={user.rank === rank.rank}
                       />
                     ))}
                 </div>
-                
+
                 <RankDetailsDialog />
               </div>
             </CardContent>
           </Card>
-          
+
           <Card className="bg-solo-dark border-gray-800 hover:shadow-lg hover:shadow-solo-primary/5 transition-all duration-300 overflow-hidden hidden md:block">
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-yellow-400 to-amber-500"></div>
             <CardHeader className="px-3 sm:px-6 py-4 sm:py-6">
@@ -879,10 +918,10 @@ const Character = () => {
                     {rankDetails.find(r => r.rank === user.rank)?.description || "Beginning hunter with standard rewards."}
                   </div>
                 </div>
-                
+
                 {rankDetails.find(r => r.rank === user.rank)?.benefits.map((benefit, index) => (
-                  <div 
-                    key={index} 
+                  <div
+                    key={index}
                     className="flex items-center gap-3 p-3 hover:bg-gray-800/50 rounded-md transition-all duration-300 hover:translate-x-1 group"
                   >
                     <div className="w-8 h-8 rounded-full bg-gradient-to-br from-solo-primary/20 to-blue-500/20 flex items-center justify-center text-solo-primary shadow-lg shadow-solo-primary/10 group-hover:shadow-solo-primary/20 transition-all duration-300">
@@ -899,8 +938,8 @@ const Character = () => {
 
       {/* Database Debug Button */}
       <div className="mt-8 flex justify-end">
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           size="sm"
           className="flex items-center gap-1"
           onClick={() => setShowDbDebug(!showDbDebug)}
@@ -919,10 +958,10 @@ const Character = () => {
               IndexedDB Contents
             </h2>
             <div className="flex gap-2">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={loadDbData} 
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={loadDbData}
                 disabled={isLoadingDb}
               >
                 Refresh Data
@@ -936,7 +975,7 @@ const Character = () => {
               </Button>
             </div>
           </div>
-          
+
           {isLoadingDb ? (
             <div className="text-center py-4">
               <p>Loading database contents...</p>
@@ -976,7 +1015,7 @@ const Character = () => {
                           )}
                         </div>
                       </details>
-                      
+
                       <details className="mt-2">
                         <summary className="cursor-pointer text-blue-400 hover:text-blue-300">
                           View Missions in Store (Total: {dbContents.zustandStore.state?.missions?.length || 0})
@@ -1004,7 +1043,7 @@ const Character = () => {
                           )}
                         </div>
                       </details>
-                      
+
                       <details className="mt-2">
                         <summary className="cursor-pointer text-blue-400 hover:text-blue-300">
                           View Completed Missions in Store (Total: {dbContents.zustandStore.state?.completedMissionHistory?.length || 0})
@@ -1047,7 +1086,7 @@ const Character = () => {
                   )}
                 </div>
               </div>
-              
+
               <div>
                 <h3 className="text-md font-semibold mb-2">Direct Quests ObjectStore</h3>
                 <div className="bg-gray-800 p-3 rounded max-h-60 overflow-auto">
@@ -1065,13 +1104,13 @@ const Character = () => {
                     </>
                   ) : (
                     <p className="text-amber-400">
-                      No quests found in direct ObjectStore. This app primarily uses the 'store' 
+                      No quests found in direct ObjectStore. This app primarily uses the 'store'
                       ObjectStore which contains the serialized Zustand state.
                     </p>
                   )}
                 </div>
               </div>
-              
+
               <div>
                 <h3 className="text-md font-semibold mb-2">Direct ShopItems ObjectStore</h3>
                 <div className="bg-gray-800 p-3 rounded max-h-60 overflow-auto">
@@ -1094,7 +1133,7 @@ const Character = () => {
                   )}
                 </div>
               </div>
-              
+
               <div>
                 <h3 className="text-md font-semibold mb-2">Current State (in memory)</h3>
                 <div className="bg-gray-800 p-3 rounded max-h-60 overflow-auto">
@@ -1132,7 +1171,7 @@ const Character = () => {
                         </div>
                       </details>
                     </div>
-                    
+
                     <div>
                       <p className="font-bold text-blue-400">Missions</p>
                       <p className="text-sm mt-1">

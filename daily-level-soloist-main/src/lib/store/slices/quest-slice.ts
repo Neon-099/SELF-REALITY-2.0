@@ -13,8 +13,11 @@ export interface QuestSlice {
   addQuestTask: (questId: string, title: string, description: string, category: DailyWinCategory, difficulty: Difficulty, deadline?: Date) => void;
   completeQuestTask: (questId: string, taskId: string) => void;
   canCompleteQuest: (id: string) => boolean;
+  canStartQuest: (id: string) => boolean;
   updateQuest: (id: string, updates: Partial<Quest>) => void;
   deleteQuest: (id: string) => void;
+  getDailyQuestCompletionStatus: () => { mainQuestsCompleted: number; sideQuestsCompleted: number; dailyQuestsCompleted: number };
+  hasReachedDailyLimit: (isMainQuest: boolean, isDaily: boolean) => boolean;
 }
 
 // Helper to map daily win categories to attribute stats
@@ -77,6 +80,59 @@ export const createQuestSlice: StateCreator<StoreState, [], [], QuestSlice> = (s
       }));
     },
     startQuest: (id) => {
+      const { quests } = get();
+      const quest = quests.find(q => q.id === id);
+
+      if (!quest) return;
+
+      // Check daily limits before starting quest (only for main and side quests, not daily quests)
+      if (!quest.isDaily) {
+        const today = new Date();
+        const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        const todayEnd = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
+
+        // Count started or completed quests today
+        const startedOrCompletedTodayMainQuests = quests.filter(q =>
+          q.isMainQuest &&
+          !q.isDaily &&
+          (q.started || q.completed) &&
+          (
+            (q.createdAt && new Date(q.createdAt) >= todayStart && new Date(q.createdAt) <= todayEnd) ||
+            (q.completedAt && new Date(q.completedAt) >= todayStart && new Date(q.completedAt) <= todayEnd)
+          )
+        ).length;
+
+        const startedOrCompletedTodaySideQuests = quests.filter(q =>
+          !q.isMainQuest &&
+          !q.isDaily &&
+          !q.isRecoveryQuest && // Exclude recovery quests from side quest limitations
+          (q.started || q.completed) &&
+          (
+            (q.createdAt && new Date(q.createdAt) >= todayStart && new Date(q.createdAt) <= todayEnd) ||
+            (q.completedAt && new Date(q.completedAt) >= todayStart && new Date(q.completedAt) <= todayEnd)
+          )
+        ).length;
+
+        // Check limits
+        if (quest.isMainQuest && startedOrCompletedTodayMainQuests >= 1) {
+          toast({
+            title: "Daily Limit Reached",
+            description: "You can only start/complete 1 main quest per day. Try again tomorrow!",
+            variant: "destructive"
+          });
+          return;
+        }
+
+        if (!quest.isMainQuest && !quest.isRecoveryQuest && startedOrCompletedTodaySideQuests >= 1) {
+          toast({
+            title: "Daily Limit Reached",
+            description: "You can only start/complete 1 side quest per day. Try again tomorrow!",
+            variant: "destructive"
+          });
+          return;
+        }
+      }
+
       set((state: QuestSlice) => ({
         quests: state.quests.map(quest =>
           quest.id === id ? { ...quest, started: true } : quest
@@ -87,7 +143,7 @@ export const createQuestSlice: StateCreator<StoreState, [], [], QuestSlice> = (s
       set((state: QuestSlice) => ({
         quests: state.quests.map(quest => {
           if (quest.id !== questId) return quest;
-          
+
           const newTask: Task = {
             id: uuidv4(),
             title,
@@ -98,7 +154,7 @@ export const createQuestSlice: StateCreator<StoreState, [], [], QuestSlice> = (s
             expReward: Math.floor(quest.expReward / 4), // Split main quest EXP among tasks
             createdAt: new Date()
           };
-          
+
           return {
             ...quest,
             tasks: [...quest.tasks, newTask]
@@ -113,11 +169,11 @@ export const createQuestSlice: StateCreator<StoreState, [], [], QuestSlice> = (s
 
         const updatedQuests = state.quests.map((q: Quest) => {
           if (q.id !== questId) return q;
-          
+
           const updatedTasks = q.tasks.map(task =>
             task.id === taskId ? { ...task, completed: true, completedAt: new Date() } : task
           );
-          
+
           return { ...q, tasks: updatedTasks };
         });
 
@@ -128,12 +184,12 @@ export const createQuestSlice: StateCreator<StoreState, [], [], QuestSlice> = (s
         const dailyWinCategories = ['mental', 'physical', 'spiritual', 'intelligence'];
         let attributeStat: Stat;
         let dailyWinCategory: DailyWinCategory;
-        
+
         if (dailyWinCategories.includes(completedTask.category)) {
           // It's a standard daily win category
           dailyWinCategory = completedTask.category as DailyWinCategory;
           attributeStat = categoryToStat(dailyWinCategory);
-          
+
           // Update daily win progress
           setTimeout(() => {
             get().updateDailyWin(dailyWinCategory, taskId);
@@ -144,7 +200,7 @@ export const createQuestSlice: StateCreator<StoreState, [], [], QuestSlice> = (s
           if (mappedDailyWin) {
             dailyWinCategory = mappedDailyWin;
             attributeStat = completedTask.category as Stat;
-            
+
             // Update daily win progress
             setTimeout(() => {
               get().updateDailyWin(dailyWinCategory, taskId);
@@ -158,25 +214,25 @@ export const createQuestSlice: StateCreator<StoreState, [], [], QuestSlice> = (s
         // Get the experience modifier from punishment system
         const getExpModifier = get().getExpModifier;
         const expModifier = getExpModifier();
-        
+
         // Calculate the modified EXP reward
         const finalExpReward = Math.floor(completedTask.expReward * expModifier);
 
         let { exp, level, expToNextLevel } = state.user;
         exp += finalExpReward;
-        
+
         while (exp >= expToNextLevel) {
           level++;
           exp -= expToNextLevel;
           expToNextLevel = calculateExpToNextLevel(level);
         }
-        
+
         // Call increaseStatFree after the state update
         setTimeout(() => {
           // Add stat points with modifier applied
           const statExpReward = Math.floor(8 * expModifier);
           get().addStatExp(attributeStat, statExpReward);
-          
+
           // Notify user if a penalty was applied
           if (expModifier < 1) {
             toast({
@@ -202,12 +258,12 @@ export const createQuestSlice: StateCreator<StoreState, [], [], QuestSlice> = (s
     canCompleteQuest: (id) => {
       const { quests, areSideQuestsLocked } = get();
       const quest = quests.find(q => q.id === id);
-      
+
       // Quest not found
       if (!quest) return false;
-      
-      // Check if side quests are locked (only if this is a side quest)
-      if (!quest.isMainQuest && areSideQuestsLocked()) {
+
+      // Check if side quests are locked (only if this is a side quest, not recovery quest)
+      if (!quest.isMainQuest && !quest.isDaily && !quest.isRecoveryQuest && areSideQuestsLocked()) {
         toast({
           title: "Side Quests Locked",
           description: "You must complete main quests first to unlock side quests.",
@@ -215,24 +271,127 @@ export const createQuestSlice: StateCreator<StoreState, [], [], QuestSlice> = (s
         });
         return false;
       }
-      
+
       // Already completed
       if (quest.completed) return false;
-      
+
+      // Check daily completion limits (only for main and side quests, not daily quests)
+      if (!quest.isDaily) {
+        const today = new Date();
+        const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        const todayEnd = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
+
+        // Count started or completed quests today
+        const usedTodayMainQuests = quests.filter(q =>
+          q.isMainQuest &&
+          !q.isDaily &&
+          (q.started || q.completed) &&
+          (
+            (q.createdAt && new Date(q.createdAt) >= todayStart && new Date(q.createdAt) <= todayEnd) ||
+            (q.completedAt && new Date(q.completedAt) >= todayStart && new Date(q.completedAt) <= todayEnd)
+          )
+        ).length;
+
+        const usedTodaySideQuests = quests.filter(q =>
+          !q.isMainQuest &&
+          !q.isDaily &&
+          !q.isRecoveryQuest && // Exclude recovery quests from side quest limitations
+          (q.started || q.completed) &&
+          (
+            (q.createdAt && new Date(q.createdAt) >= todayStart && new Date(q.createdAt) <= todayEnd) ||
+            (q.completedAt && new Date(q.completedAt) >= todayStart && new Date(q.completedAt) <= todayEnd)
+          )
+        ).length;
+
+        // Check limits
+        if (quest.isMainQuest && usedTodayMainQuests >= 1) {
+          toast({
+            title: "Daily Limit Reached",
+            description: "You can only start/complete 1 main quest per day. Try again tomorrow!",
+            variant: "destructive"
+          });
+          return false;
+        }
+
+        if (!quest.isMainQuest && !quest.isRecoveryQuest && usedTodaySideQuests >= 1) {
+          toast({
+            title: "Daily Limit Reached",
+            description: "You can only start/complete 1 side quest per day. Try again tomorrow!",
+            variant: "destructive"
+          });
+          return false;
+        }
+      }
+
       // If quest has tasks, all tasks must be completed
       if (quest.tasks.length > 0) {
         return quest.tasks.every(task => task.completed);
       }
-      
+
       // Quest with no tasks can be completed
+      return true;
+    },
+    canStartQuest: (id) => {
+      const { quests, areSideQuestsLocked } = get();
+      const quest = quests.find(q => q.id === id);
+
+      // Quest not found
+      if (!quest) return false;
+
+      // Already started or completed
+      if (quest.started || quest.completed) return false;
+
+      // Check if side quests are locked (only if this is a side quest, not recovery quest)
+      if (!quest.isMainQuest && !quest.isDaily && !quest.isRecoveryQuest && areSideQuestsLocked()) {
+        return false;
+      }
+
+      // Check daily limits before starting quest (only for main and side quests, not daily quests)
+      if (!quest.isDaily) {
+        const today = new Date();
+        const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        const todayEnd = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
+
+        // Count started or completed quests today
+        const usedTodayMainQuests = quests.filter(q =>
+          q.isMainQuest &&
+          !q.isDaily &&
+          (q.started || q.completed) &&
+          (
+            (q.createdAt && new Date(q.createdAt) >= todayStart && new Date(q.createdAt) <= todayEnd) ||
+            (q.completedAt && new Date(q.completedAt) >= todayStart && new Date(q.completedAt) <= todayEnd)
+          )
+        ).length;
+
+        const usedTodaySideQuests = quests.filter(q =>
+          !q.isMainQuest &&
+          !q.isDaily &&
+          !q.isRecoveryQuest && // Exclude recovery quests from side quest limitations
+          (q.started || q.completed) &&
+          (
+            (q.createdAt && new Date(q.createdAt) >= todayStart && new Date(q.createdAt) <= todayEnd) ||
+            (q.completedAt && new Date(q.completedAt) >= todayStart && new Date(q.completedAt) <= todayEnd)
+          )
+        ).length;
+
+        // Check limits
+        if (quest.isMainQuest && usedTodayMainQuests >= 1) {
+          return false;
+        }
+
+        if (!quest.isMainQuest && !quest.isRecoveryQuest && usedTodaySideQuests >= 1) {
+          return false;
+        }
+      }
+
       return true;
     },
     completeQuest: (id) => {
       const { quests, user, addExp, addGold, getExpModifier, activeRecoveryQuestIds, setActiveRecoveryQuestIds } = get();
       const quest = quests.find(q => q.id === id);
-      
+
       if (!quest || quest.completed) return;
-      
+
       const expModifier = getExpModifier();
       const finalExpReward = Math.floor(quest.expReward * expModifier);
       const now = new Date();
@@ -243,8 +402,8 @@ export const createQuestSlice: StateCreator<StoreState, [], [], QuestSlice> = (s
         const { applyMissedDeadlinePenalty } = get();
         applyMissedDeadlinePenalty('quest', id);
       }
-      
-      const updatedQuests = quests.map(q => 
+
+      const updatedQuests = quests.map(q =>
         q.id === id ? {
           ...q,
           completed: true,
@@ -257,13 +416,13 @@ export const createQuestSlice: StateCreator<StoreState, [], [], QuestSlice> = (s
         ...state,
         quests: updatedQuests,
       }));
-        
+
       addExp(finalExpReward);
       addGold(Math.floor(finalExpReward / 10));
-      
+
       let toastTitle = "Quest Completed!";
       let toastDescription = `${quest.title} - You earned ${finalExpReward} EXP and ${Math.floor(finalExpReward / 10)} gold`;
-      
+
       if (expModifier < 1) {
         toastDescription += ` (${Math.round(expModifier * 100)}% rate due to penalty)`;
       }
@@ -271,7 +430,7 @@ export const createQuestSlice: StateCreator<StoreState, [], [], QuestSlice> = (s
         toastTitle = "Quest Completed Late";
         toastDescription += " (Deadline missed)";
       }
-            
+
       toast({
         title: toastTitle,
         description: toastDescription,
@@ -288,7 +447,11 @@ export const createQuestSlice: StateCreator<StoreState, [], [], QuestSlice> = (s
           if (allActiveBatchCompleted) {
             // Use the shared helper function for end of week calculation
             const endOfWeek = getEndOfWeek();
-            
+
+            // Reduce chance counter by 1 for completing redemption challenge
+            const currentChanceCounter = get().chanceCounter || 0;
+            const newChanceCounter = Math.max(0, currentChanceCounter - 1);
+
             set((state) => ({
               ...state,
               isCursed: false, // Remove the curse
@@ -297,13 +460,13 @@ export const createQuestSlice: StateCreator<StoreState, [], [], QuestSlice> = (s
               activeRecoveryQuestIds: null,
               hasShadowFatigue: true, // Activate shadow fatigue
               shadowFatigueUntil: endOfWeek, // Shadow fatigue lasts until end of week
-              chanceCounter: 4,
-              lastRedemptionDate: new Date(),
+              chanceCounter: newChanceCounter, // Reduce by 1 as reward for completing redemption
+              // Don't set lastRedemptionDate here - it's already set when redemption starts
             }));
-            
+
             toast({
               title: "Redemption Complete!",
-              description: "You've completed all recovery quests! The curse has been lifted, but Shadow Fatigue remains for the rest of the week (75% EXP).",
+              description: `You've completed all recovery quests! The curse has been lifted, but Shadow Fatigue remains for the rest of the week (75% EXP). Weekly chances reduced to ${newChanceCounter}/5.`,
               variant: "default"
             });
           }
@@ -321,6 +484,59 @@ export const createQuestSlice: StateCreator<StoreState, [], [], QuestSlice> = (s
       set((state: QuestSlice) => ({
         quests: state.quests.filter(quest => quest.id !== id)
       }));
+    },
+    getDailyQuestCompletionStatus: () => {
+      const { quests } = get();
+      const today = new Date();
+      const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      const todayEnd = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
+
+      // Count started or completed quests today (this represents the daily limit usage)
+      const usedTodayMainQuests = quests.filter(q =>
+        q.isMainQuest &&
+        !q.isDaily &&
+        (q.started || q.completed) &&
+        (
+          (q.createdAt && new Date(q.createdAt) >= todayStart && new Date(q.createdAt) <= todayEnd) ||
+          (q.completedAt && new Date(q.completedAt) >= todayStart && new Date(q.completedAt) <= todayEnd)
+        )
+      ).length;
+
+      const usedTodaySideQuests = quests.filter(q =>
+        !q.isMainQuest &&
+        !q.isDaily &&
+        (q.started || q.completed) &&
+        (
+          (q.createdAt && new Date(q.createdAt) >= todayStart && new Date(q.createdAt) <= todayEnd) ||
+          (q.completedAt && new Date(q.completedAt) >= todayStart && new Date(q.completedAt) <= todayEnd)
+        )
+      ).length;
+
+      const completedTodayDailyQuests = quests.filter(q =>
+        q.isDaily &&
+        q.completed &&
+        q.completedAt &&
+        new Date(q.completedAt) >= todayStart &&
+        new Date(q.completedAt) <= todayEnd
+      ).length;
+
+      return {
+        mainQuestsCompleted: usedTodayMainQuests,
+        sideQuestsCompleted: usedTodaySideQuests,
+        dailyQuestsCompleted: completedTodayDailyQuests
+      };
+    },
+    hasReachedDailyLimit: (isMainQuest, isDaily) => {
+      if (isDaily) return false; // Daily quests have no limit
+
+      const { getDailyQuestCompletionStatus } = get();
+      const status = getDailyQuestCompletionStatus();
+
+      if (isMainQuest) {
+        return status.mainQuestsCompleted >= 1;
+      } else {
+        return status.sideQuestsCompleted >= 1;
+      }
     }
   };
 };

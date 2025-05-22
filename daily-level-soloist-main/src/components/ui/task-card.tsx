@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { Difficulty, DailyWinCategory } from '@/lib/types';
 import { v4 as uuidv4 } from 'uuid';
 import { getExpForDifficulty } from '@/lib/utils/calculations';
@@ -26,6 +27,7 @@ export function TaskCard({ task }: TaskCardProps) {
   const deleteTask = useSoloLevelingStore(state => state.deleteTask);
   const addTask = useSoloLevelingStore(state => state.addTask);
   const user = useSoloLevelingStore(state => state.user);
+  const isMobile = useIsMobile();
 
   // State for the edit dialog
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -183,7 +185,9 @@ export function TaskCard({ task }: TaskCardProps) {
     <>
       <div
         className={cn(
-          `relative rounded-xl border bg-solo-dark p-4 transition-all cursor-pointer flex flex-col shadow-md overflow-hidden ${task.completed ? 'opacity-60' : 'hover:border-solo-primary hover:shadow-lg'}`
+          "relative rounded-xl border bg-solo-dark transition-all cursor-pointer flex flex-col shadow-md overflow-hidden",
+          isMobile ? "p-2" : "p-4",
+          task.completed ? 'opacity-60' : 'hover:border-solo-primary hover:shadow-lg'
         )}
         onClick={handleEditClick}
       >
@@ -194,7 +198,8 @@ export function TaskCard({ task }: TaskCardProps) {
         <div className="flex justify-between items-start">
           {/* Title with gradient and shadow */}
           <h3 className={cn(
-            "font-extrabold text-2xl bg-gradient-to-r from-solo-primary to-solo-secondary bg-clip-text text-transparent drop-shadow-glow pl-1",
+            "font-extrabold bg-gradient-to-r from-solo-primary to-solo-secondary bg-clip-text text-transparent drop-shadow-glow pl-1",
+            isMobile ? "text-lg" : "text-2xl",
             task.completed ? "line-through text-gray-500 opacity-60" : ""
           )}>
             {task.title}
@@ -211,23 +216,27 @@ export function TaskCard({ task }: TaskCardProps) {
               className="p-1 rounded-full hover:bg-red-500/20 text-red-500 transition-colors"
               aria-label="Delete task"
             >
-              <Trash2 size={20} />
+              <Trash2 size={isMobile ? 16 : 20} />
             </button>
           </div>
         </div>
 
         {/* Description */}
         {task.description && (
-          <p className="text-base text-gray-400 mt-1 mb-2 italic pl-1">{task.description}</p>
+          <p className={cn(
+            "text-gray-400 mt-1 mb-2 italic pl-1",
+            isMobile ? "text-sm" : "text-base"
+          )}>{task.description}</p>
         )}
 
         {/* Deadline display at bottom right */}
         <div className="flex justify-end mt-auto">
           {deadlineInfo && !task.completed && (
             <span className={cn(
-              "flex items-center text-xs px-2 py-0.5 rounded-full font-medium bg-yellow-600/20 text-yellow-400",
+              "flex items-center rounded-full font-medium bg-yellow-600/20 text-yellow-400",
+              isMobile ? "text-xs px-1.5 py-0.5" : "text-xs px-2 py-0.5"
             )}>
-              <Clock className="h-3 w-3 mr-1" />
+              <Clock className={isMobile ? "h-2.5 w-2.5 mr-0.5" : "h-3 w-3 mr-1"} />
               {deadlineInfo.text}
             </span>
           )}
@@ -235,13 +244,16 @@ export function TaskCard({ task }: TaskCardProps) {
 
         {/* Mark as Complete Button */}
         {!task.completed && (
-          <div className="mt-4 border-t border-gray-800 pt-2">
+          <div className={cn("border-t border-gray-800", isMobile ? "mt-2 pt-1.5" : "mt-4 pt-2")}>
             <div className="flex justify-center">
               <button
                 onClick={handleCompleteTask}
-                className="flex-1 flex items-center justify-center gap-2 py-1.5 rounded bg-green-600/20 hover:bg-green-600/30 text-green-500 transition-colors text-sm"
+                className={cn(
+                  "flex-1 flex items-center justify-center gap-2 rounded bg-green-600/20 hover:bg-green-600/30 text-green-500 transition-colors",
+                  isMobile ? "py-1 text-xs" : "py-1.5 text-sm"
+                )}
               >
-                <CheckCircle size={16} />
+                <CheckCircle size={isMobile ? 14 : 16} />
                 <span>Mark as Complete</span>
               </button>
             </div>
