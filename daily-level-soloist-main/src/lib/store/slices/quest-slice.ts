@@ -505,6 +505,7 @@ export const createQuestSlice: StateCreator<StoreState, [], [], QuestSlice> = (s
       const usedTodaySideQuests = quests.filter(q =>
         !q.isMainQuest &&
         !q.isDaily &&
+        !q.isRecoveryQuest && // Exclude recovery quests from side quest limitations
         (q.started || q.completed) &&
         (
           (q.createdAt && new Date(q.createdAt) >= todayStart && new Date(q.createdAt) <= todayEnd) ||

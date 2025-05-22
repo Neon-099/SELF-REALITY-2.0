@@ -364,9 +364,6 @@ export const createPunishmentSlice: StateCreator<PunishmentSlice & any> = (set, 
     // Can't use redemption if there are already recovery quests in progress
     if (hasPendingRecovery) return false;
 
-    // Can't use redemption if weekly chances are full (5/5) - must wait for reset or new curse
-    if (chanceCounter >= 5) return false;
-
     // Check if redemption was already attempted this week (strict one-time rule)
     if (lastRedemptionDate !== null) {
       const now = new Date();

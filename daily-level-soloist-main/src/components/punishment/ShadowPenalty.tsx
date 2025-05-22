@@ -577,38 +577,29 @@ export default function ShadowPenalty() {
             </DialogContent>
           </Dialog>
           ) : (
-            // Show why redemption is not available
             <div className={cn("w-full text-center", isMobile ? "p-2" : "p-3")}>
-              {chanceCounter >= 5 ? (
-                <div className="bg-gray-800/50 rounded-lg p-2 border border-gray-600/30">
-                  <p className={cn("text-gray-400 font-medium", isMobile ? "text-xs" : "text-sm")}>
-                    <X className={cn("inline mr-1", isMobile ? "h-3 w-3" : "h-4 w-4")} />
-                    Redemption Unavailable
-                  </p>
-                  <p className={cn("text-gray-500 mt-1", isMobile ? "text-xs" : "text-sm")}>
-                    Weekly chances full (5/5). Wait for weekly reset or new curse.
-                  </p>
-                </div>
-              ) : storeHasPendingRecovery ? (
-                <div className="bg-amber-950/30 rounded-lg p-2 border border-amber-600/30">
-                  <p className={cn("text-amber-400 font-medium", isMobile ? "text-xs" : "text-sm")}>
-                    <Shield className={cn("inline mr-1", isMobile ? "h-3 w-3" : "h-4 w-4")} />
-                    Recovery In Progress
-                  </p>
-                  <p className={cn("text-amber-300/70 mt-1", isMobile ? "text-xs" : "text-sm")}>
-                    Complete active recovery quests first.
-                  </p>
-                </div>
-              ) : (
-                <div className="bg-gray-800/50 rounded-lg p-2 border border-gray-600/30">
-                  <p className={cn("text-gray-400 font-medium", isMobile ? "text-xs" : "text-sm")}>
-                    <X className={cn("inline mr-1", isMobile ? "h-3 w-3" : "h-4 w-4")} />
-                    Redemption Unavailable
-                  </p>
-                  <p className={cn("text-gray-500 mt-1", isMobile ? "text-xs" : "text-sm")}>
-                    Already attempted this week. Wait for weekly reset.
-                  </p>
-                </div>
+              {!storeHasPendingRecovery && (
+                chanceCounter >= 5 ? (
+                  <div className="bg-gray-800/50 rounded-lg p-2 border border-gray-600/30">
+                    <p className={cn("text-gray-400 font-medium", isMobile ? "text-xs" : "text-sm")}>
+                      <X className={cn("inline mr-1", isMobile ? "h-3 w-3" : "h-4 w-4")} />
+                      Redemption Unavailable
+                    </p>
+                    <p className={cn("text-gray-500 mt-1", isMobile ? "text-xs" : "text-sm")}>
+                      Weekly chances full (5/5). Wait for weekly reset or new curse.
+                    </p>
+                  </div>
+                ) : !canUseRedemption() ? (
+                  <div className="bg-gray-800/50 rounded-lg p-2 border border-gray-600/30">
+                    <p className={cn("text-gray-400 font-medium", isMobile ? "text-xs" : "text-sm")}>
+                      <X className={cn("inline mr-1", isMobile ? "h-3 w-3" : "h-4 w-4")} />
+                      Redemption Unavailable
+                    </p>
+                    <p className={cn("text-gray-500 mt-1", isMobile ? "text-xs" : "text-sm")}>
+                      Already attempted this week. Wait for weekly reset.
+                    </p>
+                  </div>
+                ) : null
               )}
             </div>
           )}
