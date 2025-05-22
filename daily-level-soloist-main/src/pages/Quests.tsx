@@ -1943,7 +1943,7 @@ const Quests = () => {
           <div className="flex items-center justify-between p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
             <div className="flex items-center gap-2">
               <Swords size={16} className="text-yellow-500" />
-              <span className="text-sm font-medium text-yellow-400">Main Quests</span>
+              <span className="text-sm font-medium text-yellow-400">{isMobile ? 'Main' : 'Main Quests'}</span>
             </div>
             <div className="flex items-center gap-1">
               <span className={`text-lg font-bold ${dailyStatus.mainQuestsCompleted >= 1 ? 'text-green-400' : 'text-yellow-400'}`}>
@@ -1957,7 +1957,7 @@ const Quests = () => {
           <div className="flex items-center justify-between p-3 bg-indigo-500/10 border border-indigo-500/20 rounded-lg">
             <div className="flex items-center gap-2">
               <Sword size={16} className="text-indigo-500" />
-              <span className="text-sm font-medium text-indigo-400">Side Quests</span>
+              <span className="text-sm font-medium text-indigo-400">{isMobile ? 'Side' : 'Side Quests'}</span>
             </div>
             <div className="flex items-center gap-1">
               <span className={`text-lg font-bold ${dailyStatus.sideQuestsCompleted >= 1 ? 'text-green-400' : 'text-indigo-400'}`}>

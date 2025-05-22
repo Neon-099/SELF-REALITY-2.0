@@ -107,7 +107,7 @@ export function CompletedTaskCard({ task }: CompletedTaskCardProps) {
           {task.description && (
             <p className={cn(
               "text-gray-500 mb-2",
-              isMobile ? "text-xs" : "text-sm"
+              isMobile ? "text-[10px]" : "text-sm"
             )}>{task.description}</p>
           )}
 
@@ -115,7 +115,7 @@ export function CompletedTaskCard({ task }: CompletedTaskCardProps) {
           {task.deadline && (
             <div className={cn(
               "text-gray-400 mb-2 flex gap-4",
-              isMobile ? "text-xs" : "text-xs"
+              isMobile ? "text-[10px]" : "text-xs"
             )}>
               <span className="flex items-center">
                 <Clock className={isMobile ? "h-2.5 w-2.5 mr-0.5" : "h-3 w-3 mr-1"} />

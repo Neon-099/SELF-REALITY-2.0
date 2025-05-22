@@ -225,7 +225,7 @@ export function TaskCard({ task }: TaskCardProps) {
         {task.description && (
           <p className={cn(
             "text-gray-400 mt-1 mb-2 italic pl-1",
-            isMobile ? "text-sm" : "text-base"
+            isMobile ? "text-xs" : "text-base"
           )}>{task.description}</p>
         )}
 
@@ -234,7 +234,7 @@ export function TaskCard({ task }: TaskCardProps) {
           {deadlineInfo && !task.completed && (
             <span className={cn(
               "flex items-center rounded-full font-medium bg-yellow-600/20 text-yellow-400",
-              isMobile ? "text-xs px-1.5 py-0.5" : "text-xs px-2 py-0.5"
+              isMobile ? "text-[10px] px-1.5 py-0.5" : "text-xs px-2 py-0.5"
             )}>
               <Clock className={isMobile ? "h-2.5 w-2.5 mr-0.5" : "h-3 w-3 mr-1"} />
               {deadlineInfo.text}
