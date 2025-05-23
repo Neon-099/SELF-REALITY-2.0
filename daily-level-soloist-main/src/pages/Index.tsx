@@ -219,7 +219,7 @@ const Index = () => {
             </div>
           </div>
         </CardHeader>
-        <CardContent className="pt-4">
+        <CardContent className="pt-4 px-2 sm:px-6">
           {incompleteTasks.length === 0 ? (
             <div className="bg-solo-dark/50 border border-gray-800/50 rounded-lg p-8 text-center">
               <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-blue-500/10 flex items-center justify-center">

@@ -639,11 +639,6 @@ const Quests = () => {
         zustandStore: storeData ? JSON.parse(storeData) : null,
         directQuests: fetchedQuestsFromDB
       });
-
-      toast({
-        title: "Database Loaded",
-        description: "IndexedDB data has been retrieved successfully.",
-      });
     } catch (error) {
       if (error instanceof Error) {
         console.error("Error loading data from DB:", error.message);
@@ -740,13 +735,13 @@ const Quests = () => {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="flex items-center gap-1 border-yellow-500/30 hover:border-yellow-500/60 text-yellow-500"
+                    className="flex items-center gap-1 border-yellow-500/30 hover:border-yellow-500/60 text-yellow-500 text-xs px-2 py-1 sm:text-sm sm:px-3 sm:py-2"
                   >
                     <Eye size={14} />
                     View All
                   </Button>
                 </DialogTrigger>
-                <CustomDialogContent className="w-[90vw] max-w-[500px] p-3 max-h-[80vh] overflow-hidden flex flex-col">
+                <CustomDialogContent className="w-[95vw] max-w-[350px] sm:w-[90vw] sm:max-w-[500px] p-3 max-h-[80vh] overflow-hidden flex flex-col">
                   <DialogHeader className="border-b border-yellow-500/20 pb-2 mb-3 relative">
                     <DialogTitle className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-amber-500 drop-shadow-sm text-lg">
                       All Main Quests
@@ -832,13 +827,13 @@ const Quests = () => {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="flex items-center gap-1 border-indigo-500/30 hover:border-indigo-500/60 text-indigo-500"
+                    className="flex items-center gap-1 border-indigo-500/30 hover:border-indigo-500/60 text-indigo-500 text-xs px-2 py-1 sm:text-sm sm:px-3 sm:py-2"
                   >
                     <Eye size={14} />
                     View All
                   </Button>
                 </DialogTrigger>
-                <CustomDialogContent className="w-[90vw] max-w-[500px] p-3 max-h-[80vh] overflow-hidden flex flex-col">
+                <CustomDialogContent className="w-[95vw] max-w-[350px] sm:w-[90vw] sm:max-w-[500px] p-3 max-h-[80vh] overflow-hidden flex flex-col">
                   <DialogHeader className="border-b border-indigo-500/20 pb-2 mb-3 relative">
                     <DialogTitle className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 to-purple-500 drop-shadow-sm text-lg">
                       All Side Quests
@@ -934,13 +929,13 @@ const Quests = () => {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="flex items-center gap-1 border-green-500/30 hover:border-green-500/60 text-green-500"
+                    className="flex items-center gap-1 border-green-500/30 hover:border-green-500/60 text-green-500 text-xs px-2 py-1 sm:text-sm sm:px-3 sm:py-2"
                   >
                     <Eye size={14} />
                     View All
                   </Button>
                 </DialogTrigger>
-                <CustomDialogContent className="w-[90vw] max-w-[500px] p-3 max-h-[80vh] overflow-hidden flex flex-col">
+                <CustomDialogContent className="w-[95vw] max-w-[350px] sm:w-[90vw] sm:max-w-[500px] p-3 max-h-[80vh] overflow-hidden flex flex-col">
                   <DialogHeader className="border-b border-green-500/20 pb-2 mb-3 relative">
                     <DialogTitle className="text-transparent bg-clip-text bg-gradient-to-r from-green-300 to-emerald-500 drop-shadow-sm text-lg">
                       All Daily Quests
@@ -983,7 +978,7 @@ const Quests = () => {
                             {quest.description && (
                               <p className="text-gray-400 text-sm mb-2 line-clamp-2">{quest.description}</p>
                             )}
-                            <div className="flex justify-between items-center text-xs text-gray-500">
+                            <div className="flex justify-between items-center text-xs text-gray-500 mb-2">
                               <span className="flex items-center gap-1">
                                 <CalendarClock size={10} />
                                 Due today
@@ -1037,13 +1032,13 @@ const Quests = () => {
                     <Button
                       variant="outline"
                       size="sm"
-                      className="flex items-center gap-1 border-yellow-500/30 hover:border-yellow-500/60 text-yellow-500"
+                      className="flex items-center gap-1 border-yellow-500/30 hover:border-yellow-500/60 text-yellow-500 text-xs px-2 py-1 sm:text-sm sm:px-3 sm:py-2"
                     >
                       <Eye size={14} />
                       View All
                     </Button>
                   </DialogTrigger>
-                  <CustomDialogContent className="w-[90vw] max-w-[500px] p-3 max-h-[80vh] overflow-hidden flex flex-col">
+                  <CustomDialogContent className="w-[95vw] max-w-[350px] sm:w-[90vw] sm:max-w-[500px] p-3 max-h-[80vh] overflow-hidden flex flex-col">
                     <DialogHeader className="border-b border-yellow-500/20 pb-2 mb-3 relative">
                       <DialogTitle className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-amber-500 drop-shadow-sm text-lg">
                         All Main Quests
@@ -1094,13 +1089,13 @@ const Quests = () => {
                                       <Button
                                         variant="outline"
                                         size="sm"
-                                        className="w-full border-yellow-500/30 hover:border-yellow-500/60 text-yellow-500 text-xs"
+                                        className="w-full border-yellow-500/30 hover:border-yellow-500/60 text-yellow-500 text-xs px-2 py-1 sm:text-sm sm:px-3 sm:py-2"
                                       >
                                         <Eye size={12} className="mr-1" />
                                         View Quest
                                       </Button>
                                     </DialogTrigger>
-                                    <CustomDialogContent className="w-[90vw] max-w-[400px] p-4 max-h-[80vh] overflow-hidden flex flex-col">
+                                    <CustomDialogContent className="w-[95vw] max-w-[350px] sm:w-[90vw] sm:max-w-[500px] p-4 max-h-[80vh] overflow-hidden flex flex-col">
                                       <DialogHeader className="border-b border-yellow-500/20 pb-2 mb-3 relative">
                                         <DialogTitle className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-amber-500 drop-shadow-sm text-lg">
                                           {quest.title}
@@ -1220,13 +1215,13 @@ const Quests = () => {
                                       <Button
                                         variant="outline"
                                         size="sm"
-                                        className="w-full border-yellow-500/30 hover:border-yellow-500/60 text-yellow-500 text-xs"
+                                        className="w-full border-yellow-500/30 hover:border-yellow-500/60 text-yellow-500 text-xs px-2 py-1 sm:text-sm sm:px-3 sm:py-2"
                                       >
                                         <Eye size={12} className="mr-1" />
                                         View Quest
                                       </Button>
                                     </DialogTrigger>
-                                    <CustomDialogContent className="w-[90vw] max-w-[400px] p-4 max-h-[80vh] overflow-hidden flex flex-col">
+                                    <CustomDialogContent className="w-[95vw] max-w-[350px] sm:w-[90vw] sm:max-w-[500px] p-4 max-h-[80vh] overflow-hidden flex flex-col">
                                       <DialogHeader className="border-b border-yellow-500/20 pb-2 mb-3 relative">
                                         <DialogTitle className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-amber-500 drop-shadow-sm text-lg">
                                           {quest.title}
@@ -1348,13 +1343,13 @@ const Quests = () => {
                     <Button
                       variant="outline"
                       size="sm"
-                      className="flex items-center gap-1 border-indigo-500/30 hover:border-indigo-500/60 text-indigo-500"
+                      className="flex items-center gap-1 border-indigo-500/30 hover:border-indigo-500/60 text-indigo-500 text-xs px-2 py-1 sm:text-sm sm:px-3 sm:py-2"
                     >
                       <Eye size={14} />
                       View All
                     </Button>
                   </DialogTrigger>
-                  <CustomDialogContent className="w-[90vw] max-w-[500px] p-3 max-h-[80vh] overflow-hidden flex flex-col">
+                  <CustomDialogContent className="w-[95vw] max-w-[350px] sm:w-[90vw] sm:max-w-[500px] p-3 max-h-[80vh] overflow-hidden flex flex-col">
                     <DialogHeader className="border-b border-indigo-500/20 pb-2 mb-3 relative">
                       <DialogTitle className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 to-purple-500 drop-shadow-sm text-lg">
                         All Side Quests
@@ -1421,13 +1416,13 @@ const Quests = () => {
                                       <Button
                                         variant="outline"
                                         size="sm"
-                                        className="w-full border-indigo-500/30 hover:border-indigo-500/60 text-indigo-500 text-xs"
+                                        className="w-full border-indigo-500/30 hover:border-indigo-500/60 text-indigo-500 text-xs px-2 py-1 sm:text-sm sm:px-3 sm:py-2"
                                       >
                                         <Eye size={12} className="mr-1" />
                                         View Quest
                                       </Button>
                                     </DialogTrigger>
-                                    <CustomDialogContent className="w-[90vw] max-w-[400px] p-4 max-h-[80vh] overflow-hidden flex flex-col">
+                                    <CustomDialogContent className="w-[95vw] max-w-[350px] sm:w-[90vw] sm:max-w-[500px] p-4 max-h-[80vh] overflow-hidden flex flex-col">
                                       <DialogHeader className="border-b border-indigo-500/20 pb-2 mb-3 relative">
                                         <DialogTitle className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 to-purple-500 drop-shadow-sm text-lg">
                                           {quest.title}
@@ -1563,13 +1558,13 @@ const Quests = () => {
                                       <Button
                                         variant="outline"
                                         size="sm"
-                                        className="w-full border-indigo-500/30 hover:border-indigo-500/60 text-indigo-500 text-xs"
+                                        className="w-full border-indigo-500/30 hover:border-indigo-500/60 text-indigo-500 text-xs px-2 py-1 sm:text-sm sm:px-3 sm:py-2"
                                       >
                                         <Eye size={12} className="mr-1" />
                                         View Quest
                                       </Button>
                                     </DialogTrigger>
-                                    <CustomDialogContent className="w-[90vw] max-w-[400px] p-4 max-h-[80vh] overflow-hidden flex flex-col">
+                                    <CustomDialogContent className="w-[95vw] max-w-[350px] sm:w-[90vw] sm:max-w-[500px] p-4 max-h-[80vh] overflow-hidden flex flex-col">
                                       <DialogHeader className="border-b border-indigo-500/20 pb-2 mb-3 relative">
                                         <DialogTitle className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 to-purple-500 drop-shadow-sm text-lg">
                                           {quest.title}
@@ -1695,13 +1690,13 @@ const Quests = () => {
                     <Button
                       variant="outline"
                       size="sm"
-                      className="flex items-center gap-1 border-green-500/30 hover:border-green-500/60 text-green-500"
+                      className="flex items-center gap-1 border-green-500/30 hover:border-green-500/60 text-green-500 text-xs px-2 py-1 sm:text-sm sm:px-3 sm:py-2"
                     >
                       <Eye size={14} />
                       View All
                     </Button>
                   </DialogTrigger>
-                  <CustomDialogContent className="w-[90vw] max-w-[500px] p-3 max-h-[80vh] overflow-hidden flex flex-col">
+                  <CustomDialogContent className="w-[95vw] max-w-[350px] sm:w-[90vw] sm:max-w-[500px] p-3 max-h-[80vh] overflow-hidden flex flex-col">
                     <DialogHeader className="border-b border-green-500/20 pb-2 mb-3 relative">
                       <DialogTitle className="text-transparent bg-clip-text bg-gradient-to-r from-green-300 to-emerald-500 drop-shadow-sm text-lg">
                         All Daily Quests
@@ -1755,13 +1750,13 @@ const Quests = () => {
                                   <Button
                                     variant="outline"
                                     size="sm"
-                                    className="w-full border-green-500/30 hover:border-green-500/60 text-green-500 text-xs"
+                                    className="w-full border-green-500/30 hover:border-green-500/60 text-green-500 text-xs px-2 py-1 sm:text-sm sm:px-3 sm:py-2"
                                   >
                                     <Eye size={12} className="mr-1" />
                                     View Quest
                                   </Button>
                                 </DialogTrigger>
-                                <CustomDialogContent className="w-[90vw] max-w-[400px] p-4 max-h-[80vh] overflow-hidden flex flex-col">
+                                <CustomDialogContent className="w-[95vw] max-w-[350px] sm:w-[90vw] sm:max-w-[500px] p-4 max-h-[80vh] overflow-hidden flex flex-col">
                                   <DialogHeader className="border-b border-green-500/20 pb-2 mb-3 relative">
                                     <DialogTitle className="text-transparent bg-clip-text bg-gradient-to-r from-green-300 to-emerald-500 drop-shadow-sm text-lg">
                                       {quest.title}
