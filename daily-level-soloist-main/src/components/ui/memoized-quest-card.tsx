@@ -1,8 +1,8 @@
 import React, { memo } from 'react';
-import { MainQuestCard } from '../MainQuestCard';
-import { SideQuestCard } from '../SideQuestCard';
-import { DailyQuestCard } from '../DailyQuestCard';
-import { RecoveryQuestCard } from '../RecoveryQuestCard';
+import MainQuestCard from '../MainQuestCard';
+import SideQuestCard from '../SideQuestCard';
+import DailyQuestCard from '../DailyQuestCard';
+import RecoveryQuestCard from '../RecoveryQuestCard';
 import { Quest } from '@/lib/types';
 
 interface MemoizedQuestCardProps {
