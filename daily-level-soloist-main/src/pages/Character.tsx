@@ -518,7 +518,7 @@ const Character = () => {
       const db = await getDB();
 
       // Clear all object stores
-      const storeNames = ['store', 'quests', 'tasks', 'shop'] as const;
+      const storeNames: (keyof SoloistDB)[] = ['store', 'quests', 'tasks', 'shop'];
 
       for (const storeName of storeNames) {
         try {

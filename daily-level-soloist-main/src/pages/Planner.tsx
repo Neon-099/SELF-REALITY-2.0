@@ -330,23 +330,24 @@ const TaskDialog = ({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent
         className="
-          glassmorphism
-          text-solo-text sm:max-w-[320px] w-[85vw] p-2.5 sm:p-3 max-h-[80vh] overflow-y-auto rounded-xl
+          glassmorphism flex flex-col
+          text-solo-text sm:max-w-[320px] w-[90vw] max-w-[280px] sm:max-w-[320px] p-2 sm:p-3 max-h-[85vh] overflow-hidden rounded-xl
           before:!absolute before:!inset-0 before:!rounded-xl
           before:!bg-gradient-to-br before:!from-indigo-500/10 before:!to-purple-500/5
           before:!backdrop-blur-xl before:!-z-10
         "
       >
-        <DialogHeader>
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle className="font-semibold text-white/90 tracking-wide text-base">
             {editingTask ? 'Edit Task' : 'Add New Task'}
           </DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={(e) => {
-          e.preventDefault();
-          handleSave();
-        }} className="space-y-1.5 sm:space-y-2 pt-1 sm:pt-1.5 relative z-10">
+        <div className="overflow-y-auto flex-1 pr-1">
+          <form onSubmit={(e) => {
+            e.preventDefault();
+            handleSave();
+          }} className="space-y-1.5 sm:space-y-2 pt-1 sm:pt-1.5 relative z-10">
           <div className="space-y-0.5 sm:space-y-1">
             <Label htmlFor="title" className="text-white/80 font-medium text-sm">Title</Label>
             <Input
@@ -485,30 +486,31 @@ const TaskDialog = ({
             </p>
           </div>
 
-          <div className="pt-1.5 flex justify-between items-center">
-            {editingTask && !isTaskCompleted && onDelete && (
-              <Button
-                type="button"
-                variant="destructive"
-                size="sm"
-                onClick={onDelete}
-                className="px-2 py-0.5 text-[10px]"
-              >
-                Delete
-              </Button>
-            )}
-            <Button
-              type="submit"
-              disabled={isTaskCompleted}
-              className={cn(
-                "bg-indigo-500 hover:bg-indigo-600 text-white font-medium h-7 text-xs",
-                editingTask ? "px-4" : "w-full"
+            <div className="pt-1.5 flex justify-between items-center">
+              {editingTask && !isTaskCompleted && onDelete && (
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="sm"
+                  onClick={onDelete}
+                  className="px-2 py-0.5 text-[10px]"
+                >
+                  Delete
+                </Button>
               )}
-            >
-              {editingTask ? 'Save Changes' : 'Create Task'}
-            </Button>
-          </div>
-        </form>
+              <Button
+                type="submit"
+                disabled={isTaskCompleted}
+                className={cn(
+                  "bg-indigo-500 hover:bg-indigo-600 text-white font-medium h-7 text-xs",
+                  editingTask ? "px-4" : "w-full"
+                )}
+              >
+                {editingTask ? 'Save Changes' : 'Create Task'}
+              </Button>
+            </div>
+          </form>
+        </div>
       </DialogContent>
     </Dialog>
   );

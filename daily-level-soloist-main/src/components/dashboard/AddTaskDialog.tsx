@@ -178,18 +178,19 @@ export const AddTaskDialog = ({ children }: AddTaskDialogProps) => {
 
       <DialogContent
         className="
-          glassmorphism
-          text-solo-text sm:max-w-[320px] w-[85vw] p-2.5 sm:p-3 max-h-[80vh] overflow-y-auto rounded-xl
+          glassmorphism flex flex-col
+          text-solo-text sm:max-w-[320px] w-[90vw] max-w-[280px] sm:max-w-[320px] p-2 sm:p-3 max-h-[85vh] overflow-hidden rounded-xl
           before:!absolute before:!inset-0 before:!rounded-xl
           before:!bg-gradient-to-br before:!from-indigo-500/10 before:!to-purple-500/5
           before:!backdrop-blur-xl before:!-z-10
         "
       >
-        <DialogHeader>
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle className="font-semibold text-white/90 tracking-wide text-base">Add New Task</DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-1.5 sm:space-y-2 pt-1 sm:pt-1.5 relative z-10">
+        <div className="overflow-y-auto flex-1 pr-1">
+          <form onSubmit={handleSubmit} className="space-y-1.5 sm:space-y-2 pt-1 sm:pt-1.5 relative z-10">
           <div className="space-y-0.5 sm:space-y-1">
             <Label htmlFor="title" className="text-white/80 font-medium text-sm">Title</Label>
             <Input
@@ -328,12 +329,13 @@ export const AddTaskDialog = ({ children }: AddTaskDialogProps) => {
             </p>
           </div>
 
-          <div className="pt-1.5">
-            <Button type="submit" className="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-medium h-7 text-xs">
-              Create Task
-            </Button>
-          </div>
-        </form>
+            <div className="pt-1.5">
+              <Button type="submit" className="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-medium h-7 text-xs">
+                Create Task
+              </Button>
+            </div>
+          </form>
+        </div>
       </DialogContent>
     </Dialog>
   );
