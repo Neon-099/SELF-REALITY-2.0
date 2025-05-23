@@ -82,7 +82,7 @@ interface MigrationDB extends DBSchema {
 }
 
 // Final schema without the mission stores
-interface SoloistDB extends DBSchema {
+export interface SoloistDB extends DBSchema {
   quests: {
     key: string;
     value: Quest;

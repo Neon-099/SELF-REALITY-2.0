@@ -522,7 +522,7 @@ const Character = () => {
 
       for (const storeName of storeNames) {
         try {
-          await db.clear(storeName);
+          await db.clear(storeName as keyof SoloistDB);
         } catch (error) {
           console.warn(`Failed to clear ${storeName} store:`, error);
         }
