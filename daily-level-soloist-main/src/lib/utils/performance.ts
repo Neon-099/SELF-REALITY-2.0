@@ -13,7 +13,7 @@ class PerformanceMonitor {
 
   start(name: string): void {
     if (!this.isEnabled) return;
-    
+
     this.metrics.set(name, {
       name,
       startTime: performance.now()
@@ -22,7 +22,7 @@ class PerformanceMonitor {
 
   end(name: string): number | null {
     if (!this.isEnabled) return null;
-    
+
     const metric = this.metrics.get(name);
     if (!metric) {
       console.warn(`Performance metric "${name}" not found`);
@@ -31,7 +31,7 @@ class PerformanceMonitor {
 
     const endTime = performance.now();
     const duration = endTime - metric.startTime;
-    
+
     metric.endTime = endTime;
     metric.duration = duration;
 
@@ -45,7 +45,7 @@ class PerformanceMonitor {
 
   measure<T>(name: string, fn: () => T): T {
     if (!this.isEnabled) return fn();
-    
+
     this.start(name);
     try {
       const result = fn();
@@ -59,7 +59,7 @@ class PerformanceMonitor {
 
   async measureAsync<T>(name: string, fn: () => Promise<T>): Promise<T> {
     if (!this.isEnabled) return fn();
-    
+
     this.start(name);
     try {
       const result = await fn();
@@ -81,7 +81,7 @@ class PerformanceMonitor {
 
   logSummary(): void {
     if (!this.isEnabled) return;
-    
+
     const metrics = this.getMetrics();
     if (metrics.length === 0) return;
 
@@ -102,30 +102,36 @@ export const performanceMonitor = new PerformanceMonitor();
 export function usePerformanceMonitor(componentName: string) {
   const start = () => performanceMonitor.start(`${componentName}-render`);
   const end = () => performanceMonitor.end(`${componentName}-render`);
-  
+
   return { start, end };
 }
 
 // Decorator for measuring function execution time
 export function measurePerformance(target: any, propertyName: string, descriptor: PropertyDescriptor) {
   const method = descriptor.value;
-  
+
   descriptor.value = function (...args: any[]) {
     return performanceMonitor.measure(`${target.constructor.name}.${propertyName}`, () => {
       return method.apply(this, args);
     });
   };
-  
+
   return descriptor;
 }
 
 // Utility to detect memory leaks
 export function detectMemoryLeaks() {
-  if (typeof window === 'undefined' || !window.performance || !window.performance.memory) {
+  if (typeof window === 'undefined' || !window.performance) {
     return null;
   }
 
-  const memory = (window.performance as any).memory;
+  // Type assertion for memory property which is Chrome-specific
+  const performance = window.performance as any;
+  if (!performance.memory) {
+    return null;
+  }
+
+  const memory = performance.memory;
   return {
     usedJSHeapSize: memory.usedJSHeapSize,
     totalJSHeapSize: memory.totalJSHeapSize,
@@ -141,10 +147,10 @@ export function throttle<T extends (...args: any[]) => any>(
 ): (...args: Parameters<T>) => void {
   let timeoutId: NodeJS.Timeout | null = null;
   let lastExecTime = 0;
-  
+
   return (...args: Parameters<T>) => {
     const currentTime = Date.now();
-    
+
     if (currentTime - lastExecTime > delay) {
       func(...args);
       lastExecTime = currentTime;
@@ -164,7 +170,7 @@ export function debounce<T extends (...args: any[]) => any>(
   delay: number
 ): (...args: Parameters<T>) => void {
   let timeoutId: NodeJS.Timeout | null = null;
-  
+
   return (...args: Parameters<T>) => {
     if (timeoutId) clearTimeout(timeoutId);
     timeoutId = setTimeout(() => func(...args), delay);
