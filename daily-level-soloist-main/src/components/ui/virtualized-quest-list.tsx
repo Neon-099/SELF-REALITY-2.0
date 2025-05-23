@@ -7,14 +7,14 @@ interface VirtualizedQuestListProps {
   quests: Quest[];
   onComplete?: (id: string) => void;
   onStart?: (id: string) => void;
-  canComplete?: (quest: Quest) => boolean;
-  canStart?: (quest: Quest) => boolean;
+  canComplete?: (id: string) => boolean;
+  canStart?: (id: string) => boolean;
   itemsPerPage?: number;
   gridCols?: string;
 }
 
-export function VirtualizedQuestList({ 
-  quests, 
+export function VirtualizedQuestList({
+  quests,
   onComplete,
   onStart,
   canComplete,
@@ -24,10 +24,10 @@ export function VirtualizedQuestList({
 }: VirtualizedQuestListProps) {
   const isMobile = useIsMobile();
   const [currentPage, setCurrentPage] = useState(0);
-  
+
   // Adjust items per page for mobile
   const effectiveItemsPerPage = isMobile ? Math.max(4, itemsPerPage / 2) : itemsPerPage;
-  
+
   // Paginate quests to avoid rendering too many at once
   const paginatedQuests = useMemo(() => {
     const startIndex = currentPage * effectiveItemsPerPage;
@@ -83,11 +83,11 @@ export function VirtualizedQuestList({
           >
             Previous
           </button>
-          
+
           <span className="text-sm text-gray-400">
             Page {currentPage + 1} of {totalPages} ({quests.length} total quests)
           </span>
-          
+
           <button
             onClick={() => setCurrentPage(prev => Math.min(totalPages - 1, prev + 1))}
             disabled={!hasNextPage}

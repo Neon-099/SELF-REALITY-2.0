@@ -9,8 +9,8 @@ interface MemoizedQuestCardProps {
   quest: Quest;
   onComplete?: (id: string) => void;
   onStart?: (id: string) => void;
-  canComplete?: (quest: Quest) => boolean;
-  canStart?: (quest: Quest) => boolean;
+  canComplete?: (id: string) => boolean;
+  canStart?: (id: string) => boolean;
 }
 
 // Memoized quest card component to prevent unnecessary re-renders
@@ -27,9 +27,7 @@ const MemoizedQuestCard = memo(({
       <RecoveryQuestCard
         quest={quest}
         onComplete={onComplete || (() => {})}
-        onStart={onStart || (() => {})}
-        canComplete={canComplete || (() => true)}
-        canStart={canStart || (() => true)}
+        canComplete={canComplete ? (id: string) => canComplete(id) : (() => true)}
       />
     );
   }
@@ -47,10 +45,10 @@ const MemoizedQuestCard = memo(({
     return (
       <MainQuestCard
         quest={quest}
-        onComplete={onComplete || (() => {})}
+        onComplete={(id: string, title: string, expReward: number) => onComplete?.(id)}
         onStart={onStart || (() => {})}
-        canComplete={canComplete || (() => true)}
-        canStart={canStart || (() => true)}
+        canComplete={canComplete ? (id: string) => canComplete(id) : (() => true)}
+        canStart={canStart ? (id: string) => canStart(id) : (() => true)}
       />
     );
   }
@@ -61,8 +59,8 @@ const MemoizedQuestCard = memo(({
       quest={quest}
       onComplete={onComplete || (() => {})}
       onStart={onStart || (() => {})}
-      canComplete={canComplete || (() => true)}
-      canStart={canStart || (() => true)}
+      canComplete={canComplete ? (id: string) => canComplete(id) : (() => true)}
+      canStart={canStart ? (id: string) => canStart(id) : (() => true)}
     />
   );
 }, (prevProps, nextProps) => {
