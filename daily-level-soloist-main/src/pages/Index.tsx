@@ -1,24 +1,23 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { useSoloLevelingStore } from '@/lib/store';
-import { TaskCard } from '@/components/ui/task-card';
-import { CompletedTaskCard } from '@/components/ui/completed-task-card';
+import { VirtualizedTaskList } from '@/components/ui/virtualized-task-list';
 import { DailyWinCard } from '@/components/ui/daily-win-card';
 import AddTaskDialog from '@/components/dashboard/AddTaskDialog';
 import { ShadowPenalty } from '@/components/punishment';
-import { 
-  Brain, 
-  Dumbbell, 
-  Heart, 
-  BookOpen, 
-  Award, 
-  CalendarDays, 
-  CheckSquare, 
-  ChevronDown, 
-  ChevronUp, 
-  EyeOff, 
-  Eye, 
-  Star, 
-  Sword, 
+import {
+  Brain,
+  Dumbbell,
+  Heart,
+  BookOpen,
+  Award,
+  CalendarDays,
+  CheckSquare,
+  ChevronDown,
+  ChevronUp,
+  EyeOff,
+  Eye,
+  Star,
+  Sword,
   Zap,
   Target,
   TrendingUp,
@@ -39,7 +38,7 @@ const Index = () => {
   const [showCompletedTasks, setShowCompletedTasks] = useState(false);
   const [currentDate, setCurrentDate] = useState(new Date());
   const isMobile = useIsMobile();
-  
+
   // Check for day change periodically
   useEffect(() => {
     // Function to check if the day has changed
@@ -49,30 +48,30 @@ const Index = () => {
         setCurrentDate(now);
       }
     };
-    
+
     // Check date change every minute
     const dateCheckInterval = setInterval(checkDateChange, 60000);
-    
+
     return () => clearInterval(dateCheckInterval);
   }, [currentDate]);
-  
+
   useEffect(() => {
     // Update streak on page load
     updateStreak();
-    
+
     // Check if daily wins need to be reset
     checkResetDailyWins();
-    
+
     // Set up a daily reset check
     const checkReset = () => {
       checkResetDailyWins();
     };
-    
+
     // Check for reset every time the page becomes visible
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'visible') {
         checkReset();
-        
+
         // Also check if day has changed
         const now = new Date();
         if (!isSameDay(now, currentDate)) {
@@ -80,40 +79,43 @@ const Index = () => {
         }
       }
     });
-    
+
     return () => {
       document.removeEventListener('visibilitychange', checkReset);
     };
   }, [updateStreak, checkResetDailyWins, currentDate]);
-  
-  // Filter tasks that are either not scheduled for a specific date
-  // or are scheduled for today
-  const incompleteTasks = tasks.filter(task => {
-    const isForToday = task.scheduledFor ? 
-      isSameDay(new Date(task.scheduledFor), currentDate) : 
-      isSameDay(new Date(task.createdAt), currentDate);
-    return !task.completed && isForToday;
-  });
-  
-  // Filter completed tasks for today - show ALL tasks completed today, including those from weekly planner
-  const completedTasks = tasks.filter(task => {
-    // Check if task was completed today
-    const wasCompletedToday = task.completedAt ? 
-      isSameDay(new Date(task.completedAt), currentDate) : 
-      false;
-    
-    // Show any task that was completed today
-    return task.completed && wasCompletedToday;
-  });
-  
+
+  // Memoize task filtering to prevent unnecessary recalculations
+  const incompleteTasks = useMemo(() => {
+    return tasks.filter(task => {
+      const isForToday = task.scheduledFor ?
+        isSameDay(new Date(task.scheduledFor), currentDate) :
+        isSameDay(new Date(task.createdAt), currentDate);
+      return !task.completed && isForToday;
+    });
+  }, [tasks, currentDate]);
+
+  // Memoize completed tasks filtering
+  const completedTasks = useMemo(() => {
+    return tasks.filter(task => {
+      // Check if task was completed today
+      const wasCompletedToday = task.completedAt ?
+        isSameDay(new Date(task.completedAt), currentDate) :
+        false;
+
+      // Show any task that was completed today
+      return task.completed && wasCompletedToday;
+    });
+  }, [tasks, currentDate]);
+
   const currentDailyWins = user.dailyWins;
   const allDailyWinsCompleted = areAllDailyWinsCompleted(currentDailyWins);
-  
+
   // Format date for hero section
   const formatDate = (date: Date) => {
-    return date.toLocaleDateString('en-US', { 
-      weekday: 'long', 
-      month: 'long', 
+    return date.toLocaleDateString('en-US', {
+      weekday: 'long',
+      month: 'long',
       day: 'numeric',
       year: 'numeric'
     });
@@ -132,17 +134,17 @@ const Index = () => {
               </h1>
               <p className="text-gray-400">{formatDate(currentDate)}</p>
             </div>
-            
+
             <div className="flex flex-wrap gap-2 md:gap-4">
               {/* Removed quick action buttons: Quests, Planner, Add Task */}
             </div>
           </div>
         </div>
       </div>
-      
+
       {/* Shadow Penalty Status */}
       <ShadowPenalty />
-      
+
       {/* Daily Wins Section with Enhanced Visual Design */}
       <Card className="border-gray-800/50 bg-solo-dark/90 shadow-md overflow-hidden">
         <CardHeader className="pb-3 relative">
@@ -160,29 +162,29 @@ const Index = () => {
         <CardContent className="pt-0 pb-3 px-3 sm:px-6">
           <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
             <div className="daily-win-container">
-              <DailyWinCard 
-                category="mental" 
+              <DailyWinCard
+                category="mental"
                 completed={currentDailyWins.mental}
                 icon={<Brain size={isMobile ? 18 : 24} />}
               />
             </div>
             <div className="daily-win-container">
-              <DailyWinCard 
-                category="physical" 
+              <DailyWinCard
+                category="physical"
                 completed={currentDailyWins.physical}
                 icon={<Dumbbell size={isMobile ? 18 : 24} />}
               />
             </div>
             <div className="daily-win-container">
-              <DailyWinCard 
-                category="spiritual" 
+              <DailyWinCard
+                category="spiritual"
                 completed={currentDailyWins.spiritual}
                 icon={<Heart size={isMobile ? 18 : 24} />}
               />
             </div>
             <div className="daily-win-container">
-              <DailyWinCard 
-                category="intelligence" 
+              <DailyWinCard
+                category="intelligence"
                 completed={currentDailyWins.intelligence}
                 icon={<BookOpen size={isMobile ? 18 : 24} />}
               />
@@ -190,7 +192,7 @@ const Index = () => {
           </div>
         </CardContent>
       </Card>
-      
+
       {/* Current Tasks Section with Enhanced Design */}
       <Card className="border-gray-800/50 bg-solo-dark/90 shadow-md overflow-hidden">
         <CardHeader className="pb-3 relative">
@@ -203,7 +205,7 @@ const Index = () => {
             <div className="flex gap-2">
               <Link to="/planner">
                 <Button variant="outline" size="sm" className="gap-1 text-sm">
-                  <CalendarDays className="h-4 w-4" /> 
+                  <CalendarDays className="h-4 w-4" />
                   {!isMobile && "Weekly Planner"}
                 </Button>
               </Link>
@@ -239,11 +241,7 @@ const Index = () => {
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {incompleteTasks.map((task) => (
-                <TaskCard key={task.id} task={task} />
-              ))}
-            </div>
+            <VirtualizedTaskList tasks={incompleteTasks} isCompleted={false} />
           )}
         </CardContent>
       </Card>
@@ -262,21 +260,21 @@ const Index = () => {
                 </span>
               )}
             </CardTitle>
-            <Button 
-              variant="ghost" 
-              size="sm" 
+            <Button
+              variant="ghost"
+              size="sm"
               className="gap-1 text-gray-400 hover:text-white"
               onClick={() => setShowCompletedTasks(!showCompletedTasks)}
               disabled={completedTasks.length === 0}
             >
               {showCompletedTasks ? (
                 <>
-                <EyeOff className="h-4 w-4" /> 
+                <EyeOff className="h-4 w-4" />
                 {!isMobile && "Hide completed"}
                 </>
               ) : (
                 <>
-                <Eye className="h-4 w-4" /> 
+                <Eye className="h-4 w-4" />
                 {!isMobile && "Show completed"}
                 </>
               )}
@@ -292,10 +290,8 @@ const Index = () => {
               <p className="text-gray-400 text-lg font-semibold">No completed tasks for today yet. <span className="text-green-400">Keep up the good work!</span></p>
             </div>
           ) : showCompletedTasks && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in-50 slide-in-from-top-2 duration-300">
-              {completedTasks.map((task) => (
-                <CompletedTaskCard key={task.id} task={task} />
-              ))}
+            <div className="animate-in fade-in-50 slide-in-from-top-2 duration-300">
+              <VirtualizedTaskList tasks={completedTasks} isCompleted={true} />
             </div>
           )}
         </CardContent>

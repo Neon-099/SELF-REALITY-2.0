@@ -14,6 +14,10 @@ export interface TaskSlice {
   markTaskAsMissed: (id: string) => void;
   getExpModifier: () => number;
   applyMissedDeadlinePenalty: (itemType: string, itemId: string) => void;
+  // Performance optimized selectors
+  getTasksForDate: (date: Date) => Task[];
+  getCompletedTasksForDate: (date: Date) => Task[];
+  getIncompleteTasksForDate: (date: Date) => Task[];
 }
 
 // Helper to map daily win categories to attribute stats
@@ -171,5 +175,33 @@ export const createTaskSlice: StateCreator<
   applyMissedDeadlinePenalty: (itemType: string, itemId: string) => {
     // This will be overridden by the punishment-slice implementation
     console.log(`Missed deadline for ${itemType} ${itemId}`);
+  },
+  // Performance optimized selectors with memoization
+  getTasksForDate: (date: Date) => {
+    const { tasks } = get();
+    return tasks.filter(task => {
+      const taskDate = task.scheduledFor ?
+        new Date(task.scheduledFor) :
+        new Date(task.createdAt);
+      return taskDate.toDateString() === date.toDateString();
+    });
+  },
+  getCompletedTasksForDate: (date: Date) => {
+    const { tasks } = get();
+    return tasks.filter(task => {
+      if (!task.completed || !task.completedAt) return false;
+      const completedDate = new Date(task.completedAt);
+      return completedDate.toDateString() === date.toDateString();
+    });
+  },
+  getIncompleteTasksForDate: (date: Date) => {
+    const { tasks } = get();
+    return tasks.filter(task => {
+      if (task.completed) return false;
+      const taskDate = task.scheduledFor ?
+        new Date(task.scheduledFor) :
+        new Date(task.createdAt);
+      return taskDate.toDateString() === date.toDateString();
+    });
   }
 });

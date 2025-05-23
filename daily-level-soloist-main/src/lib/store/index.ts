@@ -16,25 +16,57 @@ interface CustomPersistOptions<T> extends PersistOptions<T, T> {
   onError?: (error: Error) => void;
 }
 
-// Custom async storage for IndexedDB (store and retrieve strings only) with improved error handling
+// Cache for frequently accessed data
+const dataCache = new Map<string, { data: any; timestamp: number; ttl: number }>();
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+// Custom async storage for IndexedDB with caching and improved error handling
 const indexedDBStorage = {
   getItem: async (name: string): Promise<string | null> => {
+    // Check cache first
+    const cached = dataCache.get(name);
+    if (cached && Date.now() - cached.timestamp < cached.ttl) {
+      return cached.data;
+    }
+
     try {
       const db = await getDB();
-      return await db.get('store', name);
+      const result = await db.get('store', name);
+
+      // Cache the result
+      if (result) {
+        dataCache.set(name, { data: result, timestamp: Date.now(), ttl: CACHE_TTL });
+      }
+
+      return result;
     } catch (error) {
       console.error(`Failed to get item "${name}" from IndexedDB:`, error);
+
+      // Try fallback from localStorage
+      try {
+        const fallback = localStorage.getItem(`fallback_${name}`);
+        if (fallback) {
+          console.log(`Retrieved fallback data for "${name}" from localStorage`);
+          return fallback;
+        }
+      } catch (localStorageError) {
+        console.error('Failed to retrieve fallback from localStorage:', localStorageError);
+      }
+
       // Return null on error so the app can continue with default state
       return null;
     }
   },
   setItem: async (name: string, value: string): Promise<void> => {
+    // Update cache immediately
+    dataCache.set(name, { data: value, timestamp: Date.now(), ttl: CACHE_TTL });
+
     try {
       const db = await getDB();
       await db.put('store', value, name);
     } catch (error) {
       console.error(`Failed to save item "${name}" to IndexedDB:`, error);
-      
+
       // Optional: try to save to localStorage as fallback
       try {
         localStorage.setItem(`fallback_${name}`, value);
@@ -45,9 +77,15 @@ const indexedDBStorage = {
     }
   },
   removeItem: async (name: string): Promise<void> => {
+    // Remove from cache
+    dataCache.delete(name);
+
     try {
       const db = await getDB();
       await db.delete('store', name);
+
+      // Also remove fallback
+      localStorage.removeItem(`fallback_${name}`);
     } catch (error) {
       console.error(`Failed to remove item "${name}" from IndexedDB:`, error);
     }

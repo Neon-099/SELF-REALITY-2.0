@@ -71,19 +71,19 @@ export function DateTimePicker({
   };
 
   return (
-    <div className={cn("flex gap-2", className)}>
+    <div className={cn("flex gap-1.5 sm:gap-2", className)}>
       <Popover>
         <PopoverTrigger asChild>
           <Button
             variant="outline"
             className={cn(
-              "justify-start text-left font-normal w-full bg-gray-900 border-gray-700",
+              "justify-start text-left font-normal w-full bg-gray-800/90 border-indigo-500/20 h-7 sm:h-8 text-xs focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all",
               !date && "text-muted-foreground",
               disabled && "opacity-50 cursor-not-allowed"
             )}
             disabled={disabled}
           >
-            <CalendarIcon className="mr-2 h-4 w-4" />
+            <CalendarIcon className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
             {date ? format(date, "PPP") : <span>Pick a date</span>}
           </Button>
         </PopoverTrigger>
@@ -99,12 +99,12 @@ export function DateTimePicker({
       </Popover>
 
       <div className="relative">
-        <Clock className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
+        <Clock className="absolute left-2 top-1.5 sm:top-2 h-3 w-3 sm:h-4 sm:w-4 text-gray-400" />
         <Input
           type="time"
           value={time}
           onChange={handleTimeChange}
-          className="pl-9 w-[130px] bg-gray-900 border-gray-700 focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all"
+          className="pl-7 sm:pl-9 w-[100px] sm:w-[130px] bg-gray-800/90 border-indigo-500/20 h-7 sm:h-8 text-xs focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all"
           disabled={disabled || !date}
         />
       </div>
