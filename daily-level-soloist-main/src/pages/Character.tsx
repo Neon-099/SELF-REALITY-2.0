@@ -11,7 +11,7 @@ import { initialUser } from '@/lib/store/initial-state';
 import { toast } from '@/hooks/use-toast';
 import { predefinedMissions } from '@/data/predefined-missions';
 import { endOfDay } from 'date-fns';
-import { getDB } from '@/lib/db';
+import { getDB, SoloistDB } from '@/lib/db';
 import { Quest, ShopItem } from '@/lib/types';
 import ShadowPenalty from '@/components/punishment/ShadowPenalty';
 
