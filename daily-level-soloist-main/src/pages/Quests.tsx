@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useLayoutEffect } from 'react';
 import { useSoloLevelingStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, Swords, Star, ListTodo, ChevronDown, ChevronUp, Sword, Coins, Filter, Database, X, CalendarClock, Shield, Clock, Eye, EyeOff, Sunrise, CalendarDays, Plus } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from '@/components/ui/dialog';
+import { CheckCircle, Swords, Star, ListTodo, ChevronDown, ChevronUp, Sword, Coins, Filter, Database, X, CalendarClock, Shield, Clock, Eye, EyeOff, Sunrise, CalendarDays, Plus, AlertCircle } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogClose, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { toast } from '@/hooks/use-toast';
 import { DailyWinCategory, Difficulty, Quest, Task as QuestTask } from '@/lib/types';
 import { isSameDay, format } from 'date-fns';
@@ -13,6 +13,8 @@ import DailyQuestCard from '../components/DailyQuestCard';
 import MainQuestCard from '../components/MainQuestCard';
 import RecoveryQuestCard from '../components/RecoveryQuestCard';
 import { CustomDialogContent } from '@/components/ui/custom-dialog';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { cn } from '@/lib/utils';
 
 // Define experience reward values by difficulty
 const expRewards: { [key in Difficulty]: number } = {
@@ -540,27 +542,14 @@ const Quests = () => {
 
   const [showCompletedQuests, setShowCompletedQuests] = useState(false);
   const [isAddQuestDialogOpen, setIsAddQuestDialogOpen] = useState(false);
+  const [isSideQuestsDialogOpen, setIsSideQuestsDialogOpen] = useState(false);
+  const [isDailyQuestsDialogOpen, setIsDailyQuestsDialogOpen] = useState(false);
+  const [individualQuestDialogOpen, setIndividualQuestDialogOpen] = useState<string | null>(null);
   const [activeFilter, setActiveFilter] = useState<'all' | 'main' | 'side' | 'daily'>('all');
   const [isLoadingDb, setIsLoadingDb] = useState(false);
   const [dbContents, setDbContents] = useState<any>(null);
   const [questsData, setQuestsData] = useState<Quest[]>([]);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Check if the screen is mobile size
-  useEffect(() => {
-    const checkIfMobile = () => {
-      setIsMobile(window.innerWidth < 640);
-    };
-
-    // Initial check
-    checkIfMobile();
-
-    // Add event listener for window resize
-    window.addEventListener('resize', checkIfMobile);
-
-    // Clean up
-    return () => window.removeEventListener('resize', checkIfMobile);
-  }, []);
+  const isMobile = useIsMobile();
 
   // Add useEffect to update questsData when quests from the store change
   useEffect(() => {
@@ -1338,7 +1327,7 @@ const Quests = () => {
                   <Sword className="text-solo-primary" size={20} />
                   Side Quests
                 </h2>
-                <Dialog>
+                <Dialog open={isSideQuestsDialogOpen} onOpenChange={setIsSideQuestsDialogOpen}>
                   <DialogTrigger asChild>
                     <Button
                       variant="outline"
@@ -1354,9 +1343,14 @@ const Quests = () => {
                       <DialogTitle className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 to-purple-500 drop-shadow-sm text-lg">
                         All Side Quests
                       </DialogTitle>
-                      <DialogClose className="absolute right-0 top-0 h-6 w-6 rounded-full bg-gradient-to-r from-indigo-600/30 to-purple-700/30 hover:from-indigo-600/50 hover:to-purple-700/50 transition-all p-0.5 border border-indigo-500/20 flex items-center justify-center cursor-pointer z-10">
+                      <button
+                        type="button"
+                        className="absolute right-0 top-0 h-6 w-6 rounded-full bg-gradient-to-r from-indigo-600/30 to-purple-700/30 hover:from-indigo-600/50 hover:to-purple-700/50 transition-all p-0.5 border border-indigo-500/20 flex items-center justify-center cursor-pointer z-10"
+                        onClick={() => setIsSideQuestsDialogOpen(false)}
+                        aria-label="Close dialog"
+                      >
                         <X className="h-4 w-4 text-indigo-300" />
-                      </DialogClose>
+                      </button>
                     </DialogHeader>
                     <div className="py-2 flex-1 overflow-y-auto pr-2 custom-scrollbar">
                       {/* In Progress Quests */}
@@ -1384,11 +1378,6 @@ const Quests = () => {
                                       <h3 className={`font-medium ${quest.isRecoveryQuest ? 'text-amber-400' : 'text-indigo-400'}`}>
                                         {quest.title}
                                       </h3>
-                                      {quest.isRecoveryQuest && (
-                                        <span className="bg-amber-950/50 text-xs text-amber-500 px-1.5 py-0.5 rounded-sm">
-                                          Recovery
-                                        </span>
-                                      )}
                                     </div>
                                     <div className="flex items-center gap-1 text-xs">
                                       <Star size={12} className="text-yellow-400" />
@@ -1411,88 +1400,240 @@ const Quests = () => {
                                       </span>
                                     )}
                                   </div>
-                                  <Dialog>
+                                  <Dialog open={individualQuestDialogOpen === quest.id} onOpenChange={(open) => setIndividualQuestDialogOpen(open ? quest.id : null)}>
                                     <DialogTrigger asChild>
                                       <Button
                                         variant="outline"
                                         size="sm"
-                                        className="w-full border-indigo-500/30 hover:border-indigo-500/60 text-indigo-500 text-xs px-2 py-1 sm:text-sm sm:px-3 sm:py-2"
+                                        className={`w-full text-xs px-2 py-1 sm:text-sm sm:px-3 sm:py-2 ${
+                                          quest.isRecoveryQuest
+                                            ? 'border-amber-500/30 hover:border-amber-500/60 text-amber-500'
+                                            : 'border-indigo-500/30 hover:border-indigo-500/60 text-indigo-500'
+                                        }`}
                                       >
                                         <Eye size={12} className="mr-1" />
                                         View Quest
                                       </Button>
                                     </DialogTrigger>
-                                    <CustomDialogContent className="w-[95vw] max-w-[350px] sm:w-[90vw] sm:max-w-[500px] p-4 max-h-[80vh] overflow-hidden flex flex-col">
-                                      <DialogHeader className="border-b border-indigo-500/20 pb-2 mb-3 relative">
-                                        <DialogTitle className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 to-purple-500 drop-shadow-sm text-lg">
+                                    <CustomDialogContent className={cn(
+                                      quest.isRecoveryQuest
+                                        ? "glassmorphism flex flex-col text-solo-text rounded-xl before:!absolute before:!inset-0 before:!rounded-xl before:!bg-gradient-to-br before:!from-indigo-500/10 before:!to-purple-500/5 before:!backdrop-blur-xl before:!-z-10"
+                                        : "w-[95vw] max-w-[350px] sm:w-[90vw] sm:max-w-[500px] p-4 max-h-[80vh] overflow-hidden flex flex-col",
+                                      quest.isRecoveryQuest && (isMobile
+                                        ? "w-[90vw] max-w-[320px] p-2 sm:p-3 max-h-[85vh]"
+                                        : "max-w-lg max-h-[90vh] p-4 sm:p-6")
+                                    )}>
+                                      <DialogHeader className={cn(
+                                        quest.isRecoveryQuest ? "flex-shrink-0 relative" : "border-b border-indigo-500/20 pb-2 mb-3 relative"
+                                      )}>
+                                        <DialogTitle className={cn(
+                                          quest.isRecoveryQuest
+                                            ? cn("font-semibold text-white/90 tracking-wide", isMobile ? "text-base" : "text-xl")
+                                            : "text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 to-purple-500 drop-shadow-sm text-lg"
+                                        )}>
                                           {quest.title}
                                         </DialogTitle>
-                                        <DialogClose className="absolute right-0 top-0 h-6 w-6 rounded-full bg-gradient-to-r from-indigo-600/30 to-purple-700/30 hover:from-indigo-600/50 hover:to-purple-700/50 transition-all p-0.5 border border-indigo-500/20 flex items-center justify-center cursor-pointer z-10">
-                                          <X className="h-4 w-4 text-indigo-300" />
-                                        </DialogClose>
+                                        {quest.isRecoveryQuest && (
+                                          <DialogDescription className={cn("text-white/70", isMobile ? "text-xs" : "text-sm")}>
+                                            Complete this special recovery quest to lift your curse and restore your experience gain rate.
+                                          </DialogDescription>
+                                        )}
+                                        <button
+                                          type="button"
+                                          className={`absolute right-0 top-0 h-6 w-6 rounded-full transition-all p-0.5 border flex items-center justify-center cursor-pointer z-10 ${
+                                            quest.isRecoveryQuest
+                                              ? 'bg-gradient-to-r from-amber-600/30 to-orange-700/30 hover:from-amber-600/50 hover:to-orange-700/50 border-amber-500/20'
+                                              : 'bg-gradient-to-r from-indigo-600/30 to-purple-700/30 hover:from-indigo-600/50 hover:to-purple-700/50 border-indigo-500/20'
+                                          }`}
+                                          onClick={() => setIndividualQuestDialogOpen(null)}
+                                          aria-label="Close dialog"
+                                        >
+                                          <X className={`h-4 w-4 ${quest.isRecoveryQuest ? 'text-amber-300' : 'text-indigo-300'}`} />
+                                        </button>
                                       </DialogHeader>
-                                      <div className="py-2 flex-1 overflow-y-auto pr-2 custom-scrollbar">
-                                        {quest.description && (
-                                          <div className="mb-4 p-3 bg-gray-800/30 rounded-md">
-                                            <p className="text-gray-300/90 text-sm">{quest.description}</p>
-                                          </div>
-                                        )}
+                                      <div className={cn(
+                                        quest.isRecoveryQuest
+                                          ? cn("flex-1 overflow-y-auto", isMobile ? "pr-1" : "pr-2 -mr-2")
+                                          : "py-2 flex-1 overflow-y-auto pr-2 custom-scrollbar"
+                                      )}>
+                                        {quest.isRecoveryQuest ? (
+                                          <div className={cn("relative z-10", isMobile ? "space-y-2 pt-1" : "space-y-4")}>
+                                            {quest.description && (
+                                              <div className={cn("border border-amber-500/30 bg-amber-950/20 rounded-md", isMobile ? "p-2" : "p-3")}>
+                                                <h4 className={cn("font-semibold text-amber-400 mb-2", isMobile ? "text-sm" : "text-base")}>
+                                                  Quest Description:
+                                                </h4>
+                                                <p className={cn("text-amber-200/90", isMobile ? "text-xs" : "text-sm")}>{quest.description}</p>
+                                              </div>
+                                            )}
 
-                                        {/* Quest Tasks */}
-                                        <div className="mb-4">
-                                          <h4 className="text-sm font-semibold text-indigo-400 mb-2">Tasks:</h4>
-                                          {quest.tasks && quest.tasks.length > 0 ? (
-                                            <div className="space-y-1.5">
-                                              {quest.tasks.map((task, index) => (
-                                                <div
-                                                  key={task.id}
-                                                  className="flex items-center p-2 rounded-lg bg-gradient-to-r from-gray-800/60 to-gray-800/40 border border-gray-700/30"
-                                                >
-                                                  <span className="text-indigo-400 text-xs font-medium w-5 text-center flex-shrink-0">
-                                                    {index + 1}.
-                                                  </span>
-                                                  <div className="ml-2">
-                                                    <span className="text-sm font-medium text-gray-200">
-                                                      {task.title}
-                                                    </span>
-                                                  </div>
+                                            {/* Quest Tasks */}
+                                            <div className={cn("border border-amber-500/30 bg-amber-950/20 rounded-md", isMobile ? "p-2" : "p-3")}>
+                                              <h4 className={cn("font-semibold text-amber-400 mb-2", isMobile ? "text-sm" : "text-base")}>
+                                                Recovery Tasks:
+                                              </h4>
+                                              {quest.tasks && quest.tasks.length > 0 ? (
+                                                <div className={cn("text-amber-200/90", isMobile ? "space-y-2 text-xs" : "space-y-3 text-sm")}>
+                                                  {quest.tasks.map((task, index) => (
+                                                    <div key={task.id} className="space-y-1">
+                                                      <div className="flex items-center gap-2">
+                                                        <CheckCircle className={cn("text-amber-500 flex-shrink-0", isMobile ? "h-3 w-3" : "h-4 w-4")} />
+                                                        <span className={cn("font-medium", isMobile ? "text-xs" : "text-sm")}>{task.title}</span>
+                                                      </div>
+                                                      {task.description && (
+                                                        <div className={cn("space-y-1", isMobile ? "ml-4" : "ml-6")}>
+                                                          <div className={cn("flex items-start gap-2 text-amber-300/80", isMobile ? "text-[10px]" : "text-xs")}>
+                                                            <span className="text-amber-500 mt-0.5">•</span>
+                                                            <span>{task.description}</span>
+                                                          </div>
+                                                        </div>
+                                                      )}
+                                                    </div>
+                                                  ))}
                                                 </div>
-                                              ))}
+                                              ) : (
+                                                <p className={cn("text-amber-300/80 italic", isMobile ? "text-xs" : "text-sm")}>No tasks added yet.</p>
+                                              )}
                                             </div>
-                                          ) : (
-                                            <p className="text-sm text-gray-400 italic">No tasks added yet.</p>
-                                          )}
-                                        </div>
 
-                                        {/* Start Quest Button */}
-                                        {!quest.started ? (
-                                          <Button
-                                            variant="default"
-                                            onClick={() => {
-                                              if (canStartQuest(quest.id)) {
-                                                startQuest(quest.id);
-                                                toast({
-                                                  title: "Quest Started!",
-                                                  description: `You've started the quest "${quest.title}"`,
-                                                });
-                                              }
-                                            }}
-                                            disabled={!canStartQuest(quest.id)}
-                                            className={`w-full ${
-                                              !canStartQuest(quest.id)
-                                                ? 'bg-gray-600 hover:bg-gray-600 text-gray-400 cursor-not-allowed'
-                                                : 'bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white'
-                                            }`}
-                                          >
-                                            {!canStartQuest(quest.id) ? 'Daily Limit Reached' : 'Start Quest'}
-                                          </Button>
-                                        ) : (
-                                          <div className="bg-green-900/20 p-2 rounded-md border border-green-500/20 text-center text-green-400 text-sm">
-                                            <Clock className="inline-block h-4 w-4 mr-1" />
-                                            Quest in progress
+                                            <div className={cn("border border-amber-500/30 bg-amber-950/20 rounded-md", isMobile ? "p-2" : "p-3")}>
+                                              <h4 className={cn("font-semibold text-amber-400 mb-2", isMobile ? "text-sm" : "text-base")}>
+                                                Important Notes:
+                                              </h4>
+                                              <ul className={cn("text-amber-200/90", isMobile ? "space-y-1 text-xs" : "space-y-1 text-sm")}>
+                                                <li className="flex items-start gap-2">
+                                                  <AlertCircle className={cn("text-amber-500 flex-shrink-0 mt-0.5", isMobile ? "h-3 w-3" : "h-4 w-4")} />
+                                                  <span>This is a special recovery quest to lift your curse</span>
+                                                </li>
+                                                <li className="flex items-start gap-2">
+                                                  <AlertCircle className={cn("text-amber-500 flex-shrink-0 mt-0.5", isMobile ? "h-3 w-3" : "h-4 w-4")} />
+                                                  <span>Complete all tasks to restore your experience gain rate</span>
+                                                </li>
+                                                <li className="flex items-start gap-2">
+                                                  <AlertCircle className={cn("text-amber-500 flex-shrink-0 mt-0.5", isMobile ? "h-3 w-3" : "h-4 w-4")} />
+                                                  <span>Abandoning this quest will reset your redemption progress</span>
+                                                </li>
+                                              </ul>
+                                            </div>
                                           </div>
+                                        ) : (
+                                          <>
+                                            {quest.description && (
+                                              <div className="mb-4 p-3 bg-gray-800/30 rounded-md">
+                                                <p className="text-gray-300/90 text-sm">{quest.description}</p>
+                                              </div>
+                                            )}
+
+                                            {/* Quest Tasks */}
+                                            <div className="mb-4">
+                                              <h4 className="text-sm font-semibold text-indigo-400 mb-2">Tasks:</h4>
+                                              {quest.tasks && quest.tasks.length > 0 ? (
+                                                <div className="space-y-1.5">
+                                                  {quest.tasks.map((task, index) => (
+                                                    <div
+                                                      key={task.id}
+                                                      className="flex items-center p-2 rounded-lg bg-gradient-to-r from-gray-800/60 to-gray-800/40 border border-gray-700/30"
+                                                    >
+                                                      <span className="text-indigo-400 text-xs font-medium w-5 text-center flex-shrink-0">
+                                                        {index + 1}.
+                                                      </span>
+                                                      <div className="ml-2">
+                                                        <span className="text-sm font-medium text-gray-200">
+                                                          {task.title}
+                                                        </span>
+                                                      </div>
+                                                    </div>
+                                                  ))}
+                                                </div>
+                                              ) : (
+                                                <p className="text-sm text-gray-400 italic">No tasks added yet.</p>
+                                              )}
+                                            </div>
+                                          </>
                                         )}
+
                                       </div>
+
+                                      <DialogFooter className={cn(
+                                        quest.isRecoveryQuest
+                                          ? cn(
+                                              "flex-shrink-0 flex gap-2 border-t border-gray-700",
+                                              isMobile ? "mt-2 pt-2 flex-col" : "mt-4 pt-4 sm:justify-between"
+                                            )
+                                          : "pt-2"
+                                      )}>
+                                        {quest.isRecoveryQuest ? (
+                                          <>
+                                            {!quest.started ? (
+                                              <Button
+                                                variant="default"
+                                                onClick={() => {
+                                                  if (canStartQuest(quest.id)) {
+                                                    startQuest(quest.id);
+                                                    toast({
+                                                      title: "Recovery Quest Started!",
+                                                      description: `You've started the recovery quest "${quest.title}"`,
+                                                    });
+                                                    const closeButton = document.querySelector('[aria-label="Close dialog"]');
+                                                    if (closeButton) {
+                                                      (closeButton as HTMLElement).click();
+                                                    }
+                                                  }
+                                                }}
+                                                disabled={!canStartQuest(quest.id)}
+                                                className={cn(
+                                                  !canStartQuest(quest.id)
+                                                    ? 'bg-gray-600 hover:bg-gray-600 text-gray-400 cursor-not-allowed'
+                                                    : 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white',
+                                                  isMobile ? "h-8 text-xs" : "h-9 text-sm"
+                                                )}
+                                              >
+                                                <Shield className={cn("mr-2", isMobile ? "h-3 w-3" : "h-4 w-4")} />
+                                                {!canStartQuest(quest.id) ? 'Daily Limit Reached' : 'Start Recovery Quest'}
+                                              </Button>
+                                            ) : (
+                                              <div className={cn(
+                                                "bg-green-900/20 p-2 rounded-md border border-green-500/20 text-center text-green-400",
+                                                isMobile ? "text-xs" : "text-sm"
+                                              )}>
+                                                <Clock className={cn("inline-block mr-1", isMobile ? "h-3 w-3" : "h-4 w-4")} />
+                                                Recovery Quest in progress
+                                              </div>
+                                            )}
+                                          </>
+                                        ) : (
+                                          <>
+                                            {/* Start Quest Button */}
+                                            {!quest.started ? (
+                                              <Button
+                                                variant="default"
+                                                onClick={() => {
+                                                  if (canStartQuest(quest.id)) {
+                                                    startQuest(quest.id);
+                                                    toast({
+                                                      title: "Quest Started!",
+                                                      description: `You've started the quest "${quest.title}"`,
+                                                    });
+                                                  }
+                                                }}
+                                                disabled={!canStartQuest(quest.id)}
+                                                className={`w-full ${
+                                                  !canStartQuest(quest.id)
+                                                    ? 'bg-gray-600 hover:bg-gray-600 text-gray-400 cursor-not-allowed'
+                                                    : 'bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white'
+                                                }`}
+                                              >
+                                                {!canStartQuest(quest.id) ? 'Daily Limit Reached' : 'Start Quest'}
+                                              </Button>
+                                            ) : (
+                                              <div className="bg-green-900/20 p-2 rounded-md border border-green-500/20 text-center text-green-400 text-sm">
+                                                <Clock className="inline-block h-4 w-4 mr-1" />
+                                                Quest in progress
+                                              </div>
+                                            )}
+                                          </>
+                                        )}
+                                      </DialogFooter>
                                     </CustomDialogContent>
                                   </Dialog>
                                 </div>
@@ -1526,11 +1667,6 @@ const Quests = () => {
                                       <h3 className={`font-medium ${quest.isRecoveryQuest ? 'text-amber-400' : 'text-indigo-400'}`}>
                                         {quest.title}
                                       </h3>
-                                      {quest.isRecoveryQuest && (
-                                        <span className="bg-amber-950/50 text-xs text-amber-500 px-1.5 py-0.5 rounded-sm">
-                                          Recovery
-                                        </span>
-                                      )}
                                     </div>
                                     <div className="flex items-center gap-1 text-xs">
                                       <Star size={12} className="text-yellow-400" />
@@ -1553,88 +1689,239 @@ const Quests = () => {
                                       </span>
                                     )}
                                   </div>
-                                  <Dialog>
+                                  <Dialog open={individualQuestDialogOpen === quest.id} onOpenChange={(open) => setIndividualQuestDialogOpen(open ? quest.id : null)}>
                                     <DialogTrigger asChild>
                                       <Button
                                         variant="outline"
                                         size="sm"
-                                        className="w-full border-indigo-500/30 hover:border-indigo-500/60 text-indigo-500 text-xs px-2 py-1 sm:text-sm sm:px-3 sm:py-2"
+                                        className={`w-full text-xs px-2 py-1 sm:text-sm sm:px-3 sm:py-2 ${
+                                          quest.isRecoveryQuest
+                                            ? 'border-amber-500/30 hover:border-amber-500/60 text-amber-500'
+                                            : 'border-indigo-500/30 hover:border-indigo-500/60 text-indigo-500'
+                                        }`}
                                       >
                                         <Eye size={12} className="mr-1" />
                                         View Quest
                                       </Button>
                                     </DialogTrigger>
-                                    <CustomDialogContent className="w-[95vw] max-w-[350px] sm:w-[90vw] sm:max-w-[500px] p-4 max-h-[80vh] overflow-hidden flex flex-col">
-                                      <DialogHeader className="border-b border-indigo-500/20 pb-2 mb-3 relative">
-                                        <DialogTitle className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 to-purple-500 drop-shadow-sm text-lg">
+                                    <CustomDialogContent className={cn(
+                                      quest.isRecoveryQuest
+                                        ? "glassmorphism flex flex-col text-solo-text rounded-xl before:!absolute before:!inset-0 before:!rounded-xl before:!bg-gradient-to-br before:!from-indigo-500/10 before:!to-purple-500/5 before:!backdrop-blur-xl before:!-z-10"
+                                        : "w-[95vw] max-w-[350px] sm:w-[90vw] sm:max-w-[500px] p-4 max-h-[80vh] overflow-hidden flex flex-col",
+                                      quest.isRecoveryQuest && (isMobile
+                                        ? "w-[90vw] max-w-[320px] p-2 sm:p-3 max-h-[85vh]"
+                                        : "max-w-lg max-h-[90vh] p-4 sm:p-6")
+                                    )}>
+                                      <DialogHeader className={cn(
+                                        quest.isRecoveryQuest ? "flex-shrink-0 relative" : "border-b border-indigo-500/20 pb-2 mb-3 relative"
+                                      )}>
+                                        <DialogTitle className={cn(
+                                          quest.isRecoveryQuest
+                                            ? cn("font-semibold text-white/90 tracking-wide", isMobile ? "text-base" : "text-xl")
+                                            : "text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 to-purple-500 drop-shadow-sm text-lg"
+                                        )}>
                                           {quest.title}
                                         </DialogTitle>
-                                        <DialogClose className="absolute right-0 top-0 h-6 w-6 rounded-full bg-gradient-to-r from-indigo-600/30 to-purple-700/30 hover:from-indigo-600/50 hover:to-purple-700/50 transition-all p-0.5 border border-indigo-500/20 flex items-center justify-center cursor-pointer z-10">
-                                          <X className="h-4 w-4 text-indigo-300" />
-                                        </DialogClose>
-                                      </DialogHeader>
-                                      <div className="py-2 flex-1 overflow-y-auto pr-2 custom-scrollbar">
-                                        {quest.description && (
-                                          <div className="mb-4 p-3 bg-gray-800/30 rounded-md">
-                                            <p className="text-gray-300/90 text-sm">{quest.description}</p>
-                                          </div>
+                                        {quest.isRecoveryQuest && (
+                                          <DialogDescription className={cn("text-white/70", isMobile ? "text-xs" : "text-sm")}>
+                                            Complete this special recovery quest to lift your curse and restore your experience gain rate.
+                                          </DialogDescription>
                                         )}
+                                        <button
+                                          type="button"
+                                          className={`absolute right-0 top-0 h-6 w-6 rounded-full transition-all p-0.5 border flex items-center justify-center cursor-pointer z-10 ${
+                                            quest.isRecoveryQuest
+                                              ? 'bg-gradient-to-r from-amber-600/30 to-orange-700/30 hover:from-amber-600/50 hover:to-orange-700/50 border-amber-500/20'
+                                              : 'bg-gradient-to-r from-indigo-600/30 to-purple-700/30 hover:from-indigo-600/50 hover:to-purple-700/50 border-indigo-500/20'
+                                          }`}
+                                          onClick={() => setIndividualQuestDialogOpen(null)}
+                                          aria-label="Close dialog"
+                                        >
+                                          <X className={`h-4 w-4 ${quest.isRecoveryQuest ? 'text-amber-300' : 'text-indigo-300'}`} />
+                                        </button>
+                                      </DialogHeader>
+                                      <div className={cn(
+                                        quest.isRecoveryQuest
+                                          ? cn("flex-1 overflow-y-auto", isMobile ? "pr-1" : "pr-2 -mr-2")
+                                          : "py-2 flex-1 overflow-y-auto pr-2 custom-scrollbar"
+                                      )}>
+                                        {quest.isRecoveryQuest ? (
+                                          <div className={cn("relative z-10", isMobile ? "space-y-2 pt-1" : "space-y-4")}>
+                                            {quest.description && (
+                                              <div className={cn("border border-amber-500/30 bg-amber-950/20 rounded-md", isMobile ? "p-2" : "p-3")}>
+                                                <h4 className={cn("font-semibold text-amber-400 mb-2", isMobile ? "text-sm" : "text-base")}>
+                                                  Quest Description:
+                                                </h4>
+                                                <p className={cn("text-amber-200/90", isMobile ? "text-xs" : "text-sm")}>{quest.description}</p>
+                                              </div>
+                                            )}
 
-                                        {/* Quest Tasks */}
-                                        <div className="mb-4">
-                                          <h4 className="text-sm font-semibold text-indigo-400 mb-2">Tasks:</h4>
-                                          {quest.tasks && quest.tasks.length > 0 ? (
-                                            <div className="space-y-1.5">
-                                              {quest.tasks.map((task, index) => (
-                                                <div
-                                                  key={task.id}
-                                                  className="flex items-center p-2 rounded-lg bg-gradient-to-r from-gray-800/60 to-gray-800/40 border border-gray-700/30"
-                                                >
-                                                  <span className="text-indigo-400 text-xs font-medium w-5 text-center flex-shrink-0">
-                                                    {index + 1}.
-                                                  </span>
-                                                  <div className="ml-2">
-                                                    <span className="text-sm font-medium text-gray-200">
-                                                      {task.title}
-                                                    </span>
-                                                  </div>
+                                            {/* Quest Tasks */}
+                                            <div className={cn("border border-amber-500/30 bg-amber-950/20 rounded-md", isMobile ? "p-2" : "p-3")}>
+                                              <h4 className={cn("font-semibold text-amber-400 mb-2", isMobile ? "text-sm" : "text-base")}>
+                                                Recovery Tasks:
+                                              </h4>
+                                              {quest.tasks && quest.tasks.length > 0 ? (
+                                                <div className={cn("text-amber-200/90", isMobile ? "space-y-2 text-xs" : "space-y-3 text-sm")}>
+                                                  {quest.tasks.map((task, index) => (
+                                                    <div key={task.id} className="space-y-1">
+                                                      <div className="flex items-center gap-2">
+                                                        <CheckCircle className={cn("text-amber-500 flex-shrink-0", isMobile ? "h-3 w-3" : "h-4 w-4")} />
+                                                        <span className={cn("font-medium", isMobile ? "text-xs" : "text-sm")}>{task.title}</span>
+                                                      </div>
+                                                      {task.description && (
+                                                        <div className={cn("space-y-1", isMobile ? "ml-4" : "ml-6")}>
+                                                          <div className={cn("flex items-start gap-2 text-amber-300/80", isMobile ? "text-[10px]" : "text-xs")}>
+                                                            <span className="text-amber-500 mt-0.5">•</span>
+                                                            <span>{task.description}</span>
+                                                          </div>
+                                                        </div>
+                                                      )}
+                                                    </div>
+                                                  ))}
                                                 </div>
-                                              ))}
+                                              ) : (
+                                                <p className={cn("text-amber-300/80 italic", isMobile ? "text-xs" : "text-sm")}>No tasks added yet.</p>
+                                              )}
                                             </div>
-                                          ) : (
-                                            <p className="text-sm text-gray-400 italic">No tasks added yet.</p>
-                                          )}
-                                        </div>
 
-                                        {/* Start Quest Button */}
-                                        {!quest.started ? (
-                                          <Button
-                                            variant="default"
-                                            onClick={() => {
-                                              if (canStartQuest(quest.id)) {
-                                                startQuest(quest.id);
-                                                toast({
-                                                  title: "Quest Started!",
-                                                  description: `You've started the quest "${quest.title}"`,
-                                                });
-                                              }
-                                            }}
-                                            disabled={!canStartQuest(quest.id)}
-                                            className={`w-full ${
-                                              !canStartQuest(quest.id)
-                                                ? 'bg-gray-600 hover:bg-gray-600 text-gray-400 cursor-not-allowed'
-                                                : 'bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white'
-                                            }`}
-                                          >
-                                            {!canStartQuest(quest.id) ? 'Daily Limit Reached' : 'Start Quest'}
-                                          </Button>
-                                        ) : (
-                                          <div className="bg-green-900/20 p-2 rounded-md border border-green-500/20 text-center text-green-400 text-sm">
-                                            <Clock className="inline-block h-4 w-4 mr-1" />
-                                            Quest in progress
+                                            <div className={cn("border border-amber-500/30 bg-amber-950/20 rounded-md", isMobile ? "p-2" : "p-3")}>
+                                              <h4 className={cn("font-semibold text-amber-400 mb-2", isMobile ? "text-sm" : "text-base")}>
+                                                Important Notes:
+                                              </h4>
+                                              <ul className={cn("text-amber-200/90", isMobile ? "space-y-1 text-xs" : "space-y-1 text-sm")}>
+                                                <li className="flex items-start gap-2">
+                                                  <AlertCircle className={cn("text-amber-500 flex-shrink-0 mt-0.5", isMobile ? "h-3 w-3" : "h-4 w-4")} />
+                                                  <span>This is a special recovery quest to lift your curse</span>
+                                                </li>
+                                                <li className="flex items-start gap-2">
+                                                  <AlertCircle className={cn("text-amber-500 flex-shrink-0 mt-0.5", isMobile ? "h-3 w-3" : "h-4 w-4")} />
+                                                  <span>Complete all tasks to restore your experience gain rate</span>
+                                                </li>
+                                                <li className="flex items-start gap-2">
+                                                  <AlertCircle className={cn("text-amber-500 flex-shrink-0 mt-0.5", isMobile ? "h-3 w-3" : "h-4 w-4")} />
+                                                  <span>Abandoning this quest will reset your redemption progress</span>
+                                                </li>
+                                              </ul>
+                                            </div>
                                           </div>
+                                        ) : (
+                                          <>
+                                            {quest.description && (
+                                              <div className="mb-4 p-3 bg-gray-800/30 rounded-md">
+                                                <p className="text-gray-300/90 text-sm">{quest.description}</p>
+                                              </div>
+                                            )}
+
+                                            {/* Quest Tasks */}
+                                            <div className="mb-4">
+                                              <h4 className="text-sm font-semibold text-indigo-400 mb-2">Tasks:</h4>
+                                              {quest.tasks && quest.tasks.length > 0 ? (
+                                                <div className="space-y-1.5">
+                                                  {quest.tasks.map((task, index) => (
+                                                    <div
+                                                      key={task.id}
+                                                      className="flex items-center p-2 rounded-lg bg-gradient-to-r from-gray-800/60 to-gray-800/40 border border-gray-700/30"
+                                                    >
+                                                      <span className="text-indigo-400 text-xs font-medium w-5 text-center flex-shrink-0">
+                                                        {index + 1}.
+                                                      </span>
+                                                      <div className="ml-2">
+                                                        <span className="text-sm font-medium text-gray-200">
+                                                          {task.title}
+                                                        </span>
+                                                      </div>
+                                                    </div>
+                                                  ))}
+                                                </div>
+                                              ) : (
+                                                <p className="text-sm text-gray-400 italic">No tasks added yet.</p>
+                                              )}
+                                            </div>
+                                          </>
                                         )}
                                       </div>
+
+                                      <DialogFooter className={cn(
+                                        quest.isRecoveryQuest
+                                          ? cn(
+                                              "flex-shrink-0 flex gap-2 border-t border-gray-700",
+                                              isMobile ? "mt-2 pt-2 flex-col" : "mt-4 pt-4 sm:justify-between"
+                                            )
+                                          : "pt-2"
+                                      )}>
+                                        {quest.isRecoveryQuest ? (
+                                          <>
+                                            {!quest.started ? (
+                                              <Button
+                                                variant="default"
+                                                onClick={() => {
+                                                  if (canStartQuest(quest.id)) {
+                                                    startQuest(quest.id);
+                                                    toast({
+                                                      title: "Recovery Quest Started!",
+                                                      description: `You've started the recovery quest "${quest.title}"`,
+                                                    });
+                                                    const closeButton = document.querySelector('[aria-label="Close dialog"]');
+                                                    if (closeButton) {
+                                                      (closeButton as HTMLElement).click();
+                                                    }
+                                                  }
+                                                }}
+                                                disabled={!canStartQuest(quest.id)}
+                                                className={cn(
+                                                  !canStartQuest(quest.id)
+                                                    ? 'bg-gray-600 hover:bg-gray-600 text-gray-400 cursor-not-allowed'
+                                                    : 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white',
+                                                  isMobile ? "h-8 text-xs" : "h-9 text-sm"
+                                                )}
+                                              >
+                                                <Shield className={cn("mr-2", isMobile ? "h-3 w-3" : "h-4 w-4")} />
+                                                {!canStartQuest(quest.id) ? 'Daily Limit Reached' : 'Start Recovery Quest'}
+                                              </Button>
+                                            ) : (
+                                              <div className={cn(
+                                                "bg-green-900/20 p-2 rounded-md border border-green-500/20 text-center text-green-400",
+                                                isMobile ? "text-xs" : "text-sm"
+                                              )}>
+                                                <Clock className={cn("inline-block mr-1", isMobile ? "h-3 w-3" : "h-4 w-4")} />
+                                                Recovery Quest in progress
+                                              </div>
+                                            )}
+                                          </>
+                                        ) : (
+                                          <>
+                                            {/* Start Quest Button */}
+                                            {!quest.started ? (
+                                              <Button
+                                                variant="default"
+                                                onClick={() => {
+                                                  if (canStartQuest(quest.id)) {
+                                                    startQuest(quest.id);
+                                                    toast({
+                                                      title: "Quest Started!",
+                                                      description: `You've started the quest "${quest.title}"`,
+                                                    });
+                                                  }
+                                                }}
+                                                disabled={!canStartQuest(quest.id)}
+                                                className={`w-full ${
+                                                  !canStartQuest(quest.id)
+                                                    ? 'bg-gray-600 hover:bg-gray-600 text-gray-400 cursor-not-allowed'
+                                                    : 'bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white'
+                                                }`}
+                                              >
+                                                {!canStartQuest(quest.id) ? 'Daily Limit Reached' : 'Start Quest'}
+                                              </Button>
+                                            ) : (
+                                              <div className="bg-green-900/20 p-2 rounded-md border border-green-500/20 text-center text-green-400 text-sm">
+                                                <Clock className="inline-block h-4 w-4 mr-1" />
+                                                Quest in progress
+                                              </div>
+                                            )}
+                                          </>
+                                        )}
+                                      </DialogFooter>
                                     </CustomDialogContent>
                                   </Dialog>
                                 </div>
@@ -1685,7 +1972,7 @@ const Quests = () => {
                   <Sunrise className="text-green-500" size={20} />
                   Daily Quests
                 </h2>
-                <Dialog>
+                <Dialog open={isDailyQuestsDialogOpen} onOpenChange={setIsDailyQuestsDialogOpen}>
                   <DialogTrigger asChild>
                     <Button
                       variant="outline"
@@ -1701,9 +1988,14 @@ const Quests = () => {
                       <DialogTitle className="text-transparent bg-clip-text bg-gradient-to-r from-green-300 to-emerald-500 drop-shadow-sm text-lg">
                         All Daily Quests
                       </DialogTitle>
-                      <DialogClose className="absolute right-0 top-0 h-6 w-6 rounded-full bg-gradient-to-r from-green-600/30 to-emerald-700/30 hover:from-green-600/50 hover:to-emerald-700/50 transition-all p-0.5 border border-green-500/20 flex items-center justify-center cursor-pointer z-10">
+                      <button
+                        type="button"
+                        className="absolute right-0 top-0 h-6 w-6 rounded-full bg-gradient-to-r from-green-600/30 to-emerald-700/30 hover:from-green-600/50 hover:to-emerald-700/50 transition-all p-0.5 border border-green-500/20 flex items-center justify-center cursor-pointer z-10"
+                        onClick={() => setIsDailyQuestsDialogOpen(false)}
+                        aria-label="Close dialog"
+                      >
                         <X className="h-4 w-4 text-green-300" />
-                      </DialogClose>
+                      </button>
                     </DialogHeader>
                     <div className="py-2 flex-1 overflow-y-auto pr-2 custom-scrollbar">
                       <div className="grid grid-cols-1 gap-2">
@@ -1761,8 +2053,14 @@ const Quests = () => {
                                     <DialogTitle className="text-transparent bg-clip-text bg-gradient-to-r from-green-300 to-emerald-500 drop-shadow-sm text-lg">
                                       {quest.title}
                                     </DialogTitle>
-                                    <DialogClose className="absolute right-0 top-0 h-6 w-6 rounded-full bg-gradient-to-r from-green-600/30 to-emerald-700/30 hover:from-green-600/50 hover:to-emerald-700/50 transition-all p-0.5 border border-green-500/20 flex items-center justify-center cursor-pointer z-10">
-                                      <X className="h-4 w-4 text-green-300" />
+                                    <DialogClose asChild>
+                                      <button
+                                        type="button"
+                                        className="absolute right-0 top-0 h-6 w-6 rounded-full bg-gradient-to-r from-green-600/30 to-emerald-700/30 hover:from-green-600/50 hover:to-emerald-700/50 transition-all p-0.5 border border-green-500/20 flex items-center justify-center cursor-pointer z-10"
+                                        aria-label="Close dialog"
+                                      >
+                                        <X className="h-4 w-4 text-green-300" />
+                                      </button>
                                     </DialogClose>
                                   </DialogHeader>
                                   <div className="py-2 flex-1 overflow-y-auto pr-2 custom-scrollbar">
@@ -2063,16 +2361,22 @@ const Quests = () => {
                       .map((quest) => (
                         <div
                           key={quest.id}
-                          className="bg-solo-dark border border-gray-800 rounded-lg p-4 opacity-70"
+                          className={`bg-solo-dark rounded-lg p-4 opacity-70 ${
+                            quest.isRecoveryQuest
+                              ? 'border border-amber-500/30'
+                              : 'border border-gray-800'
+                          }`}
                         >
                           <div className="flex justify-between items-start mb-2">
                             <div className="flex items-center gap-2">
-                              <div className="text-solo-primary/70">
-                                <Sword size={16} />
+                              <div className={quest.isRecoveryQuest ? "text-amber-500/70" : "text-solo-primary/70"}>
+                                {quest.isRecoveryQuest ? <Shield size={16} /> : <Sword size={16} />}
                               </div>
                               <h3 className="font-medium text-lg line-through">{quest.title}</h3>
                             </div>
-                            <span className="text-solo-primary/70 font-bold">+{quest.expReward} EXP</span>
+                            <span className={quest.isRecoveryQuest ? "text-amber-500/70 font-bold" : "text-solo-primary/70 font-bold"}>
+                              +{quest.expReward} EXP
+                            </span>
                           </div>
 
                           {quest.description && (

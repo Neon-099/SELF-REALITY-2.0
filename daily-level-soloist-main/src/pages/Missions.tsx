@@ -14,6 +14,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { motion } from 'framer-motion';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { cn } from '@/lib/utils';
 
 // Utility function to convert Mission to PredefinedMission format
 const convertMissionToPredefined = (mission: Mission): PredefinedMission => {
@@ -112,11 +114,10 @@ const createRankLevels = (): RankLevel[] => [
 
 const Missions = () => {
   const [currentRankIndex, setCurrentRankIndex] = useState(0);
-  const { user, missions, addMission, completeMission } = useSoloLevelingStore(state => ({
+  const { user, missions, addMission } = useSoloLevelingStore(state => ({
     user: state.user,
     missions: state.missions,
-    addMission: state.addMission,
-    completeMission: state.completeMission
+    addMission: state.addMission
   }));
   const [rankLevels, setRankLevels] = useState<RankLevel[]>(createRankLevels());
   const [isLoading, setIsLoading] = useState(true);
@@ -124,6 +125,7 @@ const Missions = () => {
   const [recentMissions, setRecentMissions] = useState<PredefinedMission[]>([]);
   const { toast } = useToast();
   const [showModal, setShowModal] = useState(false);
+  const isMobile = useIsMobile();
   const [newMission, setNewMission] = useState({
     title: '',
     description: '',
@@ -137,29 +139,29 @@ const Missions = () => {
 
   const handleNewMissionChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    
+
     if (name === 'count') {
       const count = parseInt(value) || 1;
       // Update task names array length based on new count
       const taskNames = [...newMission.taskNames];
-      
+
       // If increasing count, add empty task names
       if (count > taskNames.length) {
         while (taskNames.length < count) {
           taskNames.push(`Task ${taskNames.length + 1}`);
         }
-      } 
+      }
       // If decreasing count, truncate the array
       else if (count < taskNames.length) {
         taskNames.length = count;
       }
-      
+
       setNewMission(prev => ({ ...prev, count, taskNames }));
     } else {
       setNewMission(prev => ({ ...prev, [name]: value }));
     }
   };
-  
+
   const handleTaskNameChange = (index: number, value: string) => {
     const taskNames = [...newMission.taskNames];
     taskNames[index] = value;
@@ -168,28 +170,28 @@ const Missions = () => {
 
   const handleCreateMission = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Get XP reward from input
     const expReward = parseInt(newMission.expReward) || 30; // Default to 30 if invalid
-    
+
     // Get task count
     const count = parseInt(String(newMission.count)) || 1; // Default to 1 if invalid
-    
+
     // Validate day number against rank requirements
     const rankLevel = rankLevels.find(r => r.id === newMission.rank);
     if (rankLevel && Number(newMission.day) > rankLevel.daysRequired) {
-      toast({ 
-        title: 'Invalid Day', 
+      toast({
+        title: 'Invalid Day',
         description: `${newMission.rank} Rank only has ${rankLevel.daysRequired} days available.`,
         variant: 'destructive'
       });
       return;
     }
-    
+
     // Clean up task names - replace empty strings with default names
     const taskNames = newMission.taskNames
       .map((name, index) => name.trim() || `Task ${index + 1}`);
-    
+
     // Use the updated addMission function that now accepts taskNames
     addMission(
       newMission.title,
@@ -201,22 +203,22 @@ const Missions = () => {
       count,
       taskNames
     );
-    
+
     setShowModal(false);
-    setNewMission({ 
-      title: '', 
-      description: '', 
-      day: 1, 
-      rank: 'F', 
-      difficulty: 'normal', 
+    setNewMission({
+      title: '',
+      description: '',
+      day: 1,
+      rank: 'F',
+      difficulty: 'normal',
       expReward: '30',
       count: 1,
       taskNames: ['']
     });
-    
-    toast({ 
-      title: 'Mission Created', 
-      description: `Mission added to ${newMission.rank} Rank - Day ${newMission.day}!` 
+
+    toast({
+      title: 'Mission Created',
+      description: `Mission added to ${newMission.rank} Rank - Day ${newMission.day}!`
     });
   };
 
@@ -232,25 +234,25 @@ const Missions = () => {
         const rankOrder: Rank[] = ['F', 'E', 'D', 'C', 'B', 'A', 'S', 'SS', 'SSS'];
         const userRankIndex = rankOrder.indexOf(user.rank);
         const missionsByRank: Record<Rank, PredefinedMission[]> = {} as Record<Rank, PredefinedMission[]>;
-        
+
         // Include missions for all ranks, not just unlocked ones
         for (const rank of rankOrder) {
           // Include all missions for this rank, both active and completed
           const filteredMissions = missions
             .filter(m => m.rank === rank)
             .map(convertMissionToPredefined);
-          
+
           missionsByRank[rank] = filteredMissions;
         }
-        
+
         // Set recent missions to show most recently created ones
         const recentlyCreatedMissions = [...missions]
           .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
           .slice(0, 3)
           .map(convertMissionToPredefined);
-        
+
         setRecentMissions(recentlyCreatedMissions);
-        
+
         const updatedRankLevels = rankLevels.map((rankLevel, index) => {
           const isLocked = index > userRankIndex;
           const rankMissions = missionsByRank[rankLevel.id] || [];
@@ -291,7 +293,7 @@ const Missions = () => {
   };
 
   const currentRank = rankLevels[currentRankIndex];
-  
+
   // Helper to get rank text colors for titles
   const getRankTitleColor = (rank: Rank) => {
     switch (rank) {
@@ -315,7 +317,7 @@ const Missions = () => {
     }
 
     const displayMissions = recentMissions.slice(0, 3);
-    
+
     // Helper to get rank color classes
     const getRankColor = (rank: Rank) => {
       switch (rank) {
@@ -331,7 +333,7 @@ const Missions = () => {
         default: return 'from-gray-400 to-gray-600 border-gray-400';
       }
     };
-    
+
     // Helper to get solid rank colors
     const getRankSolidColor = (rank: Rank) => {
       switch (rank) {
@@ -347,7 +349,7 @@ const Missions = () => {
         default: return 'bg-gray-500';
       }
     };
-    
+
     // Helper to get badge rank colors
     const getRankBadgeColor = (rank: Rank) => {
       switch (rank) {
@@ -363,7 +365,7 @@ const Missions = () => {
         default: return 'border-gray-400 text-gray-500';
       }
     };
-    
+
     return (
       <div className="mt-12 border-t border-border pt-8">
         <div className="flex items-center justify-between mb-6">
@@ -380,15 +382,15 @@ const Missions = () => {
             const rankSolid = getRankSolidColor(mission.rank);
             const rankBadge = getRankBadgeColor(mission.rank);
             const rankLocked = rankLevels.find(r => r.id === mission.rank)?.isLocked || false;
-            
+
             return (
-              <div 
+              <div
                 key={mission.id}
                 className="bg-card rounded-xl overflow-hidden border-2 border-border/50 hover:shadow-md transition-shadow relative"
               >
                 {/* Rank indicator strip */}
                 <div className={`absolute top-0 left-0 w-2 h-full ${rankSolid}`}></div>
-                
+
                 <div className={`p-4 border-b bg-gradient-to-br from-${mission.rank.toLowerCase()}-400/5 to-${mission.rank.toLowerCase()}-600/10`}>
                   <div className="flex justify-between items-center mb-3">
                     <Badge className={`px-2 py-1 ${rankBadge} bg-transparent font-semibold`}>
@@ -399,11 +401,11 @@ const Missions = () => {
                       +{mission.expReward} EXP
                     </Badge>
                   </div>
-                  
+
                   <h3 className={`font-bold text-lg bg-gradient-to-r ${rankGradient} bg-clip-text text-transparent`}>
                     {mission.title}
                   </h3>
-                  
+
                   {rankLocked && (
                     <div className="mt-2">
                       <Badge variant="outline" className="text-gray-400 border-gray-400 flex items-center gap-1">
@@ -412,7 +414,7 @@ const Missions = () => {
                     </div>
                   )}
                 </div>
-                
+
                 <div className="p-4">
                   <p className="text-sm text-muted-foreground line-clamp-2">{mission.description}</p>
                   <div className="mt-3 text-xs text-muted-foreground">
@@ -440,139 +442,219 @@ const Missions = () => {
               <Button onClick={() => setShowModal(true)} className="flex items-center gap-2">
                 <Plus className="w-5 h-5" /> New Mission
               </Button>
-              <DialogContent variant="compact">
-                <DialogHeader>
-                  <DialogTitle>Create New Mission</DialogTitle>
+              <DialogContent className={cn(
+                "glassmorphism flex flex-col text-solo-text rounded-xl",
+                "before:!absolute before:!inset-0 before:!rounded-xl",
+                "before:!bg-gradient-to-br before:!from-indigo-500/10 before:!to-purple-500/5",
+                "before:!backdrop-blur-xl before:!-z-10",
+                isMobile
+                  ? "w-[90vw] max-w-[320px] p-2 sm:p-3 max-h-[85vh]"
+                  : "max-w-lg max-h-[90vh] p-4 sm:p-6"
+              )}>
+                <DialogHeader className="flex-shrink-0">
+                  <DialogTitle className={cn("font-semibold text-white/90 tracking-wide", isMobile ? "text-base" : "text-xl")}>
+                    Create New Mission
+                  </DialogTitle>
                 </DialogHeader>
-                <form className="space-y-3" onSubmit={handleCreateMission}>
-                  <div className="space-y-1">
-                    <Label htmlFor="mission-title">Title</Label>
-                    <Input
-                      id="mission-title"
-                      name="title"
-                      placeholder="Title"
-                      value={newMission.title}
-                      onChange={handleNewMissionChange}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <Label htmlFor="mission-description">Description</Label>
-                    <Textarea
-                      id="mission-description"
-                      name="description"
-                      placeholder="Description"
-                      value={newMission.description}
-                      onChange={handleNewMissionChange}
-                      required
-                      className="h-16"
-                    />
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="space-y-1">
-                      <Label htmlFor="mission-day">Day</Label>
+
+                <div className={cn("flex-1 overflow-y-auto", isMobile ? "pr-1" : "pr-2 -mr-2")}>
+                  <form className={cn("relative z-10", isMobile ? "space-y-1.5 pt-1" : "space-y-3")} onSubmit={handleCreateMission}>
+                    <div className={cn(isMobile ? "space-y-0.5" : "space-y-1")}>
+                      <Label htmlFor="mission-title" className={cn("text-white/80 font-medium", isMobile ? "text-sm" : "text-base")}>
+                        Title
+                      </Label>
                       <Input
-                        id="mission-day"
-                        name="day"
-                        type="number"
-                        min="1"
-                        placeholder="Day"
-                        value={newMission.day}
+                        id="mission-title"
+                        name="title"
+                        placeholder="Title"
+                        value={newMission.title}
                         onChange={handleNewMissionChange}
                         required
+                        className={cn(
+                          "border-indigo-500/20 bg-gray-800/90 focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all",
+                          isMobile ? "h-7 text-sm" : "h-8 text-base"
+                        )}
                       />
                     </div>
-                    <div className="space-y-1">
-                      <Label htmlFor="mission-exp">XP Reward</Label>
-                      <Input
-                        id="mission-exp"
-                        name="expReward"
-                        type="number"
-                        min="1"
-                        placeholder="Enter XP amount"
-                        value={newMission.expReward}
+                    <div className={cn(isMobile ? "space-y-0.5" : "space-y-1")}>
+                      <Label htmlFor="mission-description" className={cn("text-white/80 font-medium", isMobile ? "text-sm" : "text-base")}>
+                        Description
+                      </Label>
+                      <Textarea
+                        id="mission-description"
+                        name="description"
+                        placeholder="Description"
+                        value={newMission.description}
                         onChange={handleNewMissionChange}
                         required
+                        className={cn(
+                          "border-indigo-500/20 bg-gray-800/90 focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all",
+                          isMobile ? "h-12 text-sm" : "h-16 text-base"
+                        )}
                       />
                     </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="space-y-1">
-                      <Label htmlFor="mission-count">Task Count</Label>
-                      <Input
-                        id="mission-count"
-                        name="count"
-                        type="number"
-                        min="1"
-                        max="100"
-                        placeholder="Number of tasks"
-                        value={newMission.count}
-                        onChange={handleNewMissionChange}
-                        required
-                      />
+
+                    <div className={cn("grid grid-cols-2", isMobile ? "gap-1" : "gap-2")}>
+                      <div className={cn(isMobile ? "space-y-0.5" : "space-y-1")}>
+                        <Label htmlFor="mission-day" className={cn("text-white/80 font-medium", isMobile ? "text-sm" : "text-base")}>
+                          Day
+                        </Label>
+                        <Input
+                          id="mission-day"
+                          name="day"
+                          type="number"
+                          min="1"
+                          placeholder="Day"
+                          value={newMission.day}
+                          onChange={handleNewMissionChange}
+                          required
+                          className={cn(
+                            "border-indigo-500/20 bg-gray-800/90 focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all",
+                            isMobile ? "h-7 text-sm" : "h-8 text-base"
+                          )}
+                        />
+                      </div>
+                      <div className={cn(isMobile ? "space-y-0.5" : "space-y-1")}>
+                        <Label htmlFor="mission-exp" className={cn("text-white/80 font-medium", isMobile ? "text-sm" : "text-base")}>
+                          XP Reward
+                        </Label>
+                        <Input
+                          id="mission-exp"
+                          name="expReward"
+                          type="number"
+                          min="1"
+                          placeholder="Enter XP amount"
+                          value={newMission.expReward}
+                          onChange={handleNewMissionChange}
+                          required
+                          className={cn(
+                            "border-indigo-500/20 bg-gray-800/90 focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all",
+                            isMobile ? "h-7 text-sm" : "h-8 text-base"
+                          )}
+                        />
+                      </div>
                     </div>
-                    <div className="space-y-1">
-                      <Label htmlFor="mission-difficulty">Difficulty</Label>
-                      <Select name="difficulty" value={newMission.difficulty} onValueChange={val => setNewMission(n => ({ ...n, difficulty: val as Difficulty }))}>
-                        <SelectTrigger id="mission-difficulty">
-                          <SelectValue placeholder="Select difficulty" />
+
+                    <div className={cn("grid grid-cols-2", isMobile ? "gap-1" : "gap-2")}>
+                      <div className={cn(isMobile ? "space-y-0.5" : "space-y-1")}>
+                        <Label htmlFor="mission-count" className={cn("text-white/80 font-medium", isMobile ? "text-sm" : "text-base")}>
+                          Task Count
+                        </Label>
+                        <Input
+                          id="mission-count"
+                          name="count"
+                          type="number"
+                          min="1"
+                          max="100"
+                          placeholder="Number of tasks"
+                          value={newMission.count}
+                          onChange={handleNewMissionChange}
+                          required
+                          className={cn(
+                            "border-indigo-500/20 bg-gray-800/90 focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all",
+                            isMobile ? "h-7 text-sm" : "h-8 text-base"
+                          )}
+                        />
+                      </div>
+                      <div className={cn(isMobile ? "space-y-0.5" : "space-y-1")}>
+                        <Label htmlFor="mission-difficulty" className={cn("text-white/80 font-medium", isMobile ? "text-sm" : "text-base")}>
+                          Difficulty
+                        </Label>
+                        <Select name="difficulty" value={newMission.difficulty} onValueChange={val => setNewMission(n => ({ ...n, difficulty: val as Difficulty }))}>
+                          <SelectTrigger
+                            id="mission-difficulty"
+                            className={cn(
+                              "border-indigo-500/20 bg-gray-800/90 focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all",
+                              isMobile ? "h-7 text-sm" : "h-8 text-base"
+                            )}
+                          >
+                            <SelectValue placeholder="Select difficulty" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="normal">Normal</SelectItem>
+                            <SelectItem value="boss">Boss</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    <div className={cn(isMobile ? "space-y-0.5" : "space-y-1")}>
+                      <Label htmlFor="mission-rank" className={cn("text-white/80 font-medium", isMobile ? "text-sm" : "text-base")}>
+                        Rank
+                      </Label>
+                      <Select name="rank" value={newMission.rank} onValueChange={val => setNewMission(n => ({ ...n, rank: val as Rank }))}>
+                        <SelectTrigger
+                          id="mission-rank"
+                          className={cn(
+                            "border-indigo-500/20 bg-gray-800/90 focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all",
+                            isMobile ? "h-7 text-sm" : "h-8 text-base"
+                          )}
+                        >
+                          <SelectValue placeholder="Select rank" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="normal">Normal</SelectItem>
-                          <SelectItem value="boss">Boss</SelectItem>
+                          <SelectItem value="F">F</SelectItem>
+                          <SelectItem value="E">E</SelectItem>
+                          <SelectItem value="D">D</SelectItem>
+                          <SelectItem value="C">C</SelectItem>
+                          <SelectItem value="B">B</SelectItem>
+                          <SelectItem value="A">A</SelectItem>
+                          <SelectItem value="S">S</SelectItem>
+                          <SelectItem value="SS">SS</SelectItem>
+                          <SelectItem value="SSS">SSS</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
-                  </div>
-                  
-                  <div className="space-y-1">
-                    <Label htmlFor="mission-rank">Rank</Label>
-                    <Select name="rank" value={newMission.rank} onValueChange={val => setNewMission(n => ({ ...n, rank: val as Rank }))}>
-                      <SelectTrigger id="mission-rank">
-                        <SelectValue placeholder="Select rank" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="F">F</SelectItem>
-                        <SelectItem value="E">E</SelectItem>
-                        <SelectItem value="D">D</SelectItem>
-                        <SelectItem value="C">C</SelectItem>
-                        <SelectItem value="B">B</SelectItem>
-                        <SelectItem value="A">A</SelectItem>
-                        <SelectItem value="S">S</SelectItem>
-                        <SelectItem value="SS">SS</SelectItem>
-                        <SelectItem value="SSS">SSS</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  {/* Task Names */}
-                  {parseInt(String(newMission.count)) > 1 && (
-                    <div className="space-y-2">
-                      <Label>Task Names</Label>
-                      <div className="space-y-2 max-h-40 overflow-y-auto pr-2">
-                        {newMission.taskNames.map((taskName, index) => (
-                          <div key={index} className="flex items-center gap-2">
-                            <Input
-                              placeholder={`Task ${index + 1}`}
-                              value={taskName}
-                              onChange={(e) => handleTaskNameChange(index, e.target.value)}
-                              className="flex-1"
-                            />
-                          </div>
-                        ))}
+
+                    {/* Task Names */}
+                    {parseInt(String(newMission.count)) > 1 && (
+                      <div className={cn(isMobile ? "space-y-1" : "space-y-2")}>
+                        <Label className={cn("text-white/80 font-medium", isMobile ? "text-sm" : "text-base")}>
+                          Task Names
+                        </Label>
+                        <div className={cn("space-y-2 overflow-y-auto pr-2", isMobile ? "max-h-32" : "max-h-40")}>
+                          {newMission.taskNames.map((taskName, index) => (
+                            <div key={index} className="flex items-center gap-2">
+                              <Input
+                                placeholder={`Task ${index + 1}`}
+                                value={taskName}
+                                onChange={(e) => handleTaskNameChange(index, e.target.value)}
+                                className={cn(
+                                  "flex-1 border-indigo-500/20 bg-gray-800/90 focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all",
+                                  isMobile ? "h-7 text-sm" : "h-8 text-base"
+                                )}
+                              />
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  )}
-                  
-                  <DialogFooter className="pt-2">
-                    <Button type="button" variant="outline" onClick={() => setShowModal(false)} className="h-8">
-                      Cancel
-                    </Button>
-                    <Button type="submit" className="h-8">Create</Button>
-                  </DialogFooter>
-                </form>
+                    )}
+                  </form>
+                </div>
+
+                <DialogFooter className={cn(
+                  "flex-shrink-0 flex gap-2 border-t border-gray-700",
+                  isMobile ? "mt-2 pt-2 flex-col" : "mt-4 pt-4 sm:justify-between"
+                )}>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setShowModal(false)}
+                    className={cn(isMobile ? "h-8 text-xs" : "h-9 text-sm")}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    onClick={handleCreateMission}
+                    className={cn(
+                      "bg-gradient-to-r from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600 text-white",
+                      isMobile ? "h-8 text-xs" : "h-9 text-sm"
+                    )}
+                  >
+                    Create
+                  </Button>
+                </DialogFooter>
               </DialogContent>
             </Dialog>
           </div>
@@ -584,7 +666,7 @@ const Missions = () => {
           </div>
           {/* Rank Selection Timeline */}
           <div className="rounded-lg py-6 shadow-sm border border-border/30">
-            <RankBadgesTimeline 
+            <RankBadgesTimeline
               rankBadges={rankLevels}
               currentRankIndex={currentRankIndex}
               onPrevRank={handlePrevRank}
@@ -607,7 +689,7 @@ const Missions = () => {
             ) : error ? (
               <div className="text-center p-8 text-destructive">
                 <p>{error}</p>
-                <button 
+                <button
                   className="mt-4 px-4 py-2 bg-primary text-primary-foreground rounded-md"
                   onClick={() => window.location.reload()}
                 >
@@ -621,10 +703,10 @@ const Missions = () => {
                   Complete the previous rank missions to unlock {currentRank.name} missions.
                 </p>
                 <div className="opacity-50">
-                  <RankMissionProgress 
+                  <RankMissionProgress
                     key={currentRank.id}
-                    missions={currentRank.missions} 
-                    rankName={currentRank.name} 
+                    missions={currentRank.missions}
+                    rankName={currentRank.name}
                     totalDays={currentRank.daysRequired}
                     rank={currentRank.id}
                     isLocked={true}
@@ -638,17 +720,17 @@ const Missions = () => {
                 </p>
               </div>
             ) : (
-              <RankMissionProgress 
+              <RankMissionProgress
                 key={currentRank.id}
-                missions={currentRank.missions} 
-                rankName={currentRank.name} 
+                missions={currentRank.missions}
+                rankName={currentRank.name}
                 totalDays={currentRank.daysRequired}
                 rank={currentRank.id}
                 isLocked={false}
               />
             )}
           </div>
-          
+
           {/* Recently Added Missions Section */}
           {renderRecentMissions()}
         </div>

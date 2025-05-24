@@ -70,20 +70,15 @@ const RecoveryQuestCard: React.FC<RecoveryQuestCardProps> = ({ quest, onComplete
           <h3 className={`font-bold text-lg tracking-tight ${quest.completed ? 'line-through text-gray-400' : 'text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-400 drop-shadow-sm'}`}>
             {quest.title}
           </h3>
-          <div className="bg-amber-950/50 text-xs text-amber-500 px-2 py-1 rounded-sm w-fit">
+          <div className={`bg-amber-950/50 text-amber-500 px-2 py-1 rounded-sm w-fit ${isMobile ? 'text-[10px]' : 'text-xs'}`}>
             Recovery Quest
           </div>
         </div>
         <div className="flex flex-col items-end gap-2">
           <div className="flex items-center gap-2">
-            {quest.started && (
-              <div className="bg-amber-500/20 text-amber-400 text-xs px-2 py-1 rounded-full">
-                In Progress
-              </div>
-            )}
             <div className="flex items-center gap-1">
               <Star size={16} className="text-yellow-400" />
-              <span className="text-amber-400 font-bold">+{quest.expReward} EXP</span>
+              <span className={`text-amber-400 font-bold ${isMobile ? 'text-[10px]' : 'text-sm'}`}>+{quest.expReward} EXP</span>
             </div>
           </div>
         </div>
@@ -91,7 +86,7 @@ const RecoveryQuestCard: React.FC<RecoveryQuestCardProps> = ({ quest, onComplete
 
       {/* Description */}
       {quest.description && (
-        <p className="text-gray-300/90 mb-3 text-sm">
+        <p className={`text-gray-300/90 mb-3 ${isMobile ? 'text-xs' : 'text-sm'}`}>
           {quest.description}
         </p>
       )}
@@ -101,8 +96,8 @@ const RecoveryQuestCard: React.FC<RecoveryQuestCardProps> = ({ quest, onComplete
         <div className="flex items-center gap-2 my-3 p-2 bg-amber-950/30 rounded-md border border-amber-800/30">
           <Clock size={16} className="text-amber-500" />
           <div className="flex flex-col">
-            <span className="text-xs text-amber-300 font-medium">Complete by end of day</span>
-            <span className="text-xs text-amber-400/80">
+            <span className={`text-amber-300 font-medium ${isMobile ? 'text-[10px]' : 'text-xs'}`}>Complete by end of day</span>
+            <span className={`text-amber-400/80 ${isMobile ? 'text-[10px]' : 'text-xs'}`}>
               {format(new Date(quest.deadline), "MMMM d, yyyy")}
             </span>
           </div>
@@ -166,6 +161,7 @@ const RecoveryQuestCard: React.FC<RecoveryQuestCardProps> = ({ quest, onComplete
                   className="absolute right-0 top-0 h-5 w-5 rounded-full bg-gradient-to-r from-amber-600/30 to-orange-700/30 hover:from-amber-600/50 hover:to-orange-700/50 transition-all p-0.5 border border-amber-500/20 flex items-center justify-center cursor-pointer z-10"
                   onClick={(e) => {
                     e.stopPropagation();
+                    e.preventDefault();
                     setIsTaskDialogOpen(false);
                   }}
                   aria-label="Close dialog"
@@ -176,7 +172,7 @@ const RecoveryQuestCard: React.FC<RecoveryQuestCardProps> = ({ quest, onComplete
               <div className="py-1 flex-1 overflow-y-auto pr-1 custom-scrollbar">
                 {quest.description && (
                   <div className="mb-2 p-2 bg-amber-950/20 rounded-md">
-                    <p className="text-amber-200/90 text-xs">{quest.description}</p>
+                    <p className={`text-amber-200/90 ${isMobile ? 'text-[10px]' : 'text-xs'}`}>{quest.description}</p>
                   </div>
                 )}
 

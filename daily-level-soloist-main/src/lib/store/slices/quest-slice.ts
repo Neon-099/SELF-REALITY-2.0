@@ -180,6 +180,11 @@ export const createQuestSlice: StateCreator<StoreState, [], [], QuestSlice> = (s
         const completedTask = quest.tasks.find((t: Task) => t.id === taskId);
         if (!completedTask || completedTask.completed) return { quests: updatedQuests };
 
+        // Recovery quest tasks should not award EXP - they are simple completion tasks
+        if (quest.isRecoveryQuest) {
+          return { quests: updatedQuests };
+        }
+
         // Determine if this is a daily win category or an attribute category
         const dailyWinCategories = ['mental', 'physical', 'spiritual', 'intelligence'];
         let attributeStat: Stat;
@@ -417,6 +422,7 @@ export const createQuestSlice: StateCreator<StoreState, [], [], QuestSlice> = (s
         quests: updatedQuests,
       }));
 
+      // Award EXP and gold for all quests, including recovery quests
       addExp(finalExpReward);
       addGold(Math.floor(finalExpReward / 10));
 
@@ -426,6 +432,7 @@ export const createQuestSlice: StateCreator<StoreState, [], [], QuestSlice> = (s
       if (expModifier < 1) {
         toastDescription += ` (${Math.round(expModifier * 100)}% rate due to penalty)`;
       }
+
       if (missedDeadline) {
         toastTitle = "Quest Completed Late";
         toastDescription += " (Deadline missed)";

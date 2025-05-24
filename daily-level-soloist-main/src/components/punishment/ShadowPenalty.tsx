@@ -16,8 +16,6 @@ import { useIsMobile } from '@/hooks/use-mobile';
 interface RecoveryTask {
   title: string;
   description: string;
-  category: string;
-  difficulty: string;
 }
 
 interface RecoveryChallenge {
@@ -30,58 +28,112 @@ interface RecoveryChallenge {
 
 const REDEMPTION_CHALLENGES: RecoveryChallenge[] = [
   {
-    title: "Cold Shower Challenge",
-    description: "Demonstrate your resolve by taking a cold shower for at least 5 minutes",
-    difficulty: "medium",
-    category: "physical",
-    tasks: [
-      {
-        title: "Take a cold shower",
-        description: "Complete a cold shower for at least 5 minutes",
-        category: "physical",
-        difficulty: "medium"
-      }
-    ]
-  },
-  {
-    title: "10,000 Steps Challenge",
-    description: "Push your physical limits by completing 10,000 steps in a single day",
-    difficulty: "hard",
-    category: "physical",
-    tasks: [
-      {
-        title: "Complete 10,000 steps",
-        description: "Walk at least 10,000 steps today",
-        category: "physical",
-        difficulty: "hard"
-      }
-    ]
-  },
-  {
-    title: "Digital Detox Challenge",
-    description: "Free your mind from digital distractions for 4 hours",
+    title: "The Mind Unshackled",
+    description: "You let your discipline slip. To regain control, face the truth of your mind. Break the chains of mental fog with ruthless self-awareness.",
     difficulty: "medium",
     category: "mental",
     tasks: [
       {
-        title: "Digital detox for 4 hours",
-        description: "Stay away from all digital devices for 4 hours",
-        category: "mental",
-        difficulty: "medium"
+        title: "90-Minute Deep Focus Work",
+        description: "Choose a mentally demanding task you've been avoiding. Work without distractions for 90 minutes."
+      },
+      {
+        title: "Write a Brutally Honest Self-Reflection (500 words)",
+        description: "Explore why you failed your previous task and what patterns you keep repeating."
+      },
+      {
+        title: "Study 1 Hour of Cognitive Psychology",
+        description: "Focus on willpower, self-control, or habits. Use a reliable YouTube lecture or summary from a book like Thinking, Fast and Slow."
+      },
+      {
+        title: "Cold Shower (3–5 mins)",
+        description: "Build grit and shock your system back into presence."
+      },
+      {
+        title: "30 Minutes of Mindfulness Meditation",
+        description: "Sit with discomfort. Do not escape. Observe your thoughts without judgment."
       }
     ]
   },
   {
-    title: "Delayed Tasks Conquest",
-    description: "Face your procrastination head-on by completing 3 delayed tasks",
+    title: "Echoes of the Body",
+    description: "A missed task weakens your physical presence. Realign your body through pain, breath, and sweat. Reclaim strength through movement.",
     difficulty: "hard",
-    category: "intelligence",
+    category: "physical",
     tasks: [
       {
-        title: "Complete 3 delayed tasks",
-        description: "Finish 3 tasks that you've been putting off",
-        category: "intelligence",
-        difficulty: "hard"
+        title: "Complete a Full-Body HIIT Circuit (45 minutes)",
+        description: "Push limits. Minimum: burpees, jump squats, push-ups, planks, and mountain climbers."
+      },
+      {
+        title: "Take a Cold Shower or Ice Bath (3–5 mins)",
+        description: "Confront your comfort zone. Reset your nervous system."
+      },
+      {
+        title: "Read 10 Pages from a Book on Fitness/Nutrition",
+        description: "Preferably Can’t Hurt Me by David Goggins or The 4-Hour Body by Tim Ferriss or a similar book."
+      }, {
+        title: "Log Every Meal You Eat Today",
+        description: "Track calories/macros and reflect on how food influences your energy."
+      },
+      {
+        title: "Stretch + Breathwork Session (20 mins)",
+        description: "Mobility and nasal breathing to end the quest with bodily control."
+      }
+    ]
+  },
+  {
+    title: "The Warrior of Words",
+    description: "You ignored your path to expression. Now, you must fight your way back through language, clarity, and thought.",
+    difficulty: "medium",
+    category: "mental",
+    tasks: [
+      {
+        title: "Write a 700-Word Essay on a Topic That Intimidates You",
+        description: "Could be philosophy, purpose, death, or failure. Don’t hold back."
+      },
+      {
+        title: "Learn 10 Advanced English Words and Use Them in a Story",
+        description: "No script. Speak clearly and confidently about a value or belief. Upload or keep for personal reflection."
+      },
+      {
+        title: "Record a 3-Minute Spoken Rant or Speech",
+        description: "Spend 15 minutes in meditation or mindful breathing"
+      }, {
+        title: "Write 500 Words",
+        description: "Write for 30 minutes without stopping. It can be stream of consciousness or structured writing."
+      }, {
+        title: "Reflect on Your Writing",
+        description: "Journal about what you wrote, what you learned, and how it made you feel."
+      }, {
+        title: "Write a Self-Contract",
+        description: "Commit to never missing a key task again. Sign it."
+      }
+    ]
+  },
+  {
+    title: "The Clock of Death",
+    description: "Time slipped through your fingers. To honor the value of time, you must now battle it head-on. Race the day. Defy procrastination.",
+    difficulty: "hard",
+    category: "mental",
+    tasks: [
+      {
+        title: "Time Audit Your Entire Day",
+        description: "Break down how every hour is spent from wake to sleep. Be brutally honest."
+      },
+      {
+        title: "Create a tomorrow Full Hour-by-Hour Schedule and Stick to It",
+        description: "No flexibility. If something derails you, restart the hour."
+      },
+      {
+        title: "Watch One 30-Minute Lecture on Time Management",
+        description: "Preferably by Cal Newport, Ali Abdaal, or Thomas Frank."
+      }, {
+        title: "Do a 2-Hour Deep Work Sprint",
+        description: "Choose your most important task and complete it with total focus."
+      }, {
+        title: "Write a 250-Word Letter From Your Future Self at Age 30",
+        description: "Reflect on what your older self would say if you kept wasting time."
       }
     ]
   }
@@ -292,11 +344,22 @@ export default function ShadowPenalty() {
     REDEMPTION_CHALLENGES.forEach(challenge => {
       const initialQuestCount = currentQuestsState.length;
 
+      // Set individual EXP rewards for each redemption challenge
+      const getRedemptionChallengeExpReward = (challengeTitle: string): number => {
+        switch (challengeTitle) {
+          case 'The Discipline Forge': return 300;
+          case '10,000 Steps Challenge': return 450;
+          case 'Digital Detox Challenge': return 275;
+          case 'Delayed Tasks Conquest': return 425;
+          default: return 250; // Default fallback for any new challenges
+        }
+      };
+
       addQuest(
         challenge.title,
         challenge.description,
         false, // isMainQuest
-        challenge.difficulty === 'easy' ? 100 : challenge.difficulty === 'medium' ? 200 : 300, // expReward based on challenge
+        getRedemptionChallengeExpReward(challenge.title), // Individual EXP rewards for redemption challenges
         today,
         challenge.difficulty as any
       );
@@ -321,8 +384,8 @@ export default function ShadowPenalty() {
                 newQuest.id, // Use the newQuest.id here
                 task.title,
                 task.description,
-                task.category as any,
-                task.difficulty as any
+                'mental', // Default category for recovery quest tasks
+                'normal' // Default difficulty for recovery quest tasks
               );
             });
         } else {
@@ -379,7 +442,7 @@ export default function ShadowPenalty() {
             </TooltipProvider>
             <CardTitle className={cn("font-bold text-red-500", isMobile ? "text-base" : "text-lg")}>The Shadow Penalty</CardTitle>
           </div>
-          <Badge variant={expModifier < 1 ? "destructive" : "outline"} className={cn("font-mono", isMobile ? "text-xs" : "text-sm")}>
+          <Badge variant={expModifier < 1 ? "destructive" : "outline"} className={cn("font-mono", isMobile ? "text-[10px]" : "text-sm")}>
             {Math.round(expModifier * 100)}% EXP Rate
           </Badge>
         </div>
@@ -525,52 +588,100 @@ export default function ShadowPenalty() {
                   )}
                 </Button>
               </DialogTrigger>
-            <DialogContent className="max-w-md">
-              <DialogHeader>
-                <DialogTitle className="text-xl">Redemption Challenge</DialogTitle>
-                <DialogDescription>
+            <DialogContent className={cn(
+              "glassmorphism flex flex-col text-solo-text rounded-xl",
+              "before:!absolute before:!inset-0 before:!rounded-xl",
+              "before:!bg-gradient-to-br before:!from-indigo-500/10 before:!to-purple-500/5",
+              "before:!backdrop-blur-xl before:!-z-10",
+              isMobile
+                ? "w-[90vw] max-w-[320px] p-2 sm:p-3 max-h-[85vh]"
+                : "max-w-lg max-h-[90vh] p-4 sm:p-6"
+            )}>
+              <DialogHeader className="flex-shrink-0">
+                <DialogTitle className={cn("font-semibold text-white/90 tracking-wide", isMobile ? "text-base" : "text-xl")}>
+                  Redemption Challenge
+                </DialogTitle>
+                <DialogDescription className={cn("text-white/70", isMobile ? "text-xs" : "text-sm")}>
                   Complete these special recovery quests to lift your curse and restore your experience gain rate.
-                  <div className="my-4 p-3 border border-amber-500/30 bg-amber-950/20 rounded-md">
-                    <h4 className="font-semibold text-amber-400 mb-2">Challenge Requirements:</h4>
-                    <ul className="space-y-2 text-sm text-amber-200/90">
+                </DialogDescription>
+              </DialogHeader>
+
+              {/* Scrollable Content Area */}
+              <div className={cn("flex-1 overflow-y-auto", isMobile ? "pr-1" : "pr-2 -mr-2")}>
+                <div className={cn("relative z-10", isMobile ? "space-y-2 pt-1" : "space-y-4")}>
+                  <div className={cn("border border-amber-500/30 bg-amber-950/20 rounded-md", isMobile ? "p-2" : "p-3")}>
+                    <h4 className={cn("font-semibold text-amber-400 mb-2", isMobile ? "text-sm" : "text-base")}>
+                      Challenge Requirements:
+                    </h4>
+                    <div className={cn("text-amber-200/90", isMobile ? "space-y-2 text-xs" : "space-y-3 text-sm")}>
                       {REDEMPTION_CHALLENGES.map((challenge, index) => (
-                        <li key={index} className="flex items-center gap-2">
-                          <CheckCircle className="h-4 w-4 text-amber-500 flex-shrink-0" />
-                          <span>{challenge.title}</span>
-                        </li>
+                        <div key={index} className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <CheckCircle className={cn("text-amber-500 flex-shrink-0", isMobile ? "h-3 w-3" : "h-4 w-4")} />
+                            <span className={cn("font-medium", isMobile ? "text-xs" : "text-sm")}>{challenge.title}</span>
+                          </div>
+                          <ul className={cn("space-y-1", isMobile ? "ml-4" : "ml-6")}>
+                            {challenge.tasks.map((task, taskIndex) => (
+                              <li key={taskIndex} className={cn("flex items-start gap-2 text-amber-300/80", isMobile ? "text-[10px]" : "text-xs")}>
+                                <span className="text-amber-500 mt-0.5">•</span>
+                                <span>{task.title}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
                       ))}
-                    </ul>
+                    </div>
                   </div>
-                  <div className="mt-2 p-3 border border-amber-500/30 bg-amber-950/20 rounded-md">
-                    <h4 className="font-semibold text-amber-400 mb-2">Important Notes:</h4>
-                    <ul className="space-y-1 text-sm text-amber-200/90">
+
+                  <div className={cn("border border-amber-500/30 bg-amber-950/20 rounded-md", isMobile ? "p-2" : "p-3")}>
+                    <h4 className={cn("font-semibold text-amber-400 mb-2", isMobile ? "text-sm" : "text-base")}>
+                      Important Notes:
+                    </h4>
+                    <ul className={cn("text-amber-200/90", isMobile ? "space-y-1 text-xs" : "space-y-1 text-sm")}>
                       <li className="flex items-start gap-2">
-                        <AlertCircle className="h-4 w-4 text-amber-500 flex-shrink-0 mt-0.5" />
+                        <AlertCircle className={cn("text-amber-500 flex-shrink-0 mt-0.5", isMobile ? "h-3 w-3" : "h-4 w-4")} />
                         <span>All quests must be completed by the end of today</span>
                       </li>
                       <li className="flex items-start gap-2">
-                        <AlertCircle className="h-4 w-4 text-amber-500 flex-shrink-0 mt-0.5" />
-                        <span>Each recovery quest must be manually started and completed</span>
+                        <AlertCircle className={cn("text-amber-500 flex-shrink-0 mt-0.5", isMobile ? "h-3 w-3" : "h-4 w-4")} />
+                        <span>Each recovery quest and all its tasks must be manually started and completed</span>
                       </li>
                       <li className="flex items-start gap-2">
-                        <AlertCircle className="h-4 w-4 text-amber-500 flex-shrink-0 mt-0.5" />
+                        <AlertCircle className={cn("text-amber-500 flex-shrink-0 mt-0.5", isMobile ? "h-3 w-3" : "h-4 w-4")} />
                         <span>This challenge can only be attempted once per week</span>
                       </li>
                       <li className="flex items-start gap-2">
-                        <AlertCircle className="h-4 w-4 text-amber-500 flex-shrink-0 mt-0.5" />
+                        <AlertCircle className={cn("text-amber-500 flex-shrink-0 mt-0.5", isMobile ? "h-3 w-3" : "h-4 w-4")} />
                         <span>Failing will cost you one rank level!</span>
                       </li>
                     </ul>
                   </div>
-                </DialogDescription>
-              </DialogHeader>
-              <DialogFooter className="flex sm:justify-between gap-2 mt-4">
-                <Button variant="ghost" onClick={() => setRedemptionDialogOpen(false)}>
-                  <X className="mr-2 h-4 w-4" />
-                  Cancel
-                </Button>
-                <Button variant="default" onClick={startRedemptionChallenge}>
-                  <Play className="mr-2 h-4 w-4" />
+                </div>
+              </div>
+
+              <DialogFooter className={cn(
+                "flex-shrink-0 flex gap-2 border-t border-gray-700",
+                isMobile ? "mt-2 pt-2 flex-col" : "mt-4 pt-4 sm:justify-between"
+              )}>
+                {!isMobile && (
+                  <Button
+                    variant="ghost"
+                    onClick={() => setRedemptionDialogOpen(false)}
+                    className="h-9 text-sm"
+                  >
+                    <X className="mr-2 h-4 w-4" />
+                    Cancel
+                  </Button>
+                )}
+                <Button
+                  variant="default"
+                  onClick={startRedemptionChallenge}
+                  className={cn(
+                    "bg-gradient-to-r from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600 text-white",
+                    isMobile ? "h-8 text-xs" : "h-9 text-sm"
+                  )}
+                >
+                  <Play className={cn("mr-2", isMobile ? "h-3 w-3" : "h-4 w-4")} />
                   Start Challenge
                 </Button>
               </DialogFooter>
@@ -718,12 +829,7 @@ export default function ShadowPenalty() {
             })()}
           </div>
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setPenaltyDetailsOpen(false)}>
-              <X className="mr-2 h-4 w-4" />
-              Close
-            </Button>
-          </DialogFooter>
+
         </DialogContent>
       </Dialog>
     </Card>

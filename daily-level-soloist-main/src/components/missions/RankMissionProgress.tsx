@@ -20,6 +20,8 @@ import {
 import { Progress } from '@/components/ui/progress';
 import { Checkbox } from '@/components/ui/checkbox';
 import { formatRelative, addDays } from 'date-fns';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { cn } from '@/lib/utils';
 
 interface RankMissionProgressProps {
   missions: PredefinedMission[];
@@ -46,6 +48,7 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
   const [isSaving, setIsSaving] = useState(false);
   const [dayUnlockStatus, setDayUnlockStatus] = useState<Record<number, boolean>>({});
   const today = new Date();
+  const isMobile = useIsMobile();
 
   // Ensure missions is always an array
   const safeMissions = Array.isArray(missions) ? missions : [];
@@ -901,36 +904,37 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
 
       {/* Task completion dialog */}
       <Dialog open={taskDialogOpen} onOpenChange={setTaskDialogOpen}>
-        <DialogContent
-          variant="compact"
-          className={
-            currentMission && currentMission.difficulty !== 'boss'
-              ? `relative bg-clip-padding backdrop-blur-xl bg-opacity-80 border border-white/10 shadow-xl !rounded-xl fixed left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%] w-[90vw] max-w-md
-                  ${getRankColorClass(currentMission.rank)}
-                  before:content-[''] before:absolute before:inset-0 before:rounded-xl before:pointer-events-none before:select-none
-                  before:bg-gradient-to-br before:from-white/5 before:to-${currentMission.rank.toLowerCase()}-500/10 before:blur-sm before:-z-10`
-              : `relative !bg-gradient-to-br from-amber-700/60 to-gray-900/80 bg-clip-padding backdrop-blur-xl bg-opacity-80 border border-white/10 shadow-xl !rounded-xl fixed left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%] w-[90vw] max-w-md
-                  before:content-[''] before:absolute before:inset-0 before:rounded-xl before:pointer-events-none before:select-none
-                  before:bg-gradient-to-br before:from-white/5 before:to-amber-500/10 before:blur-sm before:-z-10`
-          }
-        >
+        <DialogContent className={cn(
+          "glassmorphism flex flex-col text-solo-text rounded-xl",
+          "before:!absolute before:!inset-0 before:!rounded-xl",
+          "before:!bg-gradient-to-br before:!from-indigo-500/10 before:!to-purple-500/5",
+          "before:!backdrop-blur-xl before:!-z-10",
+          isMobile
+            ? "w-[90vw] max-w-[320px] p-2 sm:p-3 max-h-[85vh]"
+            : "max-w-lg max-h-[90vh] p-4 sm:p-6"
+        )}>
           {/* Decorative blurred background icon */}
           {currentMission && (
-            <div className={`absolute -top-10 -right-10 opacity-10 pointer-events-none select-none z-0`}>
-              <Star className={`w-40 h-40 ${currentMission.difficulty === 'boss' ? 'text-amber-400' : getRankColorClass(currentMission.rank).split(' ')[0]}`} />
+            <div className={cn("absolute opacity-10 pointer-events-none select-none z-0", isMobile ? "-top-6 -right-6" : "-top-10 -right-10")}>
+              <Star className={cn(
+                currentMission.difficulty === 'boss' ? 'text-amber-400' : getRankColorClass(currentMission.rank).split(' ')[0],
+                isMobile ? "w-24 h-24" : "w-40 h-40"
+              )} />
             </div>
           )}
-          <DialogHeader>
-            <DialogTitle className={`text-xl font-extrabold tracking-tight flex items-center gap-2 justify-center text-center drop-shadow-glow
-              ${currentMission?.difficulty === 'boss'
+          <DialogHeader className="flex-shrink-0">
+            <DialogTitle className={cn(
+              "font-extrabold tracking-tight flex items-center gap-2 justify-center text-center drop-shadow-glow",
+              currentMission?.difficulty === 'boss'
                 ? 'text-amber-400'
-                : currentMission ? getRankColorClass(currentMission.rank).split(' ')[0] : ''
-              }`}>
+                : currentMission ? getRankColorClass(currentMission.rank).split(' ')[0] : '',
+              isMobile ? "text-base" : "text-xl"
+            )}>
               {currentMission ? currentMission.title : 'Mission Tasks'}
             </DialogTitle>
           </DialogHeader>
 
-          <div className="py-4 space-y-6 flex flex-col items-center">
+          <div className={cn("flex-1 overflow-y-auto flex flex-col items-center", isMobile ? "py-2 space-y-3 pr-1" : "py-4 space-y-6 pr-2 -mr-2")}>
             {currentMission && (
               <>
                 <div className="text-center w-full">
@@ -1011,11 +1015,14 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
             )}
           </div>
 
-          <DialogFooter className="flex items-center justify-center pt-2">
+          <DialogFooter className={cn(
+            "flex-shrink-0 flex items-center justify-center border-t border-gray-700",
+            isMobile ? "mt-2 pt-2" : "mt-4 pt-4"
+          )}>
             <Button
               variant="outline"
               onClick={() => setTaskDialogOpen(false)}
-              className="w-full text-center"
+              className={cn("w-full text-center", isMobile ? "h-8 text-xs" : "h-9 text-sm")}
             >
               Close
             </Button>
@@ -1025,26 +1032,29 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
 
       {/* Mission Preview Dialog */}
       <Dialog open={previewDialogOpen} onOpenChange={setPreviewDialogOpen}>
-        <DialogContent
-          variant="compact"
-          className={
-            currentMission && currentMission.difficulty !== 'boss'
-              ? `${getRankColorClass(currentMission.rank)} bg-clip-padding backdrop-blur-xl bg-opacity-80 border border-white/10 shadow-xl !rounded-xl w-[90vw] max-w-md`
-              : '!bg-gradient-to-br from-amber-700/60 to-gray-900/80 bg-clip-padding backdrop-blur-xl bg-opacity-80 border border-white/10 shadow-xl !rounded-xl w-[90vw] max-w-md'
-          }
-        >
-          <DialogHeader>
-            <DialogTitle className={`text-xl font-extrabold tracking-tight flex items-center gap-2 justify-center drop-shadow-glow
-              ${currentMission?.difficulty === 'boss'
+        <DialogContent className={cn(
+          "glassmorphism flex flex-col text-solo-text rounded-xl",
+          "before:!absolute before:!inset-0 before:!rounded-xl",
+          "before:!bg-gradient-to-br before:!from-indigo-500/10 before:!to-purple-500/5",
+          "before:!backdrop-blur-xl before:!-z-10",
+          isMobile
+            ? "w-[90vw] max-w-[320px] p-2 sm:p-3 max-h-[85vh]"
+            : "max-w-lg max-h-[90vh] p-4 sm:p-6"
+        )}>
+          <DialogHeader className="flex-shrink-0">
+            <DialogTitle className={cn(
+              "font-extrabold tracking-tight flex items-center gap-2 justify-center drop-shadow-glow",
+              currentMission?.difficulty === 'boss'
                 ? 'bg-gradient-to-r from-amber-400 to-amber-600 bg-clip-text text-transparent'
-                : currentMission ? getRankColorClass(currentMission.rank).split(' ')[0] : ''
-              }`}>
-              {currentMission?.difficulty === 'boss' && <Trophy className="h-6 w-6 text-amber-400 drop-shadow-glow animate-pulse" />}
+                : currentMission ? getRankColorClass(currentMission.rank).split(' ')[0] : '',
+              isMobile ? "text-base" : "text-xl"
+            )}>
+              {currentMission?.difficulty === 'boss' && <Trophy className={cn("text-amber-400 drop-shadow-glow animate-pulse", isMobile ? "h-4 w-4" : "h-6 w-6")} />}
               {currentMission ? currentMission.title : 'Mission Details'}
             </DialogTitle>
           </DialogHeader>
 
-          <div className="py-4 space-y-6 relative">
+          <div className={cn("flex-1 overflow-y-auto relative", isMobile ? "py-2 space-y-3 pr-1" : "py-4 space-y-6 pr-2 -mr-2")}>
             {/* Decorative blurred background icon */}
             {currentMission && (
               <div className="absolute -top-8 -right-8 opacity-10 pointer-events-none select-none">
@@ -1123,23 +1133,28 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
             )}
           </div>
 
-          <DialogFooter className="flex items-center justify-between gap-2 pt-2">
+          <DialogFooter className={cn(
+            "flex-shrink-0 flex gap-2 border-t border-gray-700",
+            isMobile ? "mt-2 pt-2 flex-col" : "mt-4 pt-4 items-center justify-between"
+          )}>
             <Button
               variant="outline"
               onClick={() => setPreviewDialogOpen(false)}
-              className="flex-1"
+              className={cn(isMobile ? "h-8 text-xs" : "h-9 text-sm flex-1")}
             >
               Close
             </Button>
             <Button
               onClick={handleStartMission}
-              className={`flex-1 gap-2 font-semibold shadow-md shadow-primary/10
-                ${currentMission?.difficulty === 'boss'
+              className={cn(
+                "gap-2 font-semibold shadow-md shadow-primary/10",
+                currentMission?.difficulty === 'boss'
                   ? 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-gray-900'
-                  : currentMission ? getRankButtonClass(currentMission.rank) : 'bg-primary hover:bg-primary/90 text-white'}
-              `}
+                  : currentMission ? getRankButtonClass(currentMission.rank) : 'bg-primary hover:bg-primary/90 text-white',
+                isMobile ? "h-8 text-xs" : "h-9 text-sm flex-1"
+              )}
             >
-              <Play className="h-4 w-4" />
+              <Play className={cn(isMobile ? "h-3 w-3" : "h-4 w-4")} />
               Start Mission
             </Button>
           </DialogFooter>
@@ -1148,26 +1163,29 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
 
       {/* Locked Mission Preview Dialog - Read Only */}
       <Dialog open={lockedPreviewDialogOpen} onOpenChange={setLockedPreviewDialogOpen}>
-        <DialogContent
-          variant="compact"
-          className={
-            currentMission && currentMission.difficulty !== 'boss'
-              ? `${getRankColorClass(currentMission.rank)} bg-clip-padding backdrop-blur-xl bg-opacity-80 border border-white/10 shadow-xl !rounded-xl w-[90vw] max-w-md`
-              : '!bg-gradient-to-br from-amber-700/60 to-gray-900/80 bg-clip-padding backdrop-blur-xl bg-opacity-80 border border-white/10 shadow-xl !rounded-xl w-[90vw] max-w-md'
-          }
-        >
-          <DialogHeader>
-            <DialogTitle className={`text-xl font-extrabold tracking-tight flex items-center gap-2 justify-center drop-shadow-glow
-              ${currentMission?.difficulty === 'boss'
+        <DialogContent className={cn(
+          "glassmorphism flex flex-col text-solo-text rounded-xl",
+          "before:!absolute before:!inset-0 before:!rounded-xl",
+          "before:!bg-gradient-to-br before:!from-indigo-500/10 before:!to-purple-500/5",
+          "before:!backdrop-blur-xl before:!-z-10",
+          isMobile
+            ? "w-[90vw] max-w-[320px] p-2 sm:p-3 max-h-[85vh]"
+            : "max-w-lg max-h-[90vh] p-4 sm:p-6"
+        )}>
+          <DialogHeader className="flex-shrink-0">
+            <DialogTitle className={cn(
+              "font-extrabold tracking-tight flex items-center gap-2 justify-center drop-shadow-glow",
+              currentMission?.difficulty === 'boss'
                 ? 'bg-gradient-to-r from-amber-400 to-amber-600 bg-clip-text text-transparent'
-                : currentMission ? getRankColorClass(currentMission.rank).split(' ')[0] : ''
-              }`}>
-              {currentMission?.difficulty === 'boss' && <Trophy className="h-6 w-6 text-amber-400 drop-shadow-glow animate-pulse" />}
+                : currentMission ? getRankColorClass(currentMission.rank).split(' ')[0] : '',
+              isMobile ? "text-base" : "text-xl"
+            )}>
+              {currentMission?.difficulty === 'boss' && <Trophy className={cn("text-amber-400 drop-shadow-glow animate-pulse", isMobile ? "h-4 w-4" : "h-6 w-6")} />}
               {currentMission ? currentMission.title : 'Mission Details'}
             </DialogTitle>
           </DialogHeader>
 
-          <div className="py-4 space-y-6 relative">
+          <div className={cn("flex-1 overflow-y-auto relative", isMobile ? "py-2 space-y-3 pr-1" : "py-4 space-y-6 pr-2 -mr-2")}>
             {/* Decorative blurred background icon */}
             {currentMission && (
               <div className="absolute -top-8 -right-8 opacity-10 pointer-events-none select-none">
@@ -1255,11 +1273,14 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
             )}
           </div>
 
-          <DialogFooter className="flex items-center justify-center pt-2">
+          <DialogFooter className={cn(
+            "flex-shrink-0 flex items-center justify-center border-t border-gray-700",
+            isMobile ? "mt-2 pt-2" : "mt-4 pt-4"
+          )}>
             <Button
               variant="outline"
               onClick={() => setLockedPreviewDialogOpen(false)}
-              className="w-full text-center"
+              className={cn("w-full text-center", isMobile ? "h-8 text-xs" : "h-9 text-sm")}
             >
               Close
             </Button>
