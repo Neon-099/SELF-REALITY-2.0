@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useSoloLevelingStore } from '@/lib/store';
 import { StatCard } from '@/components/ui/stat-card';
 import { DumbbellIcon, BrainIcon, HeartIcon, SmileIcon, Clock3Icon, SparklesIcon, Coins, Star, Crown, Trophy, Info, AlertCircle, CheckCircle, Database, X, RefreshCw } from 'lucide-react';
@@ -294,6 +295,7 @@ const RankDetailsDialog = () => {
 };
 
 const Character = () => {
+  const navigate = useNavigate();
   const [
     user,
     addExp,
@@ -312,7 +314,8 @@ const Character = () => {
     canUseRedemption,
     quests,
     deleteQuest,
-    missions
+    missions,
+    resetAllData
   ] = useSoloLevelingStore(state => [
       state.user,
       state.addExp,
@@ -331,7 +334,8 @@ const Character = () => {
       state.canUseRedemption,
       state.quests,
       state.deleteQuest,
-      state.missions
+      state.missions,
+      state.resetAllData
     ]);
 
   const [lastUpdate, setLastUpdate] = useState(Date.now());
@@ -514,6 +518,9 @@ const Character = () => {
     if (!confirmed) return;
 
     try {
+      // Reset all data in the store first
+      resetAllData();
+
       // Get the database connection
       const db = await getDB();
 
@@ -541,12 +548,12 @@ const Character = () => {
 
       toast({
         title: "Character Reset Complete",
-        description: "Your character has been reset to initial state. The page will reload.",
+        description: "Your character has been reset to initial state. Redirecting to landing page...",
       });
 
-      // Reload the page to reinitialize with fresh state
+      // Redirect to landing page to allow character name re-entry
       setTimeout(() => {
-        window.location.reload();
+        navigate('/');
       }, 2000);
 
     } catch (error) {

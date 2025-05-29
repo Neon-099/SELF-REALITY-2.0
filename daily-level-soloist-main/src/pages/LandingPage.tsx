@@ -1,10 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ArrowRight, Award, Shield, Star, Sword } from 'lucide-react';
+import { CharacterNameDialog } from '@/components/CharacterNameDialog';
 
 export default function Landing() {
+  const [isCharacterDialogOpen, setIsCharacterDialogOpen] = useState(false);
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-solo-dark to-gray-900">
       {/* Hero Section */}
@@ -16,11 +19,13 @@ export default function Landing() {
           <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
             Transform your daily tasks into an epic journey of self-improvement. Level up your life, one quest at a time.
           </p>
-          <Link to="/home">
-            <Button size="lg" className="animate-pulse-glow">
-              Enter Your Journey <ArrowRight className="ml-2" />
-            </Button>
-          </Link>
+          <Button
+            size="lg"
+            className="animate-pulse-glow"
+            onClick={() => setIsCharacterDialogOpen(true)}
+          >
+            Enter Your Journey <ArrowRight className="ml-2" />
+          </Button>
         </div>
 
         {/* Features Grid */}
@@ -70,13 +75,21 @@ export default function Landing() {
         <div className="text-center py-16 bg-solo-primary/10 rounded-lg border border-solo-primary/20">
           <h2 className="text-3xl font-bold mb-4">Ready to Begin Your Adventure?</h2>
           <p className="text-gray-300 mb-8">Your journey awaits.</p>
-          <Link to="/home">
-            <Button variant="secondary" size="lg">
-              Start your journey <ArrowRight className="ml-2" />
-            </Button>
-          </Link>
+          <Button
+            variant="secondary"
+            size="lg"
+            onClick={() => setIsCharacterDialogOpen(true)}
+          >
+            Start your journey <ArrowRight className="ml-2" />
+          </Button>
         </div>
       </div>
+
+      {/* Character Name Dialog */}
+      <CharacterNameDialog
+        open={isCharacterDialogOpen}
+        onOpenChange={setIsCharacterDialogOpen}
+      />
     </div>
   );
 }

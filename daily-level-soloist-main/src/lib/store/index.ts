@@ -9,7 +9,9 @@ import { createShopSlice, ShopSlice } from './slices/shop-slice';
 import { createPunishmentSlice, PunishmentSlice } from './slices/punishment-slice';
 import { getDB } from '../db';
 
-export type StoreState = TaskSlice & QuestSlice & MissionSlice & UserSlice & ShopSlice & PunishmentSlice;
+export type StoreState = TaskSlice & QuestSlice & MissionSlice & UserSlice & ShopSlice & PunishmentSlice & {
+  resetAllData: () => void;
+};
 
 // Define a custom type that extends PersistOptions and adds onError
 interface CustomPersistOptions<T> extends PersistOptions<T, T> {
@@ -103,6 +105,31 @@ export const useSoloLevelingStore = create<StoreState>()(
       ...createUserSlice(...a),
       ...createShopSlice(...a),
       ...createPunishmentSlice(...a),
+      resetAllData: () => {
+        const [set] = a;
+        set((state) => ({
+          ...state,
+          // Reset user to initial state
+          user: { ...initialUser, name: "Hunter" },
+          // Reset all other slices to their initial states
+          tasks: [],
+          quests: [],
+          missions: [],
+          completedMissionHistory: [],
+          shopItems: [],
+          // Reset punishment slice
+          chanceCounter: 0,
+          isCursed: false,
+          hasShadowFatigue: false,
+          shadowFatigueUntil: null,
+          cursedUntil: null,
+          lockedSideQuestsUntil: null,
+          missedMainQuestStreak: 0,
+          lastRedemptionDate: null,
+          hasPendingRecovery: false,
+          activeRecoveryQuestIds: null,
+        }));
+      }
     }),
     {
       name: 'soloist-store',
