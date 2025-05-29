@@ -16,7 +16,7 @@ export default defineConfig(({ mode }) => {
       outDir: "dist",
       emptyOutDir: true,
       // Optimize for performance
-      minify: 'terser',
+      minify: 'esbuild',
       sourcemap: !isProduction,
       target: 'es2020',
       rollupOptions: {
