@@ -188,11 +188,11 @@ const RecoveryQuestCard: React.FC<RecoveryQuestCardProps> = ({ quest, onComplete
                           className="mt-0.5 h-3 w-3 rounded border-amber-600 text-amber-500 focus:ring-amber-500 focus:ring-offset-0"
                         />
                         <div className="flex-1 min-w-0">
-                          <p className={`text-xs font-medium ${task.completed ? 'line-through text-gray-400' : 'text-amber-200'}`}>
+                          <p className={`font-medium break-words leading-tight ${task.completed ? 'line-through text-gray-400' : 'text-amber-200'} ${isMobile ? 'text-[10px]' : 'text-xs'}`}>
                             {index + 1}. {task.title}
                           </p>
                           {task.description && (
-                            <p className={`text-xs mt-0.5 ${task.completed ? 'line-through text-gray-500' : 'text-amber-300/70'}`}>
+                            <p className={`mt-0.5 break-words leading-tight ${task.completed ? 'line-through text-gray-500' : 'text-amber-300/70'} ${isMobile ? 'text-[8px]' : 'text-[10px]'}`}>
                               {task.description}
                             </p>
                           )}

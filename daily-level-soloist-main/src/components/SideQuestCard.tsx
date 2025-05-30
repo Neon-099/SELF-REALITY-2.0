@@ -8,6 +8,7 @@ import { CustomDialogContent } from '@/components/ui/custom-dialog';
 import { DateTimePicker } from '@/components/ui/date-time-picker';
 import { DailyWinCategory, Difficulty } from '@/lib/types';
 import { toast } from '@/hooks/use-toast';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface SideQuestCardProps {
   quest: any;
@@ -109,6 +110,7 @@ const SideQuestCard: React.FC<SideQuestCardProps> = ({ quest, onComplete, onStar
   const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
   const [isAddTaskDialogOpen, setIsAddTaskDialogOpen] = useState(false);
   const completeQuestTask = useSoloLevelingStore(state => state.completeQuestTask);
+  const isMobile = useIsMobile();
 
   // Initialize tasks array if it doesn't exist
   if (!quest.tasks) {
@@ -174,7 +176,7 @@ const SideQuestCard: React.FC<SideQuestCardProps> = ({ quest, onComplete, onStar
               </span>
             )}
             {!quest.started && (
-            <span className="text-solo-primary font-bold flex items-center gap-1 bg-gradient-to-r from-solo-primary/10 to-solo-primary/20 px-2 py-0.5 rounded-md text-xs shadow-sm">
+            <span className={`text-solo-primary font-bold flex items-center gap-1 bg-gradient-to-r from-solo-primary/10 to-solo-primary/20 px-2 py-0.5 rounded-md shadow-sm ${isMobile ? 'text-[10px]' : 'text-xs'}`}>
               <Star size={14} className="text-yellow-400 stroke-2 drop-shadow-glow" />
               +{quest.expReward} XP
             </span>
@@ -266,8 +268,11 @@ const SideQuestCard: React.FC<SideQuestCardProps> = ({ quest, onComplete, onStar
             <div className="py-1.5 flex-1 overflow-hidden flex flex-col">
               {/* Quest Description */}
               {quest.description && (
-                <div className="mb-3 p-2 bg-gray-800/30 rounded-md">
-                  <p className="text-gray-300/90 text-sm">{quest.description}</p>
+                <div className="mb-3">
+                  <h4 className="text-sm font-semibold text-indigo-400 mb-2">Description:</h4>
+                  <div className="p-2 bg-gray-800/30 rounded-md">
+                    <p className="text-gray-300/90 text-sm">{quest.description}</p>
+                  </div>
                 </div>
               )}
 
@@ -281,18 +286,18 @@ const SideQuestCard: React.FC<SideQuestCardProps> = ({ quest, onComplete, onStar
                     {quest.tasks.map((task: any, index: number) => (
                       <div
                         key={task.id}
-                        className="flex items-center justify-between p-1.5 sm:p-2.5 rounded-lg transition-all duration-200 shadow-md bg-gradient-to-r from-gray-800/60 to-gray-800/40 border border-gray-700/30"
+                        className="flex items-start justify-between p-1.5 sm:p-2.5 rounded-lg transition-all duration-200 shadow-md bg-gradient-to-r from-gray-800/60 to-gray-800/40 border border-gray-700/30"
                       >
-                        <div className="flex items-center gap-2 flex-1 min-w-0">
-                          <span className="text-indigo-400 text-xs font-medium w-5 text-center flex-shrink-0">
+                        <div className="flex items-start gap-2 flex-1 min-w-0">
+                          <span className="text-indigo-400 text-xs font-medium w-5 text-center flex-shrink-0 mt-0.5">
                             {index + 1}.
                           </span>
                           <div className="flex flex-col min-w-0">
-                            <span className="text-xs sm:text-sm font-medium truncate text-gray-200">
+                            <p className={`font-medium break-words leading-tight text-gray-200 ${isMobile ? 'text-[10px]' : 'text-xs'}`}>
                               {task.title}
-                            </span>
+                            </p>
                             {task.description && (
-                              <span className="text-[10px] sm:text-xs text-gray-400/80 truncate">{task.description}</span>
+                              <p className={`text-gray-400/80 break-words leading-tight ${isMobile ? 'text-[8px]' : 'text-[10px]'}`}>{task.description}</p>
                             )}
                           </div>
                         </div>
@@ -367,8 +372,11 @@ const SideQuestCard: React.FC<SideQuestCardProps> = ({ quest, onComplete, onStar
               <div className="py-1.5 flex-1 overflow-hidden flex flex-col">
                 {/* Quest Description */}
                 {quest.description && (
-                  <div className="mb-3 p-2 bg-gray-800/30 rounded-md">
-                    <p className="text-gray-300/90 text-sm">{quest.description}</p>
+                  <div className="mb-3">
+                    <h4 className="text-sm font-semibold text-indigo-400 mb-2">Description:</h4>
+                    <div className="p-2 bg-gray-800/30 rounded-md">
+                      <p className="text-gray-300/90 text-sm">{quest.description}</p>
+                    </div>
                   </div>
                 )}
 
@@ -383,11 +391,11 @@ const SideQuestCard: React.FC<SideQuestCardProps> = ({ quest, onComplete, onStar
                       {quest.tasks.map((task: any, index: number) => (
                         <div
                           key={task.id}
-                          className={`flex items-center justify-between p-1.5 sm:p-2.5 rounded-lg transition-all duration-200 shadow-md ${task.completed ? 'bg-indigo-900/20 border border-indigo-500/30' : 'bg-gradient-to-r from-gray-800/60 to-gray-800/40 border border-gray-700/30 hover:border-indigo-500/20'}`}
+                          className={`flex items-start justify-between p-1.5 sm:p-2.5 rounded-lg transition-all duration-200 shadow-md ${task.completed ? 'bg-indigo-900/20 border border-indigo-500/30' : 'bg-gradient-to-r from-gray-800/60 to-gray-800/40 border border-gray-700/30 hover:border-indigo-500/20'}`}
                         >
-                          <div className="flex items-center gap-2 flex-1 min-w-0">
+                          <div className="flex items-start gap-2 flex-1 min-w-0">
                             {task.completed ? (
-                              <div className="flex items-center justify-center w-5 h-5 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white text-xs font-medium flex-shrink-0">
+                              <div className="flex items-center justify-center w-5 h-5 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white text-xs font-medium flex-shrink-0 mt-0.5">
                                 <CheckCircle className="h-3 w-3" />
                               </div>
                             ) : (
@@ -396,16 +404,16 @@ const SideQuestCard: React.FC<SideQuestCardProps> = ({ quest, onComplete, onStar
                                   e.stopPropagation();
                                   if(!task.completed) completeQuestTask(quest.id, task.id);
                                 }}
-                                className="flex items-center justify-center w-5 h-5 rounded-full border-2 border-indigo-500/50 bg-indigo-900/20 hover:bg-indigo-900/40 cursor-pointer flex-shrink-0 text-indigo-400"
+                                className="flex items-center justify-center w-5 h-5 rounded-full border-2 border-indigo-500/50 bg-indigo-900/20 hover:bg-indigo-900/40 cursor-pointer flex-shrink-0 text-indigo-400 mt-0.5"
                               >
                               </div>
                             )}
                             <div className="flex flex-col min-w-0">
-                              <span className={`text-xs sm:text-sm font-medium truncate ${task.completed ? 'text-indigo-400' : 'text-gray-200'}`}>
+                              <p className={`font-medium break-words leading-tight ${task.completed ? 'text-indigo-400' : 'text-gray-200'} ${isMobile ? 'text-[10px]' : 'text-xs'}`}>
                                 {task.title}
-                              </span>
+                              </p>
                               {task.description && (
-                                <span className="text-[10px] sm:text-xs text-gray-400/80 truncate">{task.description}</span>
+                                <p className={`text-gray-400/80 break-words leading-tight ${isMobile ? 'text-[8px]' : 'text-[10px]'}`}>{task.description}</p>
                               )}
                             </div>
                           </div>

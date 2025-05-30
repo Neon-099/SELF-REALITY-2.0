@@ -630,7 +630,7 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
 
                 {isCompleted ? (
                   <>
-                    <p className={`hidden sm:block flex-grow text-sm sm:text-base ${isBoss
+                    <p className={`hidden sm:block flex-grow ${isMobile ? 'text-xs' : 'text-sm sm:text-base'} ${isBoss
                       ? 'text-amber-400/70'
                       : `text-${mission.rank.toLowerCase()}-400/70`} relative z-10 leading-relaxed`}>
                       {mission.description}
@@ -641,7 +641,7 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
                   <>
                     {!isStarted && (
                       <>
-                        <p className={`hidden sm:block flex-grow text-sm sm:text-base ${getRankTextStyle(mission.rank as Rank)} relative z-10 leading-relaxed`}>
+                        <p className={`hidden sm:block flex-grow ${isMobile ? 'text-xs' : 'text-sm sm:text-base'} ${getRankTextStyle(mission.rank as Rank)} relative z-10 leading-relaxed`}>
                           {mission.description}
                         </p>
                         <div className="block sm:hidden h-4"></div>
@@ -915,10 +915,10 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
         )}>
           {/* Decorative blurred background icon */}
           {currentMission && (
-            <div className={cn("absolute opacity-10 pointer-events-none select-none z-0", isMobile ? "-top-6 -right-6" : "-top-10 -right-10")}>
+            <div className={cn("absolute opacity-10 pointer-events-none select-none z-0", isMobile ? "top-2 right-2" : "top-4 right-4")}>
               <Star className={cn(
                 currentMission.difficulty === 'boss' ? 'text-amber-400' : getRankColorClass(currentMission.rank).split(' ')[0],
-                isMobile ? "w-24 h-24" : "w-40 h-40"
+                isMobile ? "w-12 h-12" : "w-16 h-16"
               )} />
             </div>
           )}
@@ -938,10 +938,10 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
             {currentMission && (
               <>
                 <div className="text-center w-full">
-                  <div className={`font-semibold mb-2 ${currentMission.difficulty === 'boss' ? 'text-amber-400' : getRankColorClass(currentMission.rank).split(' ')[0]}`}>Task Progress</div>
+                  <div className={`font-semibold mb-2 ${isMobile ? 'text-xs' : 'text-sm'} ${currentMission.difficulty === 'boss' ? 'text-amber-400' : getRankColorClass(currentMission.rank).split(' ')[0]}`}>Task Progress</div>
                   <div className="flex items-center justify-center gap-2 mb-4">
-                    <Activity className="h-5 w-5 text-blue-500" />
-                    <span className="text-xl font-bold">{completedTaskIndices.length} / {currentMission.count || 1}</span>
+                    <Activity className={cn(isMobile ? "h-4 w-4" : "h-5 w-5", "text-blue-500")} />
+                    <span className={cn(isMobile ? "text-lg" : "text-xl", "font-bold")}>{completedTaskIndices.length} / {currentMission.count || 1}</span>
                   </div>
                   <Progress
                     value={(completedTaskIndices.length / (currentMission.count || 1)) * 100}
@@ -949,13 +949,19 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
                   />
                 </div>
 
-                {/* Mission description */}
-                <div className={`text-sm p-3 rounded-md border relative z-10 w-full
+                {/* Mission description with styled background */}
+                <div className={`p-4 rounded-md border shadow-inner relative overflow-hidden w-full
                   ${currentMission.difficulty === 'boss'
-                    ? 'bg-amber-500/10 border-amber-500/30 text-amber-400'
-                    : `bg-${currentMission.rank.toLowerCase()}-400/10 border-${currentMission.rank.toLowerCase()}-400/30 ${getRankColorClass(currentMission.rank).split(' ')[0]}`}
+                    ? 'bg-gradient-to-br from-amber-500/10 to-amber-800/10 border-amber-500/40'
+                    : `bg-gradient-to-br from-${currentMission.rank.toLowerCase()}-400/10 to-${currentMission.rank.toLowerCase()}-600/10 border-${currentMission.rank.toLowerCase()}-400/40`}
                 `}>
-                  {currentMission.description}
+                  <div className="flex items-center gap-2 mb-2">
+                    <Star className={`h-5 w-5 ${currentMission.difficulty === 'boss' ? 'text-amber-400' : `text-${currentMission.rank.toLowerCase()}-400`}`} />
+                    <span className={`font-semibold ${isMobile ? 'text-sm' : 'text-base'} ${currentMission.difficulty === 'boss' ? 'text-foreground' : getRankColorClass(currentMission.rank).split(' ')[0]}`}>Description</span>
+                  </div>
+                  <p className={`${isMobile ? 'text-[10px]' : 'text-xs'} leading-relaxed font-medium ${currentMission.difficulty === 'boss' ? 'text-foreground/90' : getRankColorClass(currentMission.rank).split(' ')[0]}`}>
+                    {currentMission.description}
+                  </p>
                 </div>
 
                 {/* Task list with checkboxes - was mistakenly removed, should be added back */}
@@ -971,7 +977,7 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
                       {currentMission.taskNames.map((task, idx) => (
                         <div
                           key={idx}
-                          className={`flex items-center gap-3 p-2 rounded hover:bg-accent/20 transition-all duration-300 ${
+                          className={`flex items-start gap-3 p-2 rounded hover:bg-accent/20 transition-all duration-300 ${
                             completedTaskIndices.includes(idx)
                               ? 'bg-green-100/10 border border-green-500/30 shadow-[0_0_8px_rgba(34,197,94,0.2)]'
                               : 'border border-transparent'
@@ -982,11 +988,11 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
                             id={`task-${idx}`}
                             checked={completedTaskIndices.includes(idx)}
                             onCheckedChange={() => handleTaskToggle(idx)}
-                            className="h-5 w-5 transition-transform duration-200 data-[state=checked]:scale-110"
+                            className="h-5 w-5 transition-transform duration-200 data-[state=checked]:scale-110 mt-0.5 flex-shrink-0"
                           />
                           <label
                             htmlFor={`task-${idx}`}
-                            className={`flex-1 cursor-pointer transition-all duration-300
+                            className={`flex-1 min-w-0 cursor-pointer transition-all duration-300 break-words leading-tight ${isMobile ? 'text-[10px]' : 'text-sm'}
                               ${completedTaskIndices.includes(idx)
                                 ? 'line-through text-muted-foreground opacity-70'
                                 : currentMission.difficulty === 'boss'
@@ -997,7 +1003,7 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
                             {task}
                           </label>
                           {completedTaskIndices.includes(idx) && (
-                            <span className="text-green-500 scale-in-center">
+                            <span className="text-green-500 scale-in-center flex-shrink-0 mt-0.5">
                               <CheckCircle className="h-4 w-4" />
                             </span>
                           )}
@@ -1057,8 +1063,11 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
           <div className={cn("flex-1 overflow-y-auto relative", isMobile ? "py-2 space-y-3 pr-1" : "py-4 space-y-6 pr-2 -mr-2")}>
             {/* Decorative blurred background icon */}
             {currentMission && (
-              <div className="absolute -top-8 -right-8 opacity-10 pointer-events-none select-none">
-                <Star className={`w-32 h-32 ${currentMission.difficulty === 'boss' ? 'text-amber-400' : `text-${currentMission.rank.toLowerCase()}-400`}`} />
+              <div className={cn("absolute opacity-10 pointer-events-none select-none", isMobile ? "top-2 right-2" : "top-4 right-4")}>
+                <Star className={cn(
+                  currentMission.difficulty === 'boss' ? 'text-amber-400' : `text-${currentMission.rank.toLowerCase()}-400`,
+                  isMobile ? "w-12 h-12" : "w-16 h-16"
+                )} />
               </div>
             )}
 
@@ -1072,9 +1081,9 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
                 `}>
                   <div className="flex items-center gap-2 mb-2">
                     <Star className={`h-5 w-5 ${currentMission.difficulty === 'boss' ? 'text-amber-400' : `text-${currentMission.rank.toLowerCase()}-400`}`} />
-                    <span className={`font-semibold text-base ${currentMission.difficulty === 'boss' ? 'text-foreground' : getRankColorClass(currentMission.rank).split(' ')[0]}`}>Description</span>
+                    <span className={`font-semibold ${isMobile ? 'text-sm' : 'text-base'} ${currentMission.difficulty === 'boss' ? 'text-foreground' : getRankColorClass(currentMission.rank).split(' ')[0]}`}>Description</span>
                   </div>
-                  <p className={`text-sm leading-relaxed font-medium ${currentMission.difficulty === 'boss' ? 'text-foreground/90' : getRankColorClass(currentMission.rank).split(' ')[0]}`}>
+                  <p className={`${isMobile ? 'text-[10px]' : 'text-xs'} leading-relaxed font-medium ${currentMission.difficulty === 'boss' ? 'text-foreground/90' : getRankColorClass(currentMission.rank).split(' ')[0]}`}>
                     {currentMission.description}
                   </p>
                 </div>
@@ -1098,20 +1107,20 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
                       {currentMission.taskNames && currentMission.taskNames.map((task, idx) => (
                         <div
                           key={idx}
-                          className={`flex items-start gap-3 p-3 text-sm border-b last:border-0 rounded transition-colors duration-200
+                          className={`flex items-start gap-3 p-3 ${isMobile ? 'text-[10px]' : 'text-sm'} border-b last:border-0 rounded transition-colors duration-200
                             ${currentMission.difficulty === 'boss'
                               ? 'border-amber-500/20 hover:bg-amber-500/10'
                               : `border-${currentMission.rank.toLowerCase()}-400/20 hover:bg-${currentMission.rank.toLowerCase()}-500/10`}
                           `}
                         >
-                          <span className={`inline-flex items-center justify-center h-6 w-6 rounded-full text-xs font-bold mt-0.5
+                          <span className={`inline-flex items-center justify-center h-6 w-6 rounded-full text-xs font-bold mt-0.5 flex-shrink-0
                             ${currentMission.difficulty === 'boss'
                               ? 'bg-amber-500/20 text-amber-500'
                               : `bg-${currentMission.rank.toLowerCase()}-500/20 text-${currentMission.rank.toLowerCase()}-500`}
                           `}>
                             {idx + 1}
                           </span>
-                          <span className="font-medium">{task}</span>
+                          <span className="font-medium flex-1 min-w-0 break-words leading-tight">{task}</span>
                         </div>
                       ))}
                     </div>
@@ -1188,17 +1197,22 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
           <div className={cn("flex-1 overflow-y-auto relative", isMobile ? "py-2 space-y-3 pr-1" : "py-4 space-y-6 pr-2 -mr-2")}>
             {/* Decorative blurred background icon */}
             {currentMission && (
-              <div className="absolute -top-8 -right-8 opacity-10 pointer-events-none select-none">
-                <Star className={`w-32 h-32 ${currentMission.difficulty === 'boss' ? 'text-amber-400' : `text-${currentMission.rank.toLowerCase()}-400`}`} />
+              <div className={cn("absolute opacity-10 pointer-events-none select-none", isMobile ? "top-2 right-2" : "top-4 right-4")}>
+                <Star className={cn(
+                  currentMission.difficulty === 'boss' ? 'text-amber-400' : `text-${currentMission.rank.toLowerCase()}-400`,
+                  isMobile ? "w-12 h-12" : "w-16 h-16"
+                )} />
               </div>
             )}
 
             {/* "Locked" banner */}
-            <div className="absolute -top-1 -right-1 z-20">
-              <div className="w-24 h-24 overflow-hidden">
-                <div className="absolute transform rotate-45 bg-gray-800/90 text-xs font-bold py-1 right-[-45px] top-[15px] w-[150px] text-center text-gray-300 shadow-md border-t border-gray-700">
-                  DAY LOCKED
-                </div>
+            <div className={cn("absolute z-20 overflow-hidden", isMobile ? "top-0 right-0 w-16 h-16" : "top-0 right-0 w-20 h-20")}>
+              <div className={cn("absolute transform rotate-45 bg-gray-800/90 font-bold text-center text-gray-300 shadow-md border-t border-gray-700",
+                isMobile
+                  ? "text-[8px] py-0.5 w-24 right-[-12px] top-[12px]"
+                  : "text-xs py-1 w-32 right-[-16px] top-[16px]"
+              )}>
+                {isMobile ? "LOCKED" : "DAY LOCKED"}
               </div>
             </div>
 
@@ -1212,9 +1226,9 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
                 `}>
                   <div className="flex items-center gap-2 mb-2">
                     <Star className={`h-5 w-5 ${currentMission.difficulty === 'boss' ? 'text-amber-400' : `text-${currentMission.rank.toLowerCase()}-400`}`} />
-                    <span className={`font-semibold text-base ${currentMission.difficulty === 'boss' ? 'text-foreground' : getRankColorClass(currentMission.rank).split(' ')[0]}`}>Description</span>
+                    <span className={`font-semibold ${isMobile ? 'text-sm' : 'text-base'} ${currentMission.difficulty === 'boss' ? 'text-foreground' : getRankColorClass(currentMission.rank).split(' ')[0]}`}>Description</span>
                   </div>
-                  <p className={`text-sm leading-relaxed font-medium ${currentMission.difficulty === 'boss' ? 'text-foreground/90' : getRankColorClass(currentMission.rank).split(' ')[0]}`}>
+                  <p className={`${isMobile ? 'text-[10px]' : 'text-xs'} leading-relaxed font-medium ${currentMission.difficulty === 'boss' ? 'text-foreground/90' : getRankColorClass(currentMission.rank).split(' ')[0]}`}>
                     {currentMission.description}
                   </p>
                 </div>
@@ -1238,20 +1252,20 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
                       {currentMission.taskNames && currentMission.taskNames.map((task, idx) => (
                         <div
                           key={idx}
-                          className={`flex items-start gap-3 p-3 text-sm border-b last:border-0 rounded transition-colors duration-200
+                          className={`flex items-start gap-3 p-3 ${isMobile ? 'text-[10px]' : 'text-sm'} border-b last:border-0 rounded transition-colors duration-200
                             ${currentMission.difficulty === 'boss'
                               ? 'border-amber-500/20 hover:bg-amber-500/10'
                               : `border-${currentMission.rank.toLowerCase()}-400/20 hover:bg-${currentMission.rank.toLowerCase()}-500/10`}
                           `}
                         >
-                          <span className={`inline-flex items-center justify-center h-6 w-6 rounded-full text-xs font-bold mt-0.5
+                          <span className={`inline-flex items-center justify-center h-6 w-6 rounded-full text-xs font-bold mt-0.5 flex-shrink-0
                             ${currentMission.difficulty === 'boss'
                               ? 'bg-amber-500/20 text-amber-500'
                               : `bg-${currentMission.rank.toLowerCase()}-500/20 text-${currentMission.rank.toLowerCase()}-500`}
                           `}>
                             {idx + 1}
                           </span>
-                          <span className="font-medium">{task}</span>
+                          <span className="font-medium flex-1 min-w-0 break-words leading-tight">{task}</span>
                         </div>
                       ))}
                     </div>
