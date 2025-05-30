@@ -2,6 +2,7 @@ import React from 'react';
 import { Star, CheckCircle, CalendarClock, Sunrise } from 'lucide-react';
 import { Button } from './ui/button';
 import { format } from 'date-fns';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface DailyQuestCardProps {
   quest: any;
@@ -32,11 +33,19 @@ const categoryColors: Record<string, { bg: string, text: string, border: string 
 };
 
 const DailyQuestCard: React.FC<DailyQuestCardProps> = ({ quest, onComplete }) => {
+  const isMobile = useIsMobile();
   const categoryStyle = (quest.category && quest.category !== '') ? categoryColors[quest.category] : {
     bg: 'bg-gray-700',
     text: 'text-gray-300',
     border: 'border-gray-500'
   };
+
+  // Remove day text from quest title for display
+  const displayTitle = quest.title.replace(/\s*\(Day \d+\)$/, '');
+
+  // Check if quest is available for completion (only today's quests)
+  const isAvailableForCompletion = quest.deadline ?
+    new Date().toDateString() === new Date(quest.deadline).toDateString() : true;
 
   return (
     <div
@@ -54,16 +63,16 @@ const DailyQuestCard: React.FC<DailyQuestCardProps> = ({ quest, onComplete }) =>
       {/* Header */}
       <div className="flex justify-between items-start mb-2">
         <div className="flex flex-col gap-1">
-          <h3 className={`font-bold text-lg tracking-tight ${quest.completed ? 'line-through text-gray-400' : 'text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-500 drop-shadow-sm'}`}>{quest.title}</h3>
+          <h3 className={`font-bold text-lg tracking-tight ${quest.completed ? 'line-through text-gray-400' : 'text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-500 drop-shadow-sm'}`}>{displayTitle}</h3>
         </div>
         <div className="flex flex-col items-end gap-2">
           <div className="flex items-center gap-2">
-            {quest.category && quest.category !== '' && (
+            {quest.category && quest.category !== '' && quest.category !== 'none' && !quest.category.toLowerCase().includes('select') && (
               <span className={`text-[10px] px-1.5 py-0.5 rounded-full border shadow-sm font-medium ${categoryStyle.bg} ${categoryStyle.text} ${categoryStyle.border}`}>
                 {quest.category.charAt(0).toUpperCase() + quest.category.slice(1)}
               </span>
             )}
-            <span className="text-green-500 font-bold flex items-center gap-1 bg-gradient-to-r from-green-500/10 to-green-500/20 px-2 py-0.5 rounded-md text-xs shadow-sm">
+            <span className={`text-green-500 font-bold flex items-center gap-1 bg-gradient-to-r from-green-500/10 to-green-500/20 px-2 py-0.5 rounded-md shadow-sm ${isMobile ? 'text-[10px]' : 'text-xs'}`}>
               <Star size={14} className="text-yellow-400 stroke-2 drop-shadow-glow" />
               +{quest.expReward} XP
             </span>
@@ -84,7 +93,7 @@ const DailyQuestCard: React.FC<DailyQuestCardProps> = ({ quest, onComplete }) =>
         </div>
       )}
       {/* Complete Button */}
-      {!quest.completed && (
+      {!quest.completed && isAvailableForCompletion && (
         <Button
           variant="outline"
           onClick={() => onComplete(quest.id)}
@@ -94,6 +103,11 @@ const DailyQuestCard: React.FC<DailyQuestCardProps> = ({ quest, onComplete }) =>
           <CheckCircle size={16} className="drop-shadow-sm" />
           <span className="font-medium tracking-wide">Complete Quest</span>
         </Button>
+      )}
+      {!quest.completed && !isAvailableForCompletion && (
+        <div className="w-full flex justify-center items-center gap-2 mt-2 p-2 bg-gray-700/30 border border-gray-600/40 rounded-md">
+          <span className="text-gray-400 text-sm font-medium">Available on quest day</span>
+        </div>
       )}
       {quest.completed && (
         <div className="flex items-center justify-center gap-2 mt-2 text-green-400 text-xs font-medium">

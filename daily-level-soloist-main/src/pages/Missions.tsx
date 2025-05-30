@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Lock, Plus, Star } from 'lucide-react';
+import { Lock, Plus, Star, HelpCircle } from 'lucide-react';
 import { useSoloLevelingStore } from '@/lib/store';
 import { Rank, Mission, Difficulty } from '@/lib/types';
 import { PredefinedMission } from '@/data/predefined-missions';
@@ -125,6 +125,7 @@ const Missions = () => {
   const [recentMissions, setRecentMissions] = useState<PredefinedMission[]>([]);
   const { toast } = useToast();
   const [showModal, setShowModal] = useState(false);
+  const [showHelpDialog, setShowHelpDialog] = useState(false);
   const isMobile = useIsMobile();
   const [newMission, setNewMission] = useState({
     title: '',
@@ -391,7 +392,7 @@ const Missions = () => {
                 {/* Rank indicator strip */}
                 <div className={`absolute top-0 left-0 w-2 h-full ${rankSolid}`}></div>
 
-                <div className={`p-4 border-b bg-gradient-to-br from-${mission.rank.toLowerCase()}-400/5 to-${mission.rank.toLowerCase()}-600/10`}>
+                <div className="p-4 border-b bg-gradient-to-br from-gray-400/5 to-gray-600/10">
                   <div className="flex justify-between items-center mb-3">
                     <Badge className={`px-2 py-1 ${rankBadge} bg-transparent font-semibold`}>
                       {mission.rank} Rank
@@ -422,8 +423,8 @@ const Missions = () => {
                   </div>
                 </div>
               </div>
-            )}
-          )}
+            );
+          })}
         </div>
       </div>
     );
@@ -438,27 +439,28 @@ const Missions = () => {
             Missions
           </h1>
           <div className="flex justify-between items-center">
-            <Dialog open={showModal} onOpenChange={setShowModal}>
-              <Button onClick={() => setShowModal(true)} className="flex items-center gap-2">
-                <Plus className="w-5 h-5" /> New Mission
-              </Button>
-              <DialogContent className={cn(
-                "glassmorphism flex flex-col text-solo-text rounded-xl",
-                "before:!absolute before:!inset-0 before:!rounded-xl",
-                "before:!bg-gradient-to-br before:!from-indigo-500/10 before:!to-purple-500/5",
-                "before:!backdrop-blur-xl before:!-z-10",
-                isMobile
-                  ? "w-[90vw] max-w-[320px] p-2 sm:p-3 max-h-[85vh]"
-                  : "max-w-lg max-h-[90vh] p-4 sm:p-6"
-              )}>
-                <DialogHeader className="flex-shrink-0">
-                  <DialogTitle className={cn("font-semibold text-white/90 tracking-wide", isMobile ? "text-base" : "text-xl")}>
-                    Create New Mission
-                  </DialogTitle>
-                </DialogHeader>
+            <div className="flex items-center gap-2">
+              <Dialog open={showModal} onOpenChange={setShowModal}>
+                <Button onClick={() => setShowModal(true)} className="flex items-center gap-2">
+                  <Plus className="w-5 h-5" /> New Mission
+                </Button>
+                <DialogContent className={cn(
+                  "glassmorphism flex flex-col text-solo-text rounded-xl",
+                  "before:!absolute before:!inset-0 before:!rounded-xl",
+                  "before:!bg-gradient-to-br before:!from-indigo-500/10 before:!to-purple-500/5",
+                  "before:!backdrop-blur-xl before:!-z-10",
+                  isMobile
+                    ? "w-[90vw] max-w-[320px] p-2 sm:p-3 max-h-[85vh]"
+                    : "max-w-lg max-h-[90vh] p-4 sm:p-6"
+                )}>
+                  <DialogHeader className="flex-shrink-0">
+                    <DialogTitle className={cn("font-semibold text-white/90 tracking-wide", isMobile ? "text-base" : "text-xl")}>
+                      Create New Mission
+                    </DialogTitle>
+                  </DialogHeader>
 
-                <div className={cn("flex-1 overflow-y-auto", isMobile ? "pr-1" : "pr-2 -mr-2")}>
-                  <form className={cn("relative z-10", isMobile ? "space-y-1.5 pt-1" : "space-y-3")} onSubmit={handleCreateMission}>
+                  <div className={cn("flex-1 overflow-y-auto", isMobile ? "pr-1" : "pr-2 -mr-2")}>
+                    <form className={cn("relative z-10", isMobile ? "space-y-1.5 pt-1" : "space-y-3")} onSubmit={handleCreateMission}>
                     <div className={cn(isMobile ? "space-y-0.5" : "space-y-1")}>
                       <Label htmlFor="mission-title" className={cn("text-white/80 font-medium", isMobile ? "text-sm" : "text-base")}>
                         Title
@@ -634,21 +636,13 @@ const Missions = () => {
 
                 <DialogFooter className={cn(
                   "flex-shrink-0 flex gap-2 border-t border-gray-700",
-                  isMobile ? "mt-2 pt-2 flex-col" : "mt-4 pt-4 sm:justify-between"
+                  isMobile ? "mt-2 pt-2" : "mt-4 pt-4"
                 )}>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setShowModal(false)}
-                    className={cn(isMobile ? "h-8 text-xs" : "h-9 text-sm")}
-                  >
-                    Cancel
-                  </Button>
                   <Button
                     type="submit"
                     onClick={handleCreateMission}
                     className={cn(
-                      "bg-gradient-to-r from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600 text-white",
+                      "bg-gradient-to-r from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600 text-white w-full",
                       isMobile ? "h-8 text-xs" : "h-9 text-sm"
                     )}
                   >
@@ -657,6 +651,81 @@ const Missions = () => {
                 </DialogFooter>
               </DialogContent>
             </Dialog>
+
+            {/* Help button */}
+            <Dialog open={showHelpDialog} onOpenChange={setShowHelpDialog}>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowHelpDialog(true)}
+                className="text-gray-400 hover:text-white hover:bg-gray-800/50 transition-colors"
+              >
+                <HelpCircle className="w-5 h-5" />
+              </Button>
+              <DialogContent className={cn(
+                "glassmorphism flex flex-col text-solo-text rounded-xl",
+                "before:!absolute before:!inset-0 before:!rounded-xl",
+                "before:!bg-gradient-to-br before:!from-indigo-500/10 before:!to-purple-500/5",
+                "before:!backdrop-blur-xl before:!-z-10",
+                isMobile
+                  ? "w-[90vw] max-w-[350px] p-3 max-h-[80vh]"
+                  : "max-w-md max-h-[85vh] p-6"
+              )}>
+                <DialogHeader className="flex-shrink-0">
+                  <DialogTitle className={cn("font-semibold text-white/90 tracking-wide flex items-center gap-2", isMobile ? "text-lg" : "text-xl")}>
+                    <HelpCircle className="w-5 h-5 text-blue-400" />
+                    Mission Help
+                  </DialogTitle>
+                </DialogHeader>
+
+                <div className={cn("flex-1 overflow-y-auto space-y-4", isMobile ? "text-sm" : "text-base")}>
+                  <div className="space-y-3">
+                    <div>
+                      <h3 className="font-semibold text-white/90 mb-2">What are Missions?</h3>
+                      <p className="text-gray-300 leading-relaxed">
+                        Missions are structured challenges organized by rank levels (F to SSS). Each rank contains multiple days of missions that progressively increase in difficulty and rewards.
+                      </p>
+                    </div>
+
+                    <div>
+                      <h3 className="font-semibold text-white/90 mb-2">How to Create Missions</h3>
+                      <ul className="text-gray-300 space-y-1 list-disc list-inside">
+                        <li>Click "New Mission" to create custom missions</li>
+                        <li>Set the rank, day, and difficulty level</li>
+                        <li>Define multiple tasks for complex missions</li>
+                        <li>Assign appropriate XP rewards</li>
+                      </ul>
+                    </div>
+
+                    <div>
+                      <h3 className="font-semibold text-white/90 mb-2">Mission Types</h3>
+                      <ul className="text-gray-300 space-y-1 list-disc list-inside">
+                        <li><span className="font-medium text-blue-400">Normal:</span> Standard missions with regular difficulty</li>
+                        <li><span className="font-medium text-amber-400">Boss:</span> Challenging missions with higher rewards</li>
+                      </ul>
+                    </div>
+
+                    <div>
+                      <h3 className="font-semibold text-white/90 mb-2">Rank Progression</h3>
+                      <p className="text-gray-300 leading-relaxed">
+                        Complete missions in lower ranks to unlock higher rank missions. Each rank has a specific number of days that must be completed to progress.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <DialogFooter className="flex-shrink-0 border-t border-gray-700 pt-4">
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowHelpDialog(false)}
+                    className={cn("w-full", isMobile ? "h-9 text-sm" : "h-10 text-base")}
+                  >
+                    Got it!
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+            </div>
           </div>
           {/* Rank Navigation and Current Rank Section */}
           <div className="flex items-center justify-center mb-6">

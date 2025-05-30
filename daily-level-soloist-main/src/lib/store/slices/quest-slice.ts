@@ -57,7 +57,7 @@ export const createQuestSlice: StateCreator<StoreState, [], [], QuestSlice> = (s
 
   return {
     quests: [],
-    addQuest: (title, description, isMainQuest, expReward, deadline, difficulty = 'easy', category = 'mental', isDaily = false) => {
+    addQuest: (title, description, isMainQuest, expReward, deadline, difficulty = 'easy', category = '', isDaily = false) => {
       set((state: StoreState) => ({
         quests: [
           ...state.quests,
@@ -185,31 +185,18 @@ export const createQuestSlice: StateCreator<StoreState, [], [], QuestSlice> = (s
           return { quests: updatedQuests };
         }
 
-        // Determine if this is a daily win category or an attribute category
+        // Determine which attribute stat to update (no daily win involvement)
         const dailyWinCategories = ['mental', 'physical', 'spiritual', 'intelligence'];
         let attributeStat: Stat;
-        let dailyWinCategory: DailyWinCategory;
 
         if (dailyWinCategories.includes(completedTask.category)) {
-          // It's a standard daily win category
-          dailyWinCategory = completedTask.category as DailyWinCategory;
-          attributeStat = categoryToStat(dailyWinCategory);
-
-          // Update daily win progress
-          setTimeout(() => {
-            get().updateDailyWin(dailyWinCategory, taskId);
-          }, 100);
+          // It's a standard daily win category, map to attribute
+          attributeStat = categoryToStat(completedTask.category as DailyWinCategory);
         } else {
-          // It's an attribute category, map it back to a daily win
+          // It's an attribute category, use directly
           const mappedDailyWin = attributeToDailyWin(completedTask.category);
           if (mappedDailyWin) {
-            dailyWinCategory = mappedDailyWin;
             attributeStat = completedTask.category as Stat;
-
-            // Update daily win progress
-            setTimeout(() => {
-              get().updateDailyWin(dailyWinCategory, taskId);
-            }, 100);
           } else {
             // Default fallback if no mapping exists
             attributeStat = 'emotional';
@@ -396,6 +383,20 @@ export const createQuestSlice: StateCreator<StoreState, [], [], QuestSlice> = (s
       const quest = quests.find(q => q.id === id);
 
       if (!quest || quest.completed) return;
+
+      // For daily quests, check if it's available for completion (only today's quests)
+      if (quest.isDaily && quest.deadline) {
+        const today = new Date();
+        const questDate = new Date(quest.deadline);
+        if (today.toDateString() !== questDate.toDateString()) {
+          toast({
+            title: "Quest Not Available",
+            description: "This daily quest is not available for completion today.",
+            variant: "destructive"
+          });
+          return;
+        }
+      }
 
       const expModifier = getExpModifier();
       const finalExpReward = Math.floor(quest.expReward * expModifier);
