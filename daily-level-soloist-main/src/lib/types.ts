@@ -104,6 +104,22 @@ export interface WeeklyTask {
   category: DailyWinCategory;
 }
 
+export interface RewardJournalEntry {
+  id: string;
+  date: Date;
+  customReward: string;
+  completed: boolean;
+  claimed: boolean;
+  claimedAt?: Date;
+  requiredTasks: {
+    allTasks: boolean;
+    mainQuest: boolean;
+    sideQuest: boolean;
+    dailyQuests: boolean;
+    missionTasks: boolean;
+  };
+}
+
 export interface User {
   id: string;
   name: string;
@@ -122,4 +138,6 @@ export interface User {
   chanceCounter?: number;
   isCursed?: boolean;
   hasShadowFatigue?: boolean;
+  // Reward Journal System
+  rewardJournal: RewardJournalEntry[];
 }
