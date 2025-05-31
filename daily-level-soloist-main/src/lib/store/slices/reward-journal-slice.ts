@@ -1,6 +1,6 @@
 import { StateCreator } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
-import { RewardJournalEntry } from '@/lib/types';
+import { RewardJournalEntry, WeeklyRewardEntry } from '@/lib/types';
 import { toast } from '@/hooks/use-toast';
 
 export interface RewardJournalSlice {
@@ -16,11 +16,26 @@ export interface RewardJournalSlice {
     longestStreak: number;
     weeklyStats: { earned: number; missed: number };
   };
+  updateDailyCompletionStatus: (date: Date) => void;
   getDailyCompletionDetails: (date: Date) => {
     dailyWins: { completed: string[]; missing: string[] };
     attributes: { completed: string[]; missing: string[] };
     quests: { mainQuest: boolean; sideQuest: boolean; dailyQuests: boolean };
     missions: boolean;
+    missedItems: { tasks: number; quests: number; missions: number };
+    overall: boolean;
+  };
+
+  // Weekly Reward Actions
+  setWeeklyReward: (weekStart: Date, customReward: string) => void;
+  getWeeklyRewardEntry: (weekStart: Date) => WeeklyRewardEntry | undefined;
+  checkWeeklyCompletion: (weekStart: Date) => boolean;
+  getWeeklyCompletionDetails: (weekStart: Date) => {
+    dailyTasks: { completed: number; total: number; allCompleted: boolean };
+    dailyQuests: { completed: number; required: number; met: boolean };
+    mainQuests: { completed: number; required: number; met: boolean };
+    sideQuests: { completed: number; required: number; met: boolean };
+    missions: { completed: number; required: number; met: boolean };
     overall: boolean;
   };
 }
@@ -111,51 +126,38 @@ export const createRewardJournalSlice: StateCreator<
 
     // For today, use real-time checking
     if (dateKey === today) {
-      // STRICT RULE: Check for specific task completion requirements
-      // Must complete all 4 daily wins AND 5 attributes (one task from each category)
-
+      // Check all tasks for today
       const tasksForToday = tasks.filter((task: any) => {
         const taskDate = task.scheduledFor ? new Date(task.scheduledFor) : new Date(task.createdAt);
-        return taskDate.toDateString() === dateKey && task.completed;
+        return taskDate.toDateString() === dateKey;
       });
+      const allTasksCompleted = tasksForToday.length === 0 || tasksForToday.every((task: any) => task.completed);
 
-      // Define required categories
-      const dailyWinCategories = ['mental', 'physical', 'spiritual', 'intelligence'];
-      const attributeCategories = ['physical', 'cognitive', 'emotional', 'spiritual', 'social'];
-
-      // Check if all 4 daily win categories have at least one completed task
-      const completedDailyWins = dailyWinCategories.filter(category =>
-        tasksForToday.some((task: any) => task.category === category)
-      );
-
-      // Check if all 5 attribute categories have at least one completed task
-      const completedAttributes = attributeCategories.filter(category =>
-        tasksForToday.some((task: any) => task.category === category)
-      );
-
-      const allDailyWinsCompleted = completedDailyWins.length === 4;
-      const allAttributesCompleted = completedAttributes.length === 5;
-
-      // Check quest completion for today
+      // Check quest completion for today (main and side quests are no longer required)
       const questStatus = getDailyQuestCompletionStatus ? getDailyQuestCompletionStatus() : { mainQuestsCompleted: 0, sideQuestsCompleted: 0, dailyQuestsCompleted: 0 };
-      const mainQuestCompleted = questStatus.mainQuestsCompleted >= 1;
-      const sideQuestCompleted = questStatus.sideQuestsCompleted >= 1;
-      const dailyQuestsCompleted = questStatus.dailyQuestsCompleted > 0; // At least some daily quests
+      const dailyQuestsCompleted = questStatus.dailyQuestsCompleted >= 5; // Require 5 daily quests
 
-      // Check mission tasks for today
-      const missionsForToday = missions.filter((mission: any) => {
-        const missionDate = mission.createdAt ? new Date(mission.createdAt) : new Date();
-        return missionDate.toDateString() === dateKey && mission.started;
+      // Check mission completion for today - require at least 3 missions completed
+      const completedMissionsToday = missions.filter((mission: any) => {
+        if (!mission.completed || !mission.completedAt) return false;
+        const completedDate = new Date(mission.completedAt);
+        return completedDate.toDateString() === dateKey;
       });
-      const allMissionTasksCompleted = missionsForToday.length === 0 ||
-        missionsForToday.every((mission: any) => mission.completed);
+      const missionRequirementMet = completedMissionsToday.length >= 3;
 
-      return allDailyWinsCompleted && allAttributesCompleted && mainQuestCompleted &&
-             sideQuestCompleted && dailyQuestsCompleted && allMissionTasksCompleted;
+      return allTasksCompleted && dailyQuestsCompleted && missionRequirementMet;
     }
 
-    // For past dates, check if completion was recorded
-    return false; // For now, only support today's completion checking
+    // For past dates, we can't accurately check completion in real-time
+    // Instead, rely on the stored completion status in the reward journal entry
+    const { user } = get();
+    if (!user.rewardJournal) return false;
+
+    const entry = user.rewardJournal.find(
+      (entry: RewardJournalEntry) => new Date(entry.date).toDateString() === dateKey
+    );
+
+    return entry ? entry.completed : false;
   },
 
   claimDailyReward: (date: Date) => {
@@ -207,7 +209,7 @@ export const createRewardJournalSlice: StateCreator<
     if (!isCompleted) {
       toast({
         title: "Reward Not Unlocked",
-        description: "Complete all 4 daily wins, 5 attributes, quests, and missions to unlock your reward!",
+        description: "Complete all your tasks, 5 daily quests, and at least 3 missions to unlock your reward!",
         variant: "destructive"
       });
       return;
@@ -316,6 +318,54 @@ export const createRewardJournalSlice: StateCreator<
     };
   },
 
+  updateDailyCompletionStatus: (date: Date) => {
+    const { user, checkDailyCompletion } = get();
+    const dateKey = date.toDateString();
+    const today = new Date();
+    const isToday = date.toDateString() === today.toDateString();
+
+    // Ensure rewardJournal exists
+    if (!user.rewardJournal) {
+      user.rewardJournal = [];
+    }
+
+    const entryIndex = user.rewardJournal.findIndex(
+      (entry: RewardJournalEntry) => new Date(entry.date).toDateString() === dateKey
+    );
+
+    if (entryIndex >= 0) {
+      const isCompleted = checkDailyCompletion(date);
+      const entry = user.rewardJournal[entryIndex];
+
+      set((state: any) => {
+        const updatedJournal = [...state.user.rewardJournal];
+
+        // Only update completion status for today
+        // Don't automatically mark past dates as missed
+        if (isToday) {
+          updatedJournal[entryIndex] = {
+            ...updatedJournal[entryIndex],
+            completed: isCompleted,
+            requiredTasks: {
+              allTasks: isCompleted,
+              mainQuest: isCompleted,
+              sideQuest: isCompleted,
+              dailyQuests: isCompleted,
+              missionTasks: isCompleted
+            }
+          };
+        }
+
+        return {
+          user: {
+            ...state.user,
+            rewardJournal: updatedJournal
+          }
+        };
+      });
+    }
+  },
+
   getDailyCompletionDetails: (date: Date) => {
     const state = get();
     const { tasks = [], quests = [], missions = [], getDailyQuestCompletionStatus } = state;
@@ -347,12 +397,12 @@ export const createRewardJournalSlice: StateCreator<
       !tasksForToday.some((task: any) => task.category === category)
     );
 
-    // Check quest completion
+    // Check quest completion with strict rules
     const questStatus = getDailyQuestCompletionStatus ? getDailyQuestCompletionStatus() : { mainQuestsCompleted: 0, sideQuestsCompleted: 0, dailyQuestsCompleted: 0 };
     const questsCompletion = {
-      mainQuest: questStatus.mainQuestsCompleted >= 1,
-      sideQuest: questStatus.sideQuestsCompleted >= 1,
-      dailyQuests: questStatus.dailyQuestsCompleted > 0
+      mainQuest: questStatus.mainQuestsCompleted === 1, // Exactly 1 main quest
+      sideQuest: questStatus.sideQuestsCompleted === 1, // Exactly 1 side quest
+      dailyQuests: questStatus.dailyQuestsCompleted === 5 // Exactly 5 daily quests
     };
 
     // Check mission completion
@@ -361,6 +411,16 @@ export const createRewardJournalSlice: StateCreator<
       return missionDate.toDateString() === dateKey && mission.started;
     });
     const missionsCompleted = missionsForToday.length === 0 || missionsForToday.every((mission: any) => mission.completed);
+
+    // Check for missed items (auto-completed with penalties)
+    const missedItems = {
+      tasks: tasksForToday.filter((task: any) => task.missed).length,
+      quests: quests.filter((quest: any) => {
+        const questDate = quest.createdAt ? new Date(quest.createdAt) : new Date();
+        return questDate.toDateString() === dateKey && quest.completed && quest.missed;
+      }).length,
+      missions: missionsForToday.filter((mission: any) => mission.missed).length
+    };
 
     // Overall completion
     const allDailyWinsCompleted = completedDailyWins.length === 4;
@@ -374,6 +434,260 @@ export const createRewardJournalSlice: StateCreator<
       attributes: { completed: completedAttributes, missing: missingAttributes },
       quests: questsCompletion,
       missions: missionsCompleted,
+      missedItems,
+      overall
+    };
+  },
+
+  // Weekly Reward Functions
+  setWeeklyReward: (weekStart: Date, customReward: string) => {
+    const { user } = get();
+
+    // Ensure weeklyRewards exists
+    if (!user.weeklyRewards) {
+      user.weeklyRewards = [];
+    }
+
+    // Calculate week end (Saturday)
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekStart.getDate() + 6);
+
+    const weekKey = weekStart.toDateString();
+
+    // Check if entry already exists for this week
+    const existingEntryIndex = user.weeklyRewards.findIndex(
+      (entry: WeeklyRewardEntry) => new Date(entry.weekStart).toDateString() === weekKey
+    );
+
+    const newEntry: WeeklyRewardEntry = {
+      id: uuidv4(),
+      weekStart: new Date(weekStart),
+      weekEnd: new Date(weekEnd),
+      customReward: customReward.trim(),
+      completed: false,
+      claimed: false,
+      dailyProgress: {}
+    };
+
+    set((state: any) => {
+      // Ensure weeklyRewards exists in state
+      if (!state.user.weeklyRewards) {
+        state.user.weeklyRewards = [];
+      }
+      const updatedWeeklyRewards = [...state.user.weeklyRewards];
+
+      if (existingEntryIndex >= 0) {
+        // Update existing entry
+        updatedWeeklyRewards[existingEntryIndex] = {
+          ...updatedWeeklyRewards[existingEntryIndex],
+          customReward: customReward.trim(),
+          completed: false,
+          claimed: false,
+          claimedAt: undefined
+        };
+      } else {
+        // Add new entry
+        updatedWeeklyRewards.push(newEntry);
+      }
+
+      return {
+        user: {
+          ...state.user,
+          weeklyRewards: updatedWeeklyRewards
+        }
+      };
+    });
+
+    toast({
+      title: "Weekly Reward Set!",
+      description: `Your weekly reward: "${customReward}"`,
+      variant: "default"
+    });
+  },
+
+  getWeeklyRewardEntry: (weekStart: Date) => {
+    const { user } = get();
+    const weekKey = weekStart.toDateString();
+
+    // Ensure weeklyRewards exists
+    if (!user.weeklyRewards) {
+      return undefined;
+    }
+
+    return user.weeklyRewards.find(
+      (entry: WeeklyRewardEntry) => new Date(entry.weekStart).toDateString() === weekKey
+    );
+  },
+
+  checkWeeklyCompletion: (weekStart: Date) => {
+    const state = get();
+    const { tasks = [], quests = [], missions = [], getDailyQuestCompletionStatus } = state;
+
+    // Calculate week end (Saturday)
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekStart.getDate() + 6);
+
+    // Get all dates in the week
+    const weekDates = [];
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(weekStart);
+      date.setDate(weekStart.getDate() + i);
+      weekDates.push(date);
+    }
+
+    // Check if week is in the future
+    const today = new Date();
+    if (weekStart > today) {
+      return false;
+    }
+
+    // Count weekly totals
+    let totalDailyTasks = 0;
+    let completedDailyTasks = 0;
+    let totalDailyQuests = 0;
+    let totalMainQuests = 0;
+    let totalSideQuests = 0;
+    let totalMissions = 0;
+
+    // Check each day in the week
+    for (const date of weekDates) {
+      const dateKey = date.toDateString();
+
+      // Skip future dates
+      if (date > today) continue;
+
+      // Count daily tasks (without deadlines)
+      const dailyTasks = tasks.filter((task: any) => {
+        const taskDate = task.scheduledFor ? new Date(task.scheduledFor) : new Date(task.createdAt);
+        return taskDate.toDateString() === dateKey && !task.deadline;
+      });
+      totalDailyTasks += dailyTasks.length;
+      completedDailyTasks += dailyTasks.filter((task: any) => task.completed).length;
+
+      // Count daily quests for this date
+      const dailyQuests = quests.filter((quest: any) => {
+        const questDate = quest.createdAt ? new Date(quest.createdAt) : new Date();
+        return questDate.toDateString() === dateKey && quest.type === 'daily' && quest.completed;
+      });
+      totalDailyQuests += dailyQuests.length;
+
+      // Count main and side quests for this date
+      const mainQuests = quests.filter((quest: any) => {
+        const questDate = quest.createdAt ? new Date(quest.createdAt) : new Date();
+        return questDate.toDateString() === dateKey && quest.type === 'main' && quest.completed;
+      });
+      totalMainQuests += mainQuests.length;
+
+      const sideQuests = quests.filter((quest: any) => {
+        const questDate = quest.createdAt ? new Date(quest.createdAt) : new Date();
+        return questDate.toDateString() === dateKey && quest.type === 'side' && quest.completed;
+      });
+      totalSideQuests += sideQuests.length;
+
+      // Count missions for this date
+      const dailyMissions = missions.filter((mission: any) => {
+        if (!mission.completed || !mission.completedAt) return false;
+        const completedDate = new Date(mission.completedAt);
+        return completedDate.toDateString() === dateKey;
+      });
+      totalMissions += dailyMissions.length;
+    }
+
+    // Check strict weekly requirements
+    const allDailyTasksCompleted = totalDailyTasks === 0 || completedDailyTasks === totalDailyTasks;
+    const dailyQuestsMet = totalDailyQuests >= 30;
+    const mainQuestsMet = totalMainQuests >= 5;
+    const sideQuestsMet = totalSideQuests >= 5;
+    const missionsMet = totalMissions >= 18;
+
+    return allDailyTasksCompleted && dailyQuestsMet && mainQuestsMet && sideQuestsMet && missionsMet;
+  },
+
+  getWeeklyCompletionDetails: (weekStart: Date) => {
+    const state = get();
+    const { tasks = [], quests = [], missions = [] } = state;
+
+    // Calculate week end (Saturday)
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekStart.getDate() + 6);
+
+    // Get all dates in the week
+    const weekDates = [];
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(weekStart);
+      date.setDate(weekStart.getDate() + i);
+      weekDates.push(date);
+    }
+
+    const today = new Date();
+
+    // Count weekly totals
+    let totalDailyTasks = 0;
+    let completedDailyTasks = 0;
+    let totalDailyQuests = 0;
+    let totalMainQuests = 0;
+    let totalSideQuests = 0;
+    let totalMissions = 0;
+
+    // Check each day in the week
+    for (const date of weekDates) {
+      const dateKey = date.toDateString();
+
+      // Skip future dates
+      if (date > today) continue;
+
+      // Count daily tasks (without deadlines)
+      const dailyTasks = tasks.filter((task: any) => {
+        const taskDate = task.scheduledFor ? new Date(task.scheduledFor) : new Date(task.createdAt);
+        return taskDate.toDateString() === dateKey && !task.deadline;
+      });
+      totalDailyTasks += dailyTasks.length;
+      completedDailyTasks += dailyTasks.filter((task: any) => task.completed).length;
+
+      // Count daily quests for this date
+      const dailyQuests = quests.filter((quest: any) => {
+        const questDate = quest.createdAt ? new Date(quest.createdAt) : new Date();
+        return questDate.toDateString() === dateKey && quest.type === 'daily' && quest.completed;
+      });
+      totalDailyQuests += dailyQuests.length;
+
+      // Count main and side quests for this date
+      const mainQuests = quests.filter((quest: any) => {
+        const questDate = quest.createdAt ? new Date(quest.createdAt) : new Date();
+        return questDate.toDateString() === dateKey && quest.type === 'main' && quest.completed;
+      });
+      totalMainQuests += mainQuests.length;
+
+      const sideQuests = quests.filter((quest: any) => {
+        const questDate = quest.createdAt ? new Date(quest.createdAt) : new Date();
+        return questDate.toDateString() === dateKey && quest.type === 'side' && quest.completed;
+      });
+      totalSideQuests += sideQuests.length;
+
+      // Count missions for this date
+      const dailyMissions = missions.filter((mission: any) => {
+        if (!mission.completed || !mission.completedAt) return false;
+        const completedDate = new Date(mission.completedAt);
+        return completedDate.toDateString() === dateKey;
+      });
+      totalMissions += dailyMissions.length;
+    }
+
+    // Calculate completion status
+    const allDailyTasksCompleted = totalDailyTasks === 0 || completedDailyTasks === totalDailyTasks;
+    const dailyQuestsMet = totalDailyQuests >= 30;
+    const mainQuestsMet = totalMainQuests >= 5;
+    const sideQuestsMet = totalSideQuests >= 5;
+    const missionsMet = totalMissions >= 18;
+
+    const overall = allDailyTasksCompleted && dailyQuestsMet && mainQuestsMet && sideQuestsMet && missionsMet;
+
+    return {
+      dailyTasks: { completed: completedDailyTasks, total: totalDailyTasks, allCompleted: allDailyTasksCompleted },
+      dailyQuests: { completed: totalDailyQuests, required: 30, met: dailyQuestsMet },
+      mainQuests: { completed: totalMainQuests, required: 5, met: mainQuestsMet },
+      sideQuests: { completed: totalSideQuests, required: 5, met: sideQuestsMet },
+      missions: { completed: totalMissions, required: 18, met: missionsMet },
       overall
     };
   }

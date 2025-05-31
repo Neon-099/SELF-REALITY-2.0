@@ -106,6 +106,8 @@ const Milestones = () => {
         </div>
       </div>
 
+
+
       {/* Level Milestones */}
       <div className={`bg-solo-dark border border-gray-800 rounded-lg ${isMobile ? 'p-3' : 'p-6'} shadow-lg`}>
         <div className={`flex items-center ${isMobile ? 'gap-2 mb-3' : 'gap-3 mb-6'}`}>

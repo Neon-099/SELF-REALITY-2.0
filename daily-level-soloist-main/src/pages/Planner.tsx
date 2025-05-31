@@ -767,6 +767,16 @@ const Planner = () => {
 
   const handleDeleteTask = () => {
     if (selectedTask) {
+      // Check if task deadline has passed
+      if (selectedTask.deadline && new Date(selectedTask.deadline) <= new Date()) {
+        toast({
+          title: "Cannot Delete Task",
+          description: "This task cannot be deleted because its deadline has passed.",
+          variant: "destructive"
+        });
+        return;
+      }
+
       deleteTask(selectedTask.id);
       toast({
         title: "Task deleted",
@@ -1172,7 +1182,7 @@ const Planner = () => {
         }}
         selectedDate={selectedDate}
         editingTask={selectedTask}
-        onDelete={selectedTask && !selectedTask.completed ? handleDeleteTask : undefined}
+        onDelete={selectedTask && !selectedTask.completed && !(selectedTask.deadline && new Date(selectedTask.deadline) <= new Date()) ? handleDeleteTask : undefined}
       />
 
       <DayDialog

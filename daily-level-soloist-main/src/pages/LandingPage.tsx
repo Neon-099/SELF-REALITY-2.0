@@ -1,12 +1,26 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ArrowRight, Award, Shield, Star, Sword } from 'lucide-react';
 import { CharacterNameDialog } from '@/components/CharacterNameDialog';
+import { useSoloLevelingStore } from '@/lib/store';
 
 export default function Landing() {
   const [isCharacterDialogOpen, setIsCharacterDialogOpen] = useState(false);
+  const navigate = useNavigate();
+  const user = useSoloLevelingStore(state => state.user);
+
+  const handleEnterJourney = () => {
+    // Check if user already has a name set
+    if (user.name && user.name.trim() !== '' && user.name !== 'Hunter') {
+      // User already has a character, redirect to home
+      navigate('/home');
+    } else {
+      // User needs to create a character
+      setIsCharacterDialogOpen(true);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-solo-dark to-gray-900">
@@ -22,7 +36,7 @@ export default function Landing() {
           <Button
             size="lg"
             className="animate-pulse-glow"
-            onClick={() => setIsCharacterDialogOpen(true)}
+            onClick={handleEnterJourney}
           >
             Enter Your Journey <ArrowRight className="ml-2" />
           </Button>
@@ -78,7 +92,7 @@ export default function Landing() {
           <Button
             variant="secondary"
             size="lg"
-            onClick={() => setIsCharacterDialogOpen(true)}
+            onClick={handleEnterJourney}
           >
             Start your journey <ArrowRight className="ml-2" />
           </Button>
