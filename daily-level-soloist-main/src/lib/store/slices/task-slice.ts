@@ -51,6 +51,7 @@ export const createTaskSlice: StateCreator<
 > = (set, get) => ({
   tasks: [],
   createTask: (title, description, difficulty, category, deadline) => {
+    const today = new Date();
     const task: Task = {
       id: uuidv4(),
       title,
@@ -59,8 +60,8 @@ export const createTaskSlice: StateCreator<
       difficulty,
       expReward: getExpForDifficulty(difficulty),
       category,
-      createdAt: new Date(),
-      scheduledFor: deadline || new Date(), // Use deadline date as scheduledFor if provided, otherwise use today
+      createdAt: today,
+      scheduledFor: today, // Always schedule for today when created from home page
       deadline
     };
     get().addTask(task);

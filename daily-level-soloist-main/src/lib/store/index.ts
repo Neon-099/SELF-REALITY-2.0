@@ -146,6 +146,10 @@ export const useSoloLevelingStore = create<StoreState>()(
         if (persistedState && persistedState.user && !persistedState.user.rewardJournal) {
           persistedState.user.rewardJournal = [];
         }
+        // Ensure weeklyRewards exists for existing users
+        if (persistedState && persistedState.user && !persistedState.user.weeklyRewards) {
+          persistedState.user.weeklyRewards = [];
+        }
         return persistedState;
       },
       version: 1

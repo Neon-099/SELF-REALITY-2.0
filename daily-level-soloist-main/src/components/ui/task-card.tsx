@@ -17,6 +17,7 @@ import { getExpForDifficulty } from '@/lib/utils/calculations';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { areAllDailyWinsCompleted } from '@/lib/utils';
 import { DateTimePicker } from '@/components/ui/date-time-picker';
+import { toast } from '@/hooks/use-toast';
 
 interface TaskCardProps {
   task: Task;
@@ -72,6 +73,19 @@ export function TaskCard({ task }: TaskCardProps) {
   // Function to handle opening the edit dialog
   const handleEditClick = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent card click event
+
+    // Check if task deadline has passed
+    const deadlineInfo = formatDeadline(task.deadline);
+    if (deadlineInfo?.isPast) {
+      // Show a toast message that the task cannot be edited
+      toast({
+        title: "Cannot Edit Task",
+        description: "This task cannot be edited because its deadline has passed.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsEditDialogOpen(true);
   };
 
@@ -122,8 +136,8 @@ export function TaskCard({ task }: TaskCardProps) {
     const now = new Date();
     const deadlineDate = new Date(deadline);
 
-    // Check if deadline is past
-    const isPast = deadlineDate < now;
+    // Check if deadline is past (more precise comparison)
+    const isPast = deadlineDate.getTime() <= now.getTime();
 
     // Calculate time remaining
     const timeRemaining = deadlineDate.getTime() - now.getTime();
@@ -181,13 +195,17 @@ export function TaskCard({ task }: TaskCardProps) {
 
   const deadlineInfo = formatDeadline(task.deadline);
 
+  // Check if task is past deadline and should not be editable
+  const isTaskPastDeadline = deadlineInfo?.isPast || false;
+
   return (
     <>
       <div
         className={cn(
-          "relative rounded-xl border bg-solo-dark transition-all cursor-pointer flex flex-col shadow-md overflow-hidden",
+          "relative rounded-xl border bg-solo-dark transition-all flex flex-col shadow-md overflow-hidden",
           isMobile ? "p-2" : "p-4",
-          task.completed ? 'opacity-60' : 'hover:border-solo-primary hover:shadow-lg'
+          task.completed ? 'opacity-60' : '',
+          isTaskPastDeadline ? 'opacity-75 cursor-not-allowed border-red-500/30' : 'cursor-pointer hover:border-solo-primary hover:shadow-lg'
         )}
         onClick={handleEditClick}
       >
@@ -209,12 +227,29 @@ export function TaskCard({ task }: TaskCardProps) {
             <button
               onClick={(e) => {
                 e.stopPropagation();
+
+                // Check if task deadline has passed
+                if (isTaskPastDeadline) {
+                  toast({
+                    title: "Cannot Delete Task",
+                    description: "This task cannot be deleted because its deadline has passed.",
+                    variant: "destructive"
+                  });
+                  return;
+                }
+
                 if (window.confirm('Are you sure you want to delete this task?')) {
                   deleteTask(task.id);
                 }
               }}
-              className="p-1 rounded-full hover:bg-red-500/20 text-red-500 transition-colors"
-              aria-label="Delete task"
+              disabled={isTaskPastDeadline}
+              className={cn(
+                "p-1 rounded-full transition-colors",
+                isTaskPastDeadline
+                  ? "text-gray-500 cursor-not-allowed opacity-50"
+                  : "hover:bg-red-500/20 text-red-500"
+              )}
+              aria-label={isTaskPastDeadline ? "Cannot delete - deadline passed" : "Delete task"}
             >
               <Trash2 size={isMobile ? 16 : 20} />
             </button>
@@ -231,10 +266,16 @@ export function TaskCard({ task }: TaskCardProps) {
 
         {/* Deadline display at bottom right */}
         <div className="flex justify-end mt-auto">
-          {deadlineInfo && !task.completed && (
+          {deadlineInfo && (
             <span className={cn(
-              "flex items-center rounded-full font-medium bg-yellow-600/20 text-yellow-400",
-              isMobile ? "text-[10px] px-1.5 py-0.5" : "text-xs px-2 py-0.5"
+              "flex items-center rounded-full font-medium",
+              isMobile ? "text-[10px] px-1.5 py-0.5" : "text-xs px-2 py-0.5",
+              // Color based on urgency level
+              deadlineInfo.urgencyLevel === "overdue" && "bg-red-600/20 text-red-400",
+              deadlineInfo.urgencyLevel === "critical" && "bg-orange-600/20 text-orange-400",
+              deadlineInfo.urgencyLevel === "urgent" && "bg-yellow-600/20 text-yellow-400",
+              deadlineInfo.urgencyLevel === "warning" && "bg-blue-600/20 text-blue-400",
+              !deadlineInfo.urgencyLevel && "bg-gray-600/20 text-gray-400"
             )}>
               <Clock className={isMobile ? "h-2.5 w-2.5 mr-0.5" : "h-3 w-3 mr-1"} />
               {deadlineInfo.text}

@@ -17,6 +17,8 @@ export interface PunishmentSlice {
 
   // Actions
   applyMissedDeadlinePenalty: (itemType: string, itemId: string) => void;
+  markQuestAsMissed: (id: string) => void;
+  markMissionAsMissed: (id: string) => void;
   checkCurseStatus: () => void;
   resetWeeklyChances: () => void;
   attemptRedemption: (success: boolean) => void;
@@ -156,6 +158,85 @@ export const createPunishmentSlice: StateCreator<PunishmentSlice & any> = (set, 
     return expModifier; // Return the EXP modifier for the immediate completion
   },
 
+  markQuestAsMissed: (id: string) => {
+    const { quests, applyMissedDeadlinePenalty, addExp, addGold, getExpModifier } = get();
+    const quest = quests.find(q => q.id === id);
+
+    if (!quest || quest.completed) return;
+
+    // Apply the missed deadline penalty through the punishment system
+    applyMissedDeadlinePenalty('quest', id);
+
+    // Get the EXP modifier for missed deadline (50% penalty)
+    const expModifier = getExpModifier() * 0.5; // Additional 50% penalty for missing deadline
+    const finalExpReward = Math.floor(quest.expReward * expModifier);
+
+    // Mark the quest as completed but with a miss flag
+    set((state: any) => ({
+      quests: state.quests.map((q: any) =>
+        q.id === id ? {
+          ...q,
+          completed: true,
+          completedAt: new Date(),
+          missed: true // Add a flag to indicate it was missed
+        } : q
+      )
+    }));
+
+    // Award reduced EXP and gold for missed quest
+    addExp(finalExpReward);
+    addGold(Math.floor(finalExpReward / 10));
+
+    toast({
+      title: "Quest Auto-Completed (Missed Deadline)",
+      description: `"${quest.title}" has been auto-completed with penalties. You earned ${finalExpReward} EXP (50% penalty applied).`,
+      variant: "destructive"
+    });
+  },
+
+  markMissionAsMissed: (id: string) => {
+    const { missions, applyMissedDeadlinePenalty, addExp, getExpModifier } = get();
+    const mission = missions.find(m => m.id === id);
+
+    if (!mission || mission.completed) return;
+
+    // Apply the missed deadline penalty through the punishment system
+    applyMissedDeadlinePenalty('mission', id);
+
+    // Get the EXP modifier for missed deadline (50% penalty)
+    const expModifier = getExpModifier() * 0.5; // Additional 50% penalty for missing deadline
+    const finalExpReward = Math.floor(mission.expReward * expModifier);
+
+    // Mark the mission as completed but with a miss flag
+    set((state: any) => ({
+      missions: state.missions.map((m: any) =>
+        m.id === id ? {
+          ...m,
+          completed: true,
+          completedAt: new Date(),
+          missed: true // Add a flag to indicate it was missed
+        } : m
+      ),
+      // Also add to completed history
+      completedMissionHistory: [...state.completedMissionHistory, {
+        ...mission,
+        completed: true,
+        completedAt: new Date(),
+        missed: true,
+        expEarned: finalExpReward
+      }]
+    }));
+
+    // Award reduced EXP for missed mission
+    addExp(finalExpReward);
+
+    toast({
+      title: "Mission Auto-Completed (Missed Deadline)",
+      description: `"${mission.title}" has been auto-completed with penalties. You earned ${finalExpReward} EXP (50% penalty applied).`,
+      variant: "destructive"
+    });
+  },
+
   checkCurseStatus: () => {
     const { isCursed, cursedUntil, hasShadowFatigue, shadowFatigueUntil, lockedSideQuestsUntil } = get();
     const now = new Date();
@@ -243,19 +324,48 @@ export const createPunishmentSlice: StateCreator<PunishmentSlice & any> = (set, 
 
       quests.forEach(quest => {
         if (!quest.completed && quest.deadline && new Date(quest.deadline) < now && !quest.missed) {
-          // Apply missed deadline penalty
-          const { applyMissedDeadlinePenalty } = get();
-          applyMissedDeadlinePenalty('quest', quest.id);
+          // Apply missed deadline penalty and auto-complete the quest
+          const { markQuestAsMissed } = get();
+          markQuestAsMissed(quest.id);
           missedQuestsCount++;
-
-          // Individual notifications for quests
-          toast({
-            title: "Quest Deadline Missed!",
-            description: `The deadline for "${quest.title}" has passed. Shadow Penalty applied.`,
-            variant: "destructive"
-          });
         }
       });
+
+      // Show a single aggregated notification if multiple quests were missed
+      if (missedQuestsCount > 1) {
+        toast({
+          title: `${missedQuestsCount} Quest Deadlines Missed!`,
+          description: `${missedQuestsCount} quests have passed their deadlines and been auto-completed with penalties.`,
+          variant: "destructive"
+        });
+      } else if (missedQuestsCount === 1) {
+        // The individual notification is shown in markQuestAsMissed
+      }
+    }
+
+    // Check missions with deadlines
+    if (missions && Array.isArray(missions)) {
+      let missedMissionsCount = 0;
+
+      missions.forEach(mission => {
+        if (!mission.completed && mission.deadline && new Date(mission.deadline) < now && !mission.missed) {
+          // Apply missed deadline penalty and auto-complete the mission
+          const { markMissionAsMissed } = get();
+          markMissionAsMissed(mission.id);
+          missedMissionsCount++;
+        }
+      });
+
+      // Show a single aggregated notification if multiple missions were missed
+      if (missedMissionsCount > 1) {
+        toast({
+          title: `${missedMissionsCount} Mission Deadlines Missed!`,
+          description: `${missedMissionsCount} missions have passed their deadlines and been auto-completed with penalties.`,
+          variant: "destructive"
+        });
+      } else if (missedMissionsCount === 1) {
+        // The individual notification is shown in markMissionAsMissed
+      }
     }
   },
 

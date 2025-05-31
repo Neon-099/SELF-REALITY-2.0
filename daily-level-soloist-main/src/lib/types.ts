@@ -111,12 +111,29 @@ export interface RewardJournalEntry {
   completed: boolean;
   claimed: boolean;
   claimedAt?: Date;
+  missed?: boolean;
+  missedAt?: Date;
   requiredTasks: {
     allTasks: boolean;
     mainQuest: boolean;
     sideQuest: boolean;
     dailyQuests: boolean;
     missionTasks: boolean;
+  };
+}
+
+export interface WeeklyRewardEntry {
+  id: string;
+  weekStart: Date; // Sunday of the week
+  weekEnd: Date;   // Saturday of the week
+  customReward: string;
+  completed: boolean;
+  claimed: boolean;
+  claimedAt?: Date;
+  missed?: boolean;
+  missedAt?: Date;
+  dailyProgress: {
+    [dateString: string]: boolean; // Track completion for each day
   };
 }
 
@@ -140,4 +157,5 @@ export interface User {
   hasShadowFatigue?: boolean;
   // Reward Journal System
   rewardJournal: RewardJournalEntry[];
+  weeklyRewards: WeeklyRewardEntry[];
 }
