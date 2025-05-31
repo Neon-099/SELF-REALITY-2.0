@@ -5,7 +5,7 @@ import { DailyWinCategory, Difficulty, Task } from '@/lib/types';
 import { Swords, Sword, ListTodo, Star, CalendarClock } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
-import { useMediaQuery } from '@/hooks/use-media-query';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 type QuestType = 'main' | 'side' | 'daily';
 
@@ -14,7 +14,7 @@ interface AddQuestDialogProps {
 }
 
 const AddQuestDialog: React.FC<AddQuestDialogProps> = ({ onClose }) => {
-  const isMobile = useMediaQuery('(max-width: 768px)');
+  const isMobile = useIsMobile();
   const addQuest = useSoloLevelingStore(state => state.addQuest);
   const updateQuest = useSoloLevelingStore(state => state.updateQuest);
   const [title, setTitle] = useState('');

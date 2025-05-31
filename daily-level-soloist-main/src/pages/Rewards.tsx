@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useSoloLevelingStore } from '@/lib/store';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import {
@@ -15,7 +14,6 @@ import {
   CheckCircle,
   XCircle,
   Plus,
-  TrendingUp,
   Award,
   Clock,
   Target,
@@ -32,7 +30,6 @@ import {
   Heart,
   Sparkles,
   MapPin,
-  Plane,
   Dumbbell,
   Palette,
   Camera,
@@ -45,7 +42,7 @@ import {
   Eye,
   EyeOff
 } from 'lucide-react';
-import { format, isToday, isPast, isFuture, addDays } from 'date-fns';
+import { format, isToday, addDays } from 'date-fns';
 import { toast } from '@/hooks/use-toast';
 
 // Reward suggestions with icons and categories
@@ -89,30 +86,24 @@ const weeklyRewardSuggestions = [
 const Rewards = () => {
   const isMobile = useIsMobile();
   const [
-    user,
     setDailyReward,
     checkDailyCompletion,
     claimDailyReward,
     getDailyRewardEntry,
     getRewardJournalStats,
-    updateDailyCompletionStatus,
     getDailyCompletionDetails,
     setWeeklyReward,
     getWeeklyRewardEntry,
-    checkWeeklyCompletion,
     getWeeklyCompletionDetails
   ] = useSoloLevelingStore(state => [
-    state.user,
     state.setDailyReward,
     state.checkDailyCompletion,
     state.claimDailyReward,
     state.getDailyRewardEntry,
     state.getRewardJournalStats,
-    state.updateDailyCompletionStatus,
     state.getDailyCompletionDetails,
     state.setWeeklyReward,
     state.getWeeklyRewardEntry,
-    state.checkWeeklyCompletion,
     state.getWeeklyCompletionDetails
   ]);
 
@@ -132,8 +123,6 @@ const Rewards = () => {
 
   const stats = getRewardJournalStats();
   const todayEntry = getDailyRewardEntry(new Date());
-  const selectedEntry = getDailyRewardEntry(selectedDate);
-  const todayDetails = getDailyCompletionDetails(new Date());
 
   // No automatic updates - only manual updates when needed
 
@@ -212,7 +201,6 @@ const Rewards = () => {
     if (!entry) return 'no-reward';
 
     const today = new Date();
-    const isToday = date.toDateString() === today.toDateString();
     const isFutureDate = date > today;
     const isPastDate = date < today;
 
@@ -1048,7 +1036,6 @@ const Rewards = () => {
                     <div className="grid grid-cols-7 gap-1">
                       {week.dates.map((date, dayIndex) => {
                         const isToday = date.toDateString() === new Date().toDateString();
-                        const dayEntry = getDailyRewardEntry(date);
                         const dayStatus = getCompletionStatus(date);
 
                         return (

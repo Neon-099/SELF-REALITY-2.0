@@ -57,7 +57,7 @@ export const createRewardJournalSlice: StateCreator<
 
     // Check if entry already exists for this date
     const existingEntryIndex = user.rewardJournal.findIndex(
-      entry => new Date(entry.date).toDateString() === dateKey
+      (entry: RewardJournalEntry) => new Date(entry.date).toDateString() === dateKey
     );
 
     const newEntry: RewardJournalEntry = {
@@ -114,7 +114,7 @@ export const createRewardJournalSlice: StateCreator<
 
   checkDailyCompletion: (date: Date) => {
     const state = get();
-    const { tasks = [], quests = [], missions = [], getDailyQuestCompletionStatus } = state;
+    const { tasks = [], missions = [], getDailyQuestCompletionStatus } = state;
     const dateKey = date.toDateString();
     const today = new Date().toDateString();
 
@@ -270,7 +270,7 @@ export const createRewardJournalSlice: StateCreator<
     const journal = user.rewardJournal;
 
     const totalRewards = journal.length;
-    const claimedRewards = journal.filter(entry => entry.claimed).length;
+    const claimedRewards = journal.filter((entry: RewardJournalEntry) => entry.claimed).length;
 
     // Calculate current streak
     let currentStreak = 0;
@@ -302,9 +302,9 @@ export const createRewardJournalSlice: StateCreator<
     const weekAgo = new Date();
     weekAgo.setDate(weekAgo.getDate() - 7);
 
-    const weeklyEntries = journal.filter(entry => new Date(entry.date) >= weekAgo);
-    const weeklyEarned = weeklyEntries.filter(entry => entry.claimed).length;
-    const weeklyMissed = weeklyEntries.filter(entry => !entry.claimed && entry.customReward).length;
+    const weeklyEntries = journal.filter((entry: RewardJournalEntry) => new Date(entry.date) >= weekAgo);
+    const weeklyEarned = weeklyEntries.filter((entry: RewardJournalEntry) => entry.claimed).length;
+    const weeklyMissed = weeklyEntries.filter((entry: RewardJournalEntry) => !entry.claimed && entry.customReward).length;
 
     return {
       totalRewards,
@@ -335,7 +335,6 @@ export const createRewardJournalSlice: StateCreator<
 
     if (entryIndex >= 0) {
       const isCompleted = checkDailyCompletion(date);
-      const entry = user.rewardJournal[entryIndex];
 
       set((state: any) => {
         const updatedJournal = [...state.user.rewardJournal];
@@ -521,7 +520,7 @@ export const createRewardJournalSlice: StateCreator<
 
   checkWeeklyCompletion: (weekStart: Date) => {
     const state = get();
-    const { tasks = [], quests = [], missions = [], getDailyQuestCompletionStatus } = state;
+    const { tasks = [], quests = [], missions = [] } = state;
 
     // Calculate week end (Saturday)
     const weekEnd = new Date(weekStart);

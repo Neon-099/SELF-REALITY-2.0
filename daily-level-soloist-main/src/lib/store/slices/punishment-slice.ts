@@ -160,7 +160,7 @@ export const createPunishmentSlice: StateCreator<PunishmentSlice & any> = (set, 
 
   markQuestAsMissed: (id: string) => {
     const { quests, applyMissedDeadlinePenalty, addExp, addGold, getExpModifier } = get();
-    const quest = quests.find(q => q.id === id);
+    const quest = quests.find((q: any) => q.id === id);
 
     if (!quest || quest.completed) return;
 
@@ -196,7 +196,7 @@ export const createPunishmentSlice: StateCreator<PunishmentSlice & any> = (set, 
 
   markMissionAsMissed: (id: string) => {
     const { missions, applyMissedDeadlinePenalty, addExp, getExpModifier } = get();
-    const mission = missions.find(m => m.id === id);
+    const mission = missions.find((m: any) => m.id === id);
 
     if (!mission || mission.completed) return;
 

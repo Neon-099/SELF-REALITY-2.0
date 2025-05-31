@@ -1062,7 +1062,7 @@ const Quests = () => {
                               <div className="flex justify-between items-start mb-2">
                                 <h3 className="font-medium text-green-400">{displayTitle}</h3>
                                 <div className="flex items-center gap-1 text-xs">
-                                  {quest.category && quest.category !== '' && quest.category !== 'none' && !quest.category.toLowerCase().includes('select') && (
+                                  {quest.category && quest.category.length > 0 && (
                                     <span className={`text-[10px] px-1.5 py-0.5 rounded-full border shadow-sm font-medium ${
                                       quest.category === 'mental'
                                         ? 'bg-blue-500/10 text-blue-400 border-blue-500/20'
@@ -2230,7 +2230,7 @@ const Quests = () => {
                                 <div className="flex justify-between items-start mb-2">
                                   <h3 className="font-medium text-green-400">{displayTitle}</h3>
                                 <div className="flex items-center gap-1 text-xs">
-                                  {quest.category && quest.category !== '' && quest.category !== 'none' && !quest.category.toLowerCase().includes('select') && (
+                                  {quest.category && quest.category.length > 0 && (
                                     <span className={`text-[10px] px-1.5 py-0.5 rounded-full border shadow-sm font-medium ${
                                       quest.category === 'mental'
                                         ? 'bg-blue-500/10 text-blue-400 border-blue-500/20'
@@ -2302,7 +2302,7 @@ const Quests = () => {
                                     )}
 
                                     {/* Category */}
-                                    {quest.category && quest.category !== '' && quest.category !== 'none' && !quest.category.toLowerCase().includes('select') && (
+                                    {quest.category && quest.category.length > 0 && (
                                       <div className="mb-4">
                                         <h4 className="text-sm font-semibold text-green-400 mb-2">Category:</h4>
                                         <div className="flex items-center">
@@ -2746,7 +2746,7 @@ const Quests = () => {
                                 </div>
                                 <div>
                                   <h3 className="font-medium text-lg line-through">{displayTitle}</h3>
-                                {quest.category && quest.category !== '' && quest.category !== 'none' && !quest.category.toLowerCase().includes('select') && (
+                                {quest.category && quest.category.length > 0 && (
                                   <span className={`text-xs px-2 py-0.5 rounded-full opacity-70 ${
                                     quest.category === 'mental'
                                       ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
