@@ -120,6 +120,8 @@ const Rewards = () => {
   const [customWeeklyReward, setCustomWeeklyReward] = useState('');
   const [showWeeklyRewards, setShowWeeklyRewards] = useState(false);
   const [showRecentDays, setShowRecentDays] = useState(false);
+  const [isEditDailyRewardDialogOpen, setIsEditDailyRewardDialogOpen] = useState(false);
+  const [editingDailyReward, setEditingDailyReward] = useState('');
 
   const stats = getRewardJournalStats();
   const todayEntry = getDailyRewardEntry(new Date());
@@ -914,6 +916,10 @@ const Rewards = () => {
                     if (!entry) {
                       setRewardText('');
                       setIsSetRewardDialogOpen(true);
+                    } else {
+                      // Open edit dialog for existing rewards
+                      setEditingDailyReward(entry.customReward);
+                      setIsEditDailyRewardDialogOpen(true);
                     }
                   }}
                 >
@@ -959,7 +965,7 @@ const Rewards = () => {
                         "{entry.customReward}"
                       </p>
                       <div className="text-xs text-gray-500">
-                        {getStatusText(status)}
+                        {getStatusText(status)} {status !== 'missed' && '• Click to edit'}
                       </div>
                     </div>
                   ) : (
@@ -1485,6 +1491,104 @@ const Rewards = () => {
               </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Daily Reward Dialog */}
+      <Dialog open={isEditDailyRewardDialogOpen} onOpenChange={setIsEditDailyRewardDialogOpen}>
+        <DialogContent className={isMobile ? "w-[90vw] max-w-[400px]" : "max-w-[600px]"}>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Gift className="h-5 w-5 text-solo-primary" />
+              Edit Daily Reward for {format(selectedDate, 'MMMM dd, yyyy')}
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            {/* Custom Reward Option */}
+            <div className="p-3 rounded-lg border border-solo-primary/30 bg-solo-primary/10">
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Plus className="h-4 w-4 text-solo-primary" />
+                  <span className="text-sm font-medium text-solo-primary">Edit Custom Daily Reward</span>
+                </div>
+                <Textarea
+                  placeholder="e.g., Watch a movie, Buy that book, 1 hour of gaming, Treat myself to dinner..."
+                  value={editingDailyReward}
+                  onChange={(e) => setEditingDailyReward(e.target.value)}
+                  className="bg-gray-800/50 border-gray-600 text-gray-200"
+                  rows={3}
+                />
+                <div className="flex gap-2">
+                  <Button
+                    onClick={() => {
+                      if (editingDailyReward.trim()) {
+                        setDailyReward(selectedDate, editingDailyReward.trim());
+                        setEditingDailyReward('');
+                        setIsEditDailyRewardDialogOpen(false);
+                        toast({
+                          title: "Daily Reward Updated!",
+                          description: `Updated reward for ${format(selectedDate, 'MMM dd, yyyy')}`,
+                          variant: "default"
+                        });
+                      }
+                    }}
+                    disabled={!editingDailyReward.trim()}
+                    className="flex-1"
+                  >
+                    Update Reward
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsEditDailyRewardDialogOpen(false)}
+                    className="flex-1"
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            {/* Suggested Rewards */}
+            <div>
+              <h4 className="text-sm font-medium text-gray-300 mb-3">Or choose from suggestions:</h4>
+              <div className="grid grid-cols-1 gap-3 max-h-[300px] overflow-y-auto">
+                {rewardSuggestions.map((suggestion) => {
+                  const IconComponent = suggestion.icon;
+                  return (
+                    <div
+                      key={suggestion.id}
+                      onClick={() => {
+                        setDailyReward(selectedDate, suggestion.text);
+                        setEditingDailyReward('');
+                        setIsEditDailyRewardDialogOpen(false);
+                        toast({
+                          title: "Daily Reward Updated!",
+                          description: `Set "${suggestion.text}" for ${format(selectedDate, 'MMM dd, yyyy')}`,
+                          variant: "default"
+                        });
+                      }}
+                      className="p-3 rounded-lg border border-gray-700 bg-gray-800/30 hover:bg-gray-700/50 cursor-pointer transition-all hover:border-solo-primary/50 group"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="flex-shrink-0">
+                          <IconComponent className="h-5 w-5 text-solo-primary group-hover:text-solo-secondary transition-colors" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-200 group-hover:text-white transition-colors">
+                            {suggestion.text}
+                          </p>
+                          <p className="text-xs text-gray-500 mt-1">
+                            {suggestion.category}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
