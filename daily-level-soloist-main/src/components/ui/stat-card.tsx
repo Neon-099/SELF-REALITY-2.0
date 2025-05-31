@@ -1,6 +1,7 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
 import { useSoloLevelingStore } from '@/lib/store';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { Stat } from '@/lib/types';
 
 interface StatCardProps {
@@ -12,6 +13,7 @@ interface StatCardProps {
 export function StatCard({ name, value, icon }: StatCardProps) {
   // Get current stat EXP from the store
   const user = useSoloLevelingStore(state => state.user);
+  const isMobile = useIsMobile();
   
   // Check if user and user.stats exist before proceeding
   if (!user || !user.stats) {
@@ -48,10 +50,13 @@ export function StatCard({ name, value, icon }: StatCardProps) {
         <div className="text-xl font-bold text-solo-primary">{value}</div>
       </div>
       
-      <div className="w-full mb-2 text-xs text-gray-400 flex justify-between">
-        <span>EXP Progress</span>
-        <span>{statExp}/{expToNextLevel}</span>
-      </div>
+      {/* Hide EXP progress text and numbers in mobile version */}
+      {!isMobile && (
+        <div className="w-full mb-2 text-xs text-gray-400 flex justify-between">
+          <span>EXP Progress</span>
+          <span>{statExp}/{expToNextLevel}</span>
+        </div>
+      )}
       
       <div className="w-full h-2 bg-gray-800 rounded-full overflow-hidden">
         <div 

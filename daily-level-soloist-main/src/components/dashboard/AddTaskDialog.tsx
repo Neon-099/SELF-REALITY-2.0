@@ -70,6 +70,12 @@ export const AddTaskDialog = ({ children }: AddTaskDialogProps) => {
       setCategory('mental');
       setHasDeadline(false);
       setDeadline(undefined);
+    } else {
+      // When dialog opens, set default deadline to current day
+      if (!deadline) {
+        const today = new Date();
+        setDeadline(today);
+      }
     }
   }, [open]);
 
