@@ -32,5 +32,6 @@ export const initialUser: User = {
   streakDays: 0,
   longestStreak: 0,
   lastActive: new Date(),
-  rank: 'F'
+  rank: 'F',
+  rewardJournal: []
 };

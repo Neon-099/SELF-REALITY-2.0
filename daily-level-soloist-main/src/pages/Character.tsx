@@ -785,8 +785,8 @@ const Character = () => {
         </Card>
       </div>
 
-      {/* Mobile attributes dialog button */}
-      <div className="sm:hidden flex justify-center">
+      {/* Mobile attributes dialog button and milestone button */}
+      <div className="sm:hidden flex justify-center gap-3">
         <Dialog>
           <DialogTrigger asChild>
             <Button
@@ -898,6 +898,15 @@ const Character = () => {
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* Milestone button */}
+        <Button
+          onClick={() => navigate('/milestones')}
+          className="bg-gradient-to-r from-yellow-400 to-amber-500 text-white font-medium rounded-lg shadow-md hover:shadow-lg transition-all duration-300 px-4 py-2.5"
+        >
+          <Trophy className="mr-2 h-4 w-4" />
+          Milestones
+        </Button>
       </div>
 
       {/* Rank System - Stacked on mobile, side-by-side on desktop */}

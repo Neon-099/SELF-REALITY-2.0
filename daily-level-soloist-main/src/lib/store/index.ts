@@ -7,9 +7,10 @@ import { createMissionSlice, MissionSlice } from './slices/mission-slice';
 import { createUserSlice, UserSlice } from './slices/user-slice';
 import { createShopSlice, ShopSlice } from './slices/shop-slice';
 import { createPunishmentSlice, PunishmentSlice } from './slices/punishment-slice';
+import { createRewardJournalSlice, RewardJournalSlice } from './slices/reward-journal-slice';
 import { getDB } from '../db';
 
-export type StoreState = TaskSlice & QuestSlice & MissionSlice & UserSlice & ShopSlice & PunishmentSlice & {
+export type StoreState = TaskSlice & QuestSlice & MissionSlice & UserSlice & ShopSlice & PunishmentSlice & RewardJournalSlice & {
   resetAllData: () => void;
 };
 
@@ -98,19 +99,20 @@ const indexedDBStorage = {
 export const useSoloLevelingStore = create<StoreState>()(
   persist(
     (...a) => ({
-      user: initialUser,
+      user: { ...initialUser, rewardJournal: initialUser.rewardJournal || [] },
       ...createTaskSlice(...a),
       ...createQuestSlice(...a),
       ...createMissionSlice(...a),
       ...createUserSlice(...a),
       ...createShopSlice(...a),
       ...createPunishmentSlice(...a),
+      ...createRewardJournalSlice(...a),
       resetAllData: () => {
         const [set] = a;
         set((state) => ({
           ...state,
           // Reset user to initial state
-          user: { ...initialUser, name: "Hunter" },
+          user: { ...initialUser, name: "Hunter", rewardJournal: [] },
           // Reset all other slices to their initial states
           tasks: [],
           quests: [],
@@ -137,7 +139,16 @@ export const useSoloLevelingStore = create<StoreState>()(
       // Add an onError handler to handle persistence failures
       onError: (error) => {
         console.error('An error occurred during state persistence:', error);
-      }
+      },
+      // Migration function to handle new properties
+      migrate: (persistedState: any, version: number) => {
+        // Ensure rewardJournal exists for existing users
+        if (persistedState && persistedState.user && !persistedState.user.rewardJournal) {
+          persistedState.user.rewardJournal = [];
+        }
+        return persistedState;
+      },
+      version: 1
     } as CustomPersistOptions<StoreState>
   )
 );
@@ -148,3 +159,5 @@ export * from './slices/quest-slice';
 export * from './slices/mission-slice';
 export * from './slices/user-slice';
 export * from './slices/shop-slice';
+export * from './slices/punishment-slice';
+export * from './slices/reward-journal-slice';
