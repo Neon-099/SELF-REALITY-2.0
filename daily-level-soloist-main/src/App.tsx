@@ -15,6 +15,7 @@ const Shop = lazy(() => import("./pages/Shop"));
 const Milestones = lazy(() => import("./pages/Milestones"));
 const Missions = lazy(() => import("./pages/Missions"));
 const Planner = lazy(() => import("./pages/Planner"));
+const Rewards = lazy(() => import("./pages/Rewards"));
 const LandingPage = lazy(() => import("./pages/LandingPage"));
 
 // Loading component for Suspense fallback
@@ -222,13 +223,19 @@ const App = () => {
                   } />
                   <Route path="/mission-board" element={<Navigate to="/missions" replace />} />
 
-                  {/* Shop/rewards */}
+                  {/* Shop */}
                   <Route path="/shop" element={
                     <ErrorBoundary>
                       <Shop />
                     </ErrorBoundary>
                   } />
-                  <Route path="/rewards" element={<Navigate to="/shop" replace />} />
+
+                  {/* Rewards Journal */}
+                  <Route path="/rewards" element={
+                    <ErrorBoundary>
+                      <Rewards />
+                    </ErrorBoundary>
+                  } />
 
                   {/* Achievement tracking */}
                   <Route path="/milestones" element={

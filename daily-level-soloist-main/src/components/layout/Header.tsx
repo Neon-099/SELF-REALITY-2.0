@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useSoloLevelingStore } from '@/lib/store';
-import { Star, Award, Sparkles } from 'lucide-react';
+import { Star, Award, Sparkles, Gift } from 'lucide-react';
 import { calculateProgress } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -41,10 +41,13 @@ export function Header() {
                 <h1 className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-solo-primary to-solo-secondary glow-text">
                   Self Reality
                 </h1>
+                <Link to="/rewards" className="ml-2 hover:scale-110 transition-transform duration-200">
+                  <Gift className="h-5 w-5 text-yellow-500 hover:text-yellow-400" />
+                </Link>
               </div>
             ) : (
               <h1 className="text-2xl font-bold text-solo-primary glow-text">
-                Self Reality Leveling 
+                Self Reality Leveling
               </h1>
             )}
           </Link>

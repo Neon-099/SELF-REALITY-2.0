@@ -1,14 +1,15 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { 
-  UserIcon, 
-  CalendarIcon, 
-  ClockIcon, 
-  ListIcon, 
-  BookIcon, 
-  ShoppingCartIcon, 
-  HomeIcon
+import {
+  UserIcon,
+  CalendarIcon,
+  ClockIcon,
+  ListIcon,
+  BookIcon,
+  ShoppingCartIcon,
+  HomeIcon,
+  Gift as GiftIcon
 } from 'lucide-react';
 
 interface MobileNavProps {
@@ -17,7 +18,7 @@ interface MobileNavProps {
 
 export function MobileNav({ onItemClick }: MobileNavProps) {
   const location = useLocation();
-  
+
   const navItems = [
     { to: "/character", icon: <UserIcon size={24} />, label: "Character" },
     { to: "/home", icon: <HomeIcon size={24} />, label: "Home" },
@@ -26,6 +27,7 @@ export function MobileNav({ onItemClick }: MobileNavProps) {
     { to: "/quests", icon: <BookIcon size={24} />, label: "Quests" },
     { to: "/missions", icon: <ListIcon size={24} />, label: "Missions" },
     { to: "/shop", icon: <ShoppingCartIcon size={24} />, label: "Shop" },
+    { to: "/rewards", icon: <GiftIcon size={24} />, label: "Rewards" },
   ];
 
   return (
@@ -33,7 +35,7 @@ export function MobileNav({ onItemClick }: MobileNavProps) {
       <div className="grid grid-cols-4 gap-4">
         {navItems.map((item) => {
           const isActive = location.pathname === item.to;
-          
+
           return (
             <Link
               key={item.to}
@@ -42,7 +44,7 @@ export function MobileNav({ onItemClick }: MobileNavProps) {
               className={cn(
                 "flex flex-col items-center justify-center p-2 rounded-lg",
                 "transition-colors duration-200",
-                isActive 
+                isActive
                   ? "text-solo-primary bg-solo-dark glow-text"
                   : "text-gray-400 hover:text-solo-primary hover:bg-solo-dark"
               )}
@@ -55,4 +57,4 @@ export function MobileNav({ onItemClick }: MobileNavProps) {
       </div>
     </nav>
   );
-} 
+}

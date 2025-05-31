@@ -2,15 +2,16 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useSoloLevelingStore } from '@/lib/store';
-import { 
-  UserIcon, 
-  CalendarIcon, 
-  ClockIcon, 
-  ListIcon, 
-  BookIcon, 
-  ShoppingCartIcon, 
+import {
+  UserIcon,
+  CalendarIcon,
+  ClockIcon,
+  ListIcon,
+  BookIcon,
+  ShoppingCartIcon,
   LayersIcon,
-  HomeIcon
+  HomeIcon,
+  Gift as GiftIcon
 } from 'lucide-react';
 
 interface NavItemProps {
@@ -24,13 +25,13 @@ const NavItem = ({ to, icon, label }: NavItemProps) => {
   const isActive = location.pathname === to;
 
   return (
-    <Link 
-      to={to} 
+    <Link
+      to={to}
       className={cn(
         "flex items-center gap-3 px-3 py-2 rounded-md transition-all",
         "hover:bg-solo-dark hover:text-solo-primary",
-        isActive 
-          ? "bg-solo-dark text-solo-primary glow-text" 
+        isActive
+          ? "bg-solo-dark text-solo-primary glow-text"
           : "text-gray-400"
       )}
     >
@@ -42,7 +43,7 @@ const NavItem = ({ to, icon, label }: NavItemProps) => {
 
 export function SidebarNav() {
   const user = useSoloLevelingStore(state => state.user);
-  
+
   const navItems = [
     { to: "/character", icon: <UserIcon size={20} />, label: "Character" },
     { to: "/home", icon: <HomeIcon size={20} />, label: "Home" },
@@ -51,6 +52,7 @@ export function SidebarNav() {
     { to: "/quests", icon: <BookIcon size={20} />, label: "Quests" },
     { to: "/missions", icon: <ListIcon size={20} />, label: "Missions" },
     { to: "/shop", icon: <ShoppingCartIcon size={20} />, label: "Shop" },
+    { to: "/rewards", icon: <GiftIcon size={20} />, label: "Rewards" },
   ];
 
   return (
@@ -68,7 +70,7 @@ export function SidebarNav() {
           </div>
         </div>
       </div>
-      
+
       {navItems.map((item) => (
         <NavItem key={item.to} {...item} />
       ))}
