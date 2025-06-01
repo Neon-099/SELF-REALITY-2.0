@@ -317,8 +317,7 @@ const Character = () => {
     quests,
     deleteQuest,
     missions,
-    resetAllData,
-    resetCharacterOnly
+    resetAllData
   ] = useSoloLevelingStore(state => [
       state.user,
       state.addExp,
@@ -338,8 +337,7 @@ const Character = () => {
       state.quests,
       state.deleteQuest,
       state.missions,
-      state.resetAllData,
-      state.resetCharacterOnly
+      state.resetAllData
     ]);
 
   const [lastUpdate, setLastUpdate] = useState(Date.now());
@@ -513,18 +511,15 @@ const Character = () => {
     const confirmed = window.confirm(
       "Are you sure you want to reset your character? This will:\n\n" +
       "• Reset your character to level 1\n" +
-      "• Reset all stats and progress\n" +
-      "• Reset character name to 'Hunter'\n\n" +
-      "Your tasks, quests, missions, and rewards will be preserved.\n\n" +
+      "• Reset all stats to initial values\n" +
+      "• Reset your name\n" +
+      "• Keep your quests, rewards, and missions\n\n" +
       "This action cannot be undone!"
     );
 
     if (!confirmed) return;
 
     try {
-      // Reset only character data in the store
-      resetCharacterOnly();
-
       // Get the database connection
       const db = await getDB();
 
@@ -532,15 +527,30 @@ const Character = () => {
       const storeData = await db.get('store', 'soloist-store');
       if (storeData) {
         const parsedStore = JSON.parse(storeData);
-        // Update only the user data in the store
-        parsedStore.state.user = {
-          ...initialUser,
-          name: "Hunter",
-          rewardJournal: parsedStore.state.user.rewardJournal || [],
-          weeklyRewards: parsedStore.state.user.weeklyRewards || []
-        };
-        // Save the updated store data
-        await db.put('store', JSON.stringify(parsedStore), 'soloist-store');
+        
+        // Preserve quests, missions, and rewards
+        const preservedQuests = parsedStore.state?.quests || [];
+        const preservedMissions = parsedStore.state?.missions || [];
+        const preservedRewards = parsedStore.state?.user?.rewardJournal || [];
+        const preservedWeeklyRewards = parsedStore.state?.user?.weeklyRewards || [];
+
+      // Reset all data in the store first
+      resetAllData();
+
+        // Get the updated store data after reset
+        const updatedStoreData = await db.get('store', 'soloist-store');
+        if (updatedStoreData) {
+          const updatedStore = JSON.parse(updatedStoreData);
+          
+          // Restore preserved data
+          updatedStore.state.quests = preservedQuests;
+          updatedStore.state.missions = preservedMissions;
+          updatedStore.state.user.rewardJournal = preservedRewards;
+          updatedStore.state.user.weeklyRewards = preservedWeeklyRewards;
+
+          // Save the updated store back to IndexedDB
+          await db.put('store', JSON.stringify(updatedStore), 'soloist-store');
+        }
       }
 
       toast({
@@ -1322,4 +1332,5 @@ const Character = () => {
 };
 
 export default Character;
+
 
