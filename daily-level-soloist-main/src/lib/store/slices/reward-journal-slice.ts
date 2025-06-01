@@ -574,10 +574,10 @@ export const createRewardJournalSlice: StateCreator<
       // Skip future dates
       if (date > today) continue;
 
-      // Count daily tasks (without deadlines) - only count on-time completed tasks, exclude missed
+      // Count ALL daily tasks - both with and without deadlines
       const dailyTasks = tasks.filter((task: any) => {
         const taskDate = task.scheduledFor ? new Date(task.scheduledFor) : new Date(task.createdAt);
-        return taskDate.toDateString() === dateKey && !task.deadline;
+        return taskDate.toDateString() === dateKey;
       });
       totalDailyTasks += dailyTasks.length;
 
@@ -668,10 +668,10 @@ export const createRewardJournalSlice: StateCreator<
       // Skip future dates
       if (date > today) continue;
 
-      // Count daily tasks (without deadlines) - only count on-time completed tasks, exclude missed
+      // Count ALL daily tasks - both with and without deadlines
       const dailyTasks = tasks.filter((task: any) => {
         const taskDate = task.scheduledFor ? new Date(task.scheduledFor) : new Date(task.createdAt);
-        return taskDate.toDateString() === dateKey && !task.deadline;
+        return taskDate.toDateString() === dateKey;
       });
       totalDailyTasks += dailyTasks.length;
 
@@ -720,16 +720,16 @@ export const createRewardJournalSlice: StateCreator<
 
     const overall = allDailyTasksCompleted && dailyQuestsMet && mainQuestsMet && sideQuestsMet && missionsMet;
 
-    // Calculate reduced requirements for weekly planner tasks - exclude missed tasks
-    const weeklyPlannerTasks = tasks.filter((task: any) => {
+    // Calculate reduced requirements for ALL weekly tasks - exclude missed tasks
+    const weeklyTasks = tasks.filter((task: any) => {
       if (!task.scheduledFor) return false;
       const taskDate = new Date(task.scheduledFor);
-      return taskDate >= weekStart && taskDate <= weekEnd && task.isWeeklyPlannerTask;
+      return taskDate >= weekStart && taskDate <= weekEnd;
     });
 
     // Only count completed tasks that were NOT missed (completed on time)
-    const completedWeeklyPlannerTasks = weeklyPlannerTasks.filter((task: any) => task.completed && !task.missed);
-    const allWeeklyPlannerTasksCompleted = weeklyPlannerTasks.length === 0 || weeklyPlannerTasks.every((task: any) => task.completed && !task.missed);
+    const completedWeeklyTasks = weeklyTasks.filter((task: any) => task.completed && !task.missed);
+    const allWeeklyTasksCompleted = weeklyTasks.length === 0 || weeklyTasks.every((task: any) => task.completed && !task.missed);
 
     // Reduced requirements (half of original)
     const reducedDailyQuestsMet = totalDailyQuests >= 15;
@@ -737,7 +737,7 @@ export const createRewardJournalSlice: StateCreator<
     const reducedSideQuestsMet = totalSideQuests >= 2;
     const reducedMissionsMet = totalMissions >= 11;
 
-    const reducedOverall = allWeeklyPlannerTasksCompleted && reducedDailyQuestsMet && reducedMainQuestsMet && reducedSideQuestsMet && reducedMissionsMet;
+    const reducedOverall = allWeeklyTasksCompleted && reducedDailyQuestsMet && reducedMainQuestsMet && reducedSideQuestsMet && reducedMissionsMet;
 
     return {
       dailyTasks: { completed: completedDailyTasks, total: totalDailyTasks, allCompleted: allDailyTasksCompleted },
@@ -747,7 +747,7 @@ export const createRewardJournalSlice: StateCreator<
       missions: { completed: totalMissions, required: 18, met: missionsMet },
       overall,
       reducedRequirements: {
-        weeklyPlannerTasks: { completed: completedWeeklyPlannerTasks.length, total: weeklyPlannerTasks.length, allCompleted: allWeeklyPlannerTasksCompleted },
+        weeklyPlannerTasks: { completed: completedWeeklyTasks.length, total: weeklyTasks.length, allCompleted: allWeeklyTasksCompleted },
         dailyQuests: { completed: totalDailyQuests, required: 15, met: reducedDailyQuestsMet },
         mainQuests: { completed: totalMainQuests, required: 2, met: reducedMainQuestsMet },
         sideQuests: { completed: totalSideQuests, required: 2, met: reducedSideQuestsMet },
@@ -771,13 +771,13 @@ export const createRewardJournalSlice: StateCreator<
       return false;
     }
 
-    // Get weekly planner tasks for this week - exclude missed tasks
-    const weeklyPlannerTasks = tasks.filter((task: any) => {
+    // Get ALL weekly tasks for this week - exclude missed tasks
+    const weeklyTasks = tasks.filter((task: any) => {
       if (!task.scheduledFor) return false;
       const taskDate = new Date(task.scheduledFor);
-      return taskDate >= weekStart && taskDate <= weekEnd && task.isWeeklyPlannerTask;
+      return taskDate >= weekStart && taskDate <= weekEnd;
     });
-    const allWeeklyPlannerTasksCompleted = weeklyPlannerTasks.length === 0 || weeklyPlannerTasks.every((task: any) => task.completed && !task.missed);
+    const allWeeklyTasksCompleted = weeklyTasks.length === 0 || weeklyTasks.every((task: any) => task.completed && !task.missed);
 
     // Count weekly totals (same logic as full requirements)
     let totalDailyQuests = 0;
@@ -838,7 +838,7 @@ export const createRewardJournalSlice: StateCreator<
     const reducedSideQuestsMet = totalSideQuests >= 2;
     const reducedMissionsMet = totalMissions >= 11;
 
-    return allWeeklyPlannerTasksCompleted && reducedDailyQuestsMet && reducedMainQuestsMet && reducedSideQuestsMet && reducedMissionsMet;
+    return allWeeklyTasksCompleted && reducedDailyQuestsMet && reducedMainQuestsMet && reducedSideQuestsMet && reducedMissionsMet;
   },
 
   // Add a new function to check and update missed rewards

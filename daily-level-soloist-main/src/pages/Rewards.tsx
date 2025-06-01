@@ -939,8 +939,8 @@ const Rewards = () => {
                     <div className="flex items-center gap-2">
                       <CheckCircle className={`h-4 w-4 ${reduced.weeklyPlannerTasks.allCompleted ? 'text-green-500' : 'text-gray-500'}`} />
                       <div>
-                        <span className="text-sm font-medium">All Weekly Planner Tasks</span>
-                        <div className="text-xs text-gray-400">Complete all tasks created in the weekly planner</div>
+                        <span className="text-sm font-medium">All Weekly Tasks</span>
+                        <div className="text-xs text-gray-400">Complete all tasks scheduled for this week</div>
                       </div>
                     </div>
                     <div className="text-right">
@@ -1912,7 +1912,7 @@ const Rewards = () => {
                 <div className="mt-3 p-3 rounded-lg bg-blue-500/20 border border-blue-500/30">
                   <h4 className="text-sm font-semibold text-blue-200 mb-2">Reduced Requirements:</h4>
                   <ul className="text-xs text-blue-100 space-y-1">
-                    <li>• All Weekly Planner Tasks</li>
+                    <li>• All Weekly Tasks (any tasks scheduled for the week)</li>
                     <li>• 15+ Daily Quests (half of full requirement)</li>
                     <li>• 2+ Main Quests (half of full requirement)</li>
                     <li>• 2+ Side Quests (half of full requirement)</li>
