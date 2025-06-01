@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSoloLevelingStore } from '@/lib/store';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -44,6 +45,7 @@ import {
 } from 'lucide-react';
 import { format, isToday, addDays } from 'date-fns';
 import { toast } from '@/hooks/use-toast';
+import { MissedRewardCard } from '@/components/ui/missed-reward-card';
 
 // Reward suggestions with icons and categories
 const rewardSuggestions = [
@@ -95,7 +97,11 @@ const Rewards = () => {
     setWeeklyReward,
     getWeeklyRewardEntry,
     checkWeeklyReducedCompletion,
-    getWeeklyCompletionDetails
+    getWeeklyCompletionDetails,
+    tasks,
+    quests,
+    missions,
+    completedMissionHistory
   ] = useSoloLevelingStore(state => [
     state.setDailyReward,
     state.checkDailyCompletion,
@@ -106,7 +112,11 @@ const Rewards = () => {
     state.setWeeklyReward,
     state.getWeeklyRewardEntry,
     state.checkWeeklyReducedCompletion,
-    state.getWeeklyCompletionDetails
+    state.getWeeklyCompletionDetails,
+    state.tasks,
+    state.quests,
+    state.missions,
+    state.completedMissionHistory
   ]);
 
   const [isSetRewardDialogOpen, setIsSetRewardDialogOpen] = useState(false);
@@ -131,6 +141,22 @@ const Rewards = () => {
 
   const stats = getRewardJournalStats();
   const todayEntry = getDailyRewardEntry(new Date());
+
+  // Force re-render when tasks, quests, or missions change to update weekly tracking
+  const [forceUpdate, setForceUpdate] = useState(0);
+
+  useEffect(() => {
+    setForceUpdate(prev => prev + 1);
+  }, [tasks, quests, missions, completedMissionHistory]);
+
+  // Memoized weekly details that updates when dependencies change
+  const getCurrentWeeklyDetails = () => {
+    const today = new Date();
+    const currentWeekStart = new Date(today);
+    currentWeekStart.setDate(today.getDate() - today.getDay());
+    currentWeekStart.setHours(0, 0, 0, 0);
+    return getWeeklyCompletionDetails(currentWeekStart);
+  };
 
   // No automatic updates - only manual updates when needed
 
@@ -343,77 +369,78 @@ const Rewards = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center gap-3">
-          <h1 className="text-3xl font-bold text-solo-text flex items-center gap-2">
-            <Gift className="h-8 w-8 text-solo-primary" />
+          <h1 className={isMobile ? "text-xl font-bold text-solo-text flex items-center gap-2" : "text-3xl font-bold text-solo-text flex items-center gap-2"}>
+            <Gift className={isMobile ? "h-5 w-5 text-solo-primary" : "h-8 w-8 text-solo-primary"} />
             Custom Reward Journal
           </h1>
           <Button
             variant="outline"
             size={isMobile ? "sm" : "default"}
             onClick={() => setIsHelpDialogOpen(true)}
-            className="flex items-center gap-1"
+            className={isMobile ? "flex items-center gap-1 text-xs px-2 py-1 h-7" : "flex items-center gap-1"}
           >
-            <HelpCircle className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'}`} />
+            <HelpCircle className={isMobile ? 'h-3 w-3' : 'h-5 w-5'} />
             {!isMobile && "How it Works"}
           </Button>
         </div>
       </div>
 
       {/* Stats Overview */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="border-gray-800/50 bg-solo-dark/90">
-          <CardContent className="p-4">
+      <div className={`grid ${isMobile ? 'grid-cols-2 gap-2' : 'grid-cols-2 lg:grid-cols-4 gap-4'}`}>
+        <Card className={isMobile ? 'border-gray-800/50 bg-solo-dark/90 p-2 rounded-md' : 'border-gray-800/50 bg-solo-dark/90'}>
+          <CardContent className={isMobile ? 'p-2' : 'p-4'}>
             <div className="flex items-center gap-2 mb-2">
-              <Trophy className="h-5 w-5 text-yellow-500" />
-              <span className="text-sm text-gray-400">Total Rewards</span>
+              <Trophy className={isMobile ? 'h-4 w-4 text-yellow-500' : 'h-5 w-5 text-yellow-500'} />
+              <span className={isMobile ? 'text-xs text-gray-400' : 'text-sm text-gray-400'}>Total Rewards</span>
             </div>
-            <div className="text-2xl font-bold text-solo-primary">{stats.totalRewards}</div>
+            <div className={isMobile ? 'text-lg font-bold text-solo-primary' : 'text-2xl font-bold text-solo-primary'}>{stats.totalRewards}</div>
           </CardContent>
         </Card>
 
-        <Card className="border-gray-800/50 bg-solo-dark/90">
-          <CardContent className="p-4">
+        <Card className={isMobile ? 'border-gray-800/50 bg-solo-dark/90 p-2 rounded-md' : 'border-gray-800/50 bg-solo-dark/90'}>
+          <CardContent className={isMobile ? 'p-2' : 'p-4'}>
             <div className="flex items-center gap-2 mb-2">
-              <CheckCircle className="h-5 w-5 text-green-500" />
-              <span className="text-sm text-gray-400">Claimed</span>
+              <CheckCircle className={isMobile ? 'h-4 w-4 text-green-500' : 'h-5 w-5 text-green-500'} />
+              <span className={isMobile ? 'text-xs text-gray-400' : 'text-sm text-gray-400'}>Claimed</span>
             </div>
-            <div className="text-2xl font-bold text-green-500">{stats.claimedRewards}</div>
+            <div className={isMobile ? 'text-lg font-bold text-green-500' : 'text-2xl font-bold text-green-500'}>{stats.claimedRewards}</div>
           </CardContent>
         </Card>
-
-        <Card className="border-gray-800/50 bg-solo-dark/90">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <Star className="h-5 w-5 text-blue-500" />
-              <span className="text-sm text-gray-400">Current Streak</span>
-            </div>
-            <div className="text-2xl font-bold text-blue-500">{stats.currentStreak}</div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-gray-800/50 bg-solo-dark/90">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <Award className="h-5 w-5 text-purple-500" />
-              <span className="text-sm text-gray-400">Best Streak</span>
-            </div>
-            <div className="text-2xl font-bold text-purple-500">{stats.longestStreak}</div>
-          </CardContent>
-        </Card>
+        {!isMobile && (
+          <>
+            <Card className="border-gray-800/50 bg-solo-dark/90">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <Star className="h-5 w-5 text-blue-500" />
+                  <span className="text-sm text-gray-400">Current Streak</span>
+                </div>
+                <div className="text-2xl font-bold text-blue-500">{stats.currentStreak}</div>
+              </CardContent>
+            </Card>
+            <Card className="border-gray-800/50 bg-solo-dark/90">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <Award className="h-5 w-5 text-purple-500" />
+                  <span className="text-sm text-gray-400">Best Streak</span>
+                </div>
+                <div className="text-2xl font-bold text-purple-500">{stats.longestStreak}</div>
+              </CardContent>
+            </Card>
+          </>
+        )}
       </div>
 
       {/* Reward Suggestions */}
-      <Card className="border-gray-800/50 bg-solo-dark/90">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-xl">
-            <Lightbulb className="h-6 w-6 text-yellow-500" />
+      <Card className={isMobile ? "border-gray-800/50 bg-solo-dark/90 rounded-md" : "border-gray-800/50 bg-solo-dark/90"}>
+        <CardHeader className={isMobile ? 'pb-2' : ''}>
+          <CardTitle className={isMobile ? 'flex items-center gap-2 text-base' : 'flex items-center gap-2 text-xl'}>
+            <Lightbulb className={isMobile ? 'h-4 w-4 text-yellow-500' : 'h-6 w-6 text-yellow-500'} />
             Reward Suggestions
           </CardTitle>
         </CardHeader>
-        <CardContent className="px-3 sm:px-6">
+        <CardContent className={isMobile ? 'px-2 py-2' : 'px-3 sm:px-6'}>
           {isMobile ? (
-            // Mobile version: Horizontal buttons
-            <div className="flex gap-3">
+            <div className="flex gap-2">
               <Button
                 variant="outline"
                 size="sm"
@@ -422,9 +449,9 @@ const Rewards = () => {
                   setSuggestionTargetDate(new Date());
                   setIsSuggestionsDialogOpen(true);
                 }}
-                className="flex-1 flex items-center gap-2 text-yellow-500 border-yellow-500/30 hover:bg-yellow-500/10"
+                className="flex-1 flex items-center gap-1 text-yellow-500 border-yellow-500/30 hover:bg-yellow-500/10 text-xs px-2 py-1 h-7"
               >
-                <Lightbulb className="h-4 w-4" />
+                <Lightbulb className="h-3 w-3" />
                 Daily Rewards
               </Button>
               <Button
@@ -438,14 +465,13 @@ const Rewards = () => {
                   setWeeklyTargetDate(nextSunday);
                   setIsWeeklySuggestionsDialogOpen(true);
                 }}
-                className="flex-1 flex items-center gap-2 text-purple-500 border-purple-500/30 hover:bg-purple-500/10"
+                className="flex-1 flex items-center gap-1 text-purple-500 border-purple-500/30 hover:bg-purple-500/10 text-xs px-2 py-1 h-7"
               >
-                <CalendarDays className="h-4 w-4" />
+                <CalendarDays className="h-3 w-3" />
                 Weekly Rewards
               </Button>
             </div>
           ) : (
-            // Desktop version: Separate sections
             <div className="space-y-8">
               {/* Daily Suggestions */}
               <div>
@@ -617,7 +643,7 @@ const Rewards = () => {
                               return taskDate.toDateString() === today.toDateString();
                             });
                             const completedTasks = todayTasks.filter((task: any) => task.completed);
-                            return `${completedTasks.length}/${todayTasks.length}`;
+                            return `${Math.min(completedTasks.length, todayTasks.length)}/${todayTasks.length}`;
                           })()}
                         </div>
                         <div className="text-xs text-gray-500">completed</div>
@@ -638,7 +664,7 @@ const Rewards = () => {
                           {(() => {
                             const { getDailyQuestCompletionStatus } = useSoloLevelingStore.getState();
                             const questStatus = getDailyQuestCompletionStatus ? getDailyQuestCompletionStatus() : { dailyQuestsCompleted: 0 };
-                            return `${questStatus.dailyQuestsCompleted}/5`;
+                            return `${Math.min(questStatus.dailyQuestsCompleted, 5)}/5`;
                           })()}
                         </div>
                         <div className="text-xs text-gray-500">completed</div>
@@ -664,7 +690,7 @@ const Rewards = () => {
                               const completedDate = new Date(mission.completedAt);
                               return completedDate.toDateString() === today.toDateString();
                             });
-                            return `${completedMissionsToday.length}/3+`;
+                            return `${Math.min(completedMissionsToday.length, 3)}/3+`;
                           })()}
                         </div>
                         <div className="text-xs text-gray-500">completed</div>
@@ -760,13 +786,8 @@ const Rewards = () => {
             </p>
 
             {(() => {
-              // Get current week start (Sunday)
-              const today = new Date();
-              const currentWeekStart = new Date(today);
-              currentWeekStart.setDate(today.getDate() - today.getDay());
-              currentWeekStart.setHours(0, 0, 0, 0);
-
-              const weeklyDetails = getWeeklyCompletionDetails(currentWeekStart);
+              // Get current weekly details with forced update dependency
+              const weeklyDetails = getCurrentWeeklyDetails();
 
               return (
                 <div className="space-y-3">
@@ -780,9 +801,7 @@ const Rewards = () => {
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className={`text-xs font-medium ${weeklyDetails.dailyTasks.allCompleted ? 'text-green-400' : 'text-gray-400'}`}>
-                        {weeklyDetails.dailyTasks.completed}/{weeklyDetails.dailyTasks.total}
-                      </div>
+                      <div className={`text-xs font-medium ${weeklyDetails.dailyTasks.allCompleted ? 'text-green-400' : 'text-gray-400'}`}>{`${Math.min(weeklyDetails.dailyTasks.completed, weeklyDetails.dailyTasks.total)}/${weeklyDetails.dailyTasks.total}`}</div>
                       <div className="text-xs text-gray-500">completed</div>
                     </div>
                   </div>
@@ -797,10 +816,13 @@ const Rewards = () => {
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className={`text-xs font-medium ${weeklyDetails.dailyQuests.met ? 'text-green-400' : 'text-yellow-400'}`}>
-                        {weeklyDetails.dailyQuests.completed}/{weeklyDetails.dailyQuests.required}
-                      </div>
+                      <div className={`text-xs font-medium ${weeklyDetails.dailyQuests.met ? 'text-green-400' : 'text-yellow-400'}`}>{`${Math.min(weeklyDetails.dailyQuests.completed, weeklyDetails.dailyQuests.required)}/${weeklyDetails.dailyQuests.required}`}</div>
                       <div className="text-xs text-gray-500">completed</div>
+                      <Progress
+                        value={(weeklyDetails.dailyQuests.completed / weeklyDetails.dailyQuests.required) * 100}
+                        className="w-16 h-1 mt-1"
+                        indicatorClassName={weeklyDetails.dailyQuests.met ? "bg-green-500" : "bg-yellow-500"}
+                      />
                     </div>
                   </div>
 
@@ -814,10 +836,13 @@ const Rewards = () => {
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className={`text-xs font-medium ${weeklyDetails.mainQuests.met ? 'text-green-400' : 'text-blue-400'}`}>
-                        {weeklyDetails.mainQuests.completed}/{weeklyDetails.mainQuests.required}
-                      </div>
+                      <div className={`text-xs font-medium ${weeklyDetails.mainQuests.met ? 'text-green-400' : 'text-blue-400'}`}>{`${Math.min(weeklyDetails.mainQuests.completed, weeklyDetails.mainQuests.required)}/${weeklyDetails.mainQuests.required}`}</div>
                       <div className="text-xs text-gray-500">completed</div>
+                      <Progress
+                        value={(weeklyDetails.mainQuests.completed / weeklyDetails.mainQuests.required) * 100}
+                        className="w-16 h-1 mt-1"
+                        indicatorClassName={weeklyDetails.mainQuests.met ? "bg-green-500" : "bg-blue-500"}
+                      />
                     </div>
                   </div>
 
@@ -831,10 +856,13 @@ const Rewards = () => {
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className={`text-xs font-medium ${weeklyDetails.sideQuests.met ? 'text-green-400' : 'text-orange-400'}`}>
-                        {weeklyDetails.sideQuests.completed}/{weeklyDetails.sideQuests.required}
-                      </div>
+                      <div className={`text-xs font-medium ${weeklyDetails.sideQuests.met ? 'text-green-400' : 'text-orange-400'}`}>{`${Math.min(weeklyDetails.sideQuests.completed, weeklyDetails.sideQuests.required)}/${weeklyDetails.sideQuests.required}`}</div>
                       <div className="text-xs text-gray-500">completed</div>
+                      <Progress
+                        value={(weeklyDetails.sideQuests.completed / weeklyDetails.sideQuests.required) * 100}
+                        className="w-16 h-1 mt-1"
+                        indicatorClassName={weeklyDetails.sideQuests.met ? "bg-green-500" : "bg-orange-500"}
+                      />
                     </div>
                   </div>
 
@@ -848,10 +876,13 @@ const Rewards = () => {
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className={`text-xs font-medium ${weeklyDetails.missions.met ? 'text-green-400' : 'text-purple-400'}`}>
-                        {weeklyDetails.missions.completed}/{weeklyDetails.missions.required}
-                      </div>
+                      <div className={`text-xs font-medium ${weeklyDetails.missions.met ? 'text-green-400' : 'text-purple-400'}`}>{`${Math.min(weeklyDetails.missions.completed, weeklyDetails.missions.required)}/${weeklyDetails.missions.required}`}</div>
                       <div className="text-xs text-gray-500">completed</div>
+                      <Progress
+                        value={(weeklyDetails.missions.completed / weeklyDetails.missions.required) * 100}
+                        className="w-16 h-1 mt-1"
+                        indicatorClassName={weeklyDetails.missions.met ? "bg-green-500" : "bg-purple-500"}
+                      />
                     </div>
                   </div>
 
@@ -897,13 +928,8 @@ const Rewards = () => {
             </p>
 
             {(() => {
-              // Get current week start (Sunday)
-              const today = new Date();
-              const currentWeekStart = new Date(today);
-              currentWeekStart.setDate(today.getDate() - today.getDay());
-              currentWeekStart.setHours(0, 0, 0, 0);
-
-              const weeklyDetails = getWeeklyCompletionDetails(currentWeekStart);
+              // Get current weekly details with forced update dependency
+              const weeklyDetails = getCurrentWeeklyDetails();
               const reduced = weeklyDetails.reducedRequirements;
 
               return (
@@ -918,10 +944,15 @@ const Rewards = () => {
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className={`text-xs font-medium ${reduced.weeklyPlannerTasks.allCompleted ? 'text-green-400' : 'text-gray-400'}`}>
-                        {reduced.weeklyPlannerTasks.completed}/{reduced.weeklyPlannerTasks.total}
-                      </div>
+                      <div className={`text-xs font-medium ${reduced.weeklyPlannerTasks.allCompleted ? 'text-green-400' : 'text-gray-400'}`}>{`${Math.min(reduced.weeklyPlannerTasks.completed, reduced.weeklyPlannerTasks.total)}/${reduced.weeklyPlannerTasks.total}`}</div>
                       <div className="text-xs text-gray-500">completed</div>
+                      {reduced.weeklyPlannerTasks.total > 0 && (
+                        <Progress
+                          value={(reduced.weeklyPlannerTasks.completed / reduced.weeklyPlannerTasks.total) * 100}
+                          className="w-16 h-1 mt-1"
+                          indicatorClassName={reduced.weeklyPlannerTasks.allCompleted ? "bg-green-500" : "bg-gray-500"}
+                        />
+                      )}
                     </div>
                   </div>
 
@@ -935,10 +966,13 @@ const Rewards = () => {
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className={`text-xs font-medium ${reduced.dailyQuests.met ? 'text-green-400' : 'text-yellow-400'}`}>
-                        {reduced.dailyQuests.completed}/{reduced.dailyQuests.required}
-                      </div>
+                      <div className={`text-xs font-medium ${reduced.dailyQuests.met ? 'text-green-400' : 'text-yellow-400'}`}>{`${Math.min(reduced.dailyQuests.completed, reduced.dailyQuests.required)}/${reduced.dailyQuests.required}`}</div>
                       <div className="text-xs text-gray-500">completed</div>
+                      <Progress
+                        value={(reduced.dailyQuests.completed / reduced.dailyQuests.required) * 100}
+                        className="w-16 h-1 mt-1"
+                        indicatorClassName={reduced.dailyQuests.met ? "bg-green-500" : "bg-yellow-500"}
+                      />
                     </div>
                   </div>
 
@@ -952,10 +986,13 @@ const Rewards = () => {
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className={`text-xs font-medium ${reduced.mainQuests.met ? 'text-green-400' : 'text-blue-400'}`}>
-                        {reduced.mainQuests.completed}/{reduced.mainQuests.required}
-                      </div>
+                      <div className={`text-xs font-medium ${reduced.mainQuests.met ? 'text-green-400' : 'text-blue-400'}`}>{`${Math.min(reduced.mainQuests.completed, reduced.mainQuests.required)}/${reduced.mainQuests.required}`}</div>
                       <div className="text-xs text-gray-500">completed</div>
+                      <Progress
+                        value={(reduced.mainQuests.completed / reduced.mainQuests.required) * 100}
+                        className="w-16 h-1 mt-1"
+                        indicatorClassName={reduced.mainQuests.met ? "bg-green-500" : "bg-blue-500"}
+                      />
                     </div>
                   </div>
 
@@ -969,10 +1006,13 @@ const Rewards = () => {
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className={`text-xs font-medium ${reduced.sideQuests.met ? 'text-green-400' : 'text-orange-400'}`}>
-                        {reduced.sideQuests.completed}/{reduced.sideQuests.required}
-                      </div>
+                      <div className={`text-xs font-medium ${reduced.sideQuests.met ? 'text-green-400' : 'text-orange-400'}`}>{`${Math.min(reduced.sideQuests.completed, reduced.sideQuests.required)}/${reduced.sideQuests.required}`}</div>
                       <div className="text-xs text-gray-500">completed</div>
+                      <Progress
+                        value={(reduced.sideQuests.completed / reduced.sideQuests.required) * 100}
+                        className="w-16 h-1 mt-1"
+                        indicatorClassName={reduced.sideQuests.met ? "bg-green-500" : "bg-orange-500"}
+                      />
                     </div>
                   </div>
 
@@ -986,10 +1026,13 @@ const Rewards = () => {
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className={`text-xs font-medium ${reduced.missions.met ? 'text-green-400' : 'text-purple-400'}`}>
-                        {reduced.missions.completed}/{reduced.missions.required}
-                      </div>
+                      <div className={`text-xs font-medium ${reduced.missions.met ? 'text-green-400' : 'text-purple-400'}`}>{`${Math.min(reduced.missions.completed, reduced.missions.required)}/${reduced.missions.required}`}</div>
                       <div className="text-xs text-gray-500">completed</div>
+                      <Progress
+                        value={(reduced.missions.completed / reduced.missions.required) * 100}
+                        className="w-16 h-1 mt-1"
+                        indicatorClassName={reduced.missions.met ? "bg-green-500" : "bg-purple-500"}
+                      />
                     </div>
                   </div>
 
@@ -1036,7 +1079,7 @@ const Rewards = () => {
           <div className="flex justify-between items-center">
             <CardTitle className="flex items-center gap-2 text-xl">
               <Calendar className="h-6 w-6 text-solo-primary" />
-              Days Rewards
+              Daily Rewards
             </CardTitle>
             <Button
               variant="ghost"
@@ -1065,25 +1108,93 @@ const Rewards = () => {
               const entry = getDailyRewardEntry(date);
               const status = getCompletionStatus(date);
               const isCurrentDay = isToday(date);
+              const today = new Date();
+              const yesterday = new Date(today);
+              yesterday.setDate(today.getDate() - 1);
+              const isYesterday = date.toDateString() === yesterday.toDateString();
 
+              // Show MissedRewardCard ONLY for yesterday if missed or not set and the day has passed
+              if (isYesterday && (status === 'missed' || (!entry && date < today))) {
+                return (
+                  <MissedRewardCard
+                    key={index}
+                    date={date}
+                    customReward={entry?.customReward}
+                    missedAt={entry?.missedAt}
+                  />
+                );
+              }
+
+              // If claimed, make card uneditable
+              if (status === 'claimed') {
+                return (
+                  <div
+                    key={index}
+                    className={`p-4 rounded-lg border transition-all cursor-not-allowed opacity-70 ${getStatusColor(status)} ${isCurrentDay ? 'ring-2 ring-solo-primary/30' : ''}`}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="text-sm font-medium">
+                        <div className="flex flex-col">
+                          <span>{format(date, 'MMM dd, yyyy')}</span>
+                          <span className={`text-xs font-normal ${
+                            (() => {
+                              const today = new Date();
+                              const yesterday = new Date(today);
+                              yesterday.setDate(today.getDate() - 1);
+                              const tomorrow = new Date(today);
+                              tomorrow.setDate(today.getDate() + 1);
+
+                              if (date.toDateString() === yesterday.toDateString()) return 'text-gray-400';
+                              if (isCurrentDay) return 'text-solo-primary';
+                              if (date.toDateString() === tomorrow.toDateString()) return 'text-blue-400';
+                              return 'text-gray-400';
+                            })()
+                          }`}>
+                            {(() => {
+                              const today = new Date();
+                              const yesterday = new Date(today);
+                              yesterday.setDate(today.getDate() - 1);
+                              const tomorrow = new Date(today);
+                              tomorrow.setDate(today.getDate() + 1);
+
+                              if (date.toDateString() === yesterday.toDateString()) return 'Yesterday';
+                              if (isCurrentDay) return 'Today';
+                              if (date.toDateString() === tomorrow.toDateString()) return 'Tomorrow';
+                              return format(date, 'EEEE'); // Day of week for other dates
+                            })()}
+                          </span>
+                        </div>
+                      </div>
+                      {getStatusIcon(status)}
+                    </div>
+
+                    {entry ? (
+                      <div>
+                        <p className="text-sm text-gray-300 truncate mb-2">
+                          "{entry.customReward}"
+                        </p>
+                        <div className="text-xs text-green-500 font-semibold">Already claimed</div>
+                      </div>
+                    ) : (
+                      <div className="text-sm text-gray-500">
+                        Click to set reward
+                      </div>
+                    )}
+                  </div>
+                );
+              }
+
+              // Default card logic for today and tomorrow (and yesterday if not missed/claimed)
               return (
                 <div
                   key={index}
-                  className={`p-4 rounded-lg border transition-all ${
-                    status === 'missed'
-                      ? 'cursor-not-allowed opacity-75'
-                      : 'cursor-pointer hover:border-solo-primary/50'
-                  } ${getStatusColor(status)} ${isCurrentDay ? 'ring-2 ring-solo-primary/30' : ''}`}
+                  className={`p-4 rounded-lg border transition-all cursor-pointer hover:border-solo-primary/50 ${getStatusColor(status)} ${isCurrentDay ? 'ring-2 ring-solo-primary/30' : ''}`}
                   onClick={() => {
-                    // Don't allow interaction with missed rewards
-                    if (status === 'missed') return;
-
                     setSelectedDate(date);
                     if (!entry) {
                       setRewardText('');
                       setIsSetRewardDialogOpen(true);
                     } else {
-                      // Open edit dialog for existing rewards
                       setEditingDailyReward(entry.customReward);
                       setIsEditDailyRewardDialogOpen(true);
                     }
@@ -1131,7 +1242,7 @@ const Rewards = () => {
                         "{entry.customReward}"
                       </p>
                       <div className="text-xs text-gray-500">
-                        {getStatusText(status)} {status !== 'missed' && '• Click to edit'}
+                        {getStatusText(status)} • Click to edit
                       </div>
                     </div>
                   ) : (
