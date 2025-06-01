@@ -407,7 +407,7 @@ const AddQuestDialog = ({ onClose, isMobile }: { onClose: () => void; isMobile: 
           </div>
           <div className={cn("bg-amber-950/20 p-3 rounded-md border border-amber-900/20", isMobile ? "text-xs" : "text-sm")}>
             <p className="text-amber-200 font-medium flex items-center">
-              <CalendarClock className={cn("mr-2 text-amber-400", isMobile ? "h-3 w-3" : "h-4 w-4")} />
+              {!isMobile && <CalendarClock className="mr-2 text-amber-400 h-4 w-4" />}
               Deadline: Today at 11:59 PM ({format(new Date().setHours(23, 59, 59), 'MMM d, yyyy')})
             </p>
             <p className={cn("text-amber-300/80 mt-1", isMobile ? "text-xs" : "text-sm")}>
@@ -530,7 +530,7 @@ const AddTaskDialog = ({ questId, onClose }: { questId: string; onClose: () => v
         <label className="text-sm font-medium">Deadline</label>
         <div className="flex items-center justify-between mb-2">
           <div className="text-xs text-indigo-300 flex items-center">
-            <CalendarClock className="h-3 w-3 mr-1" /> Automatic deadline enforcement
+            {!isMobile && <CalendarClock className="h-3 w-3 mr-1" />} Automatic deadline enforcement
           </div>
         </div>
 
@@ -542,6 +542,12 @@ const AddTaskDialog = ({ questId, onClose }: { questId: string; onClose: () => v
         <p className="text-xs text-gray-400 mt-1">
           Missing a deadline will automatically apply Shadow Penalty, reducing EXP reward by 50%.
         </p>
+        <div className="mt-2 p-2 rounded-md bg-amber-500/10 border border-amber-500/20">
+          <p className="text-xs text-amber-300 flex items-center">
+            <span className="mr-1">⚠️</span>
+            <span className="font-medium">Reminder:</span> Double-check your deadline time to ensure it's set correctly!
+          </p>
+        </div>
       </div>
       <Button onClick={handleAddTask} className="w-full">
         Add Task
@@ -2557,7 +2563,7 @@ const Quests = () => {
       {/* Daily Completion Status */}
       <div className="bg-solo-dark border border-gray-800 rounded-lg p-4">
         <h3 className="text-lg font-semibold text-solo-text mb-3 flex items-center gap-2">
-          <CalendarClock size={20} className="text-blue-500" />
+          {!isMobile && <CalendarClock size={20} className="text-blue-500" />}
           Today's Progress
         </h3>
         <div className={`grid gap-4 ${isMobile ? 'grid-cols-2' : 'grid-cols-3'}`}>

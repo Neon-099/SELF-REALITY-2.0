@@ -118,7 +118,7 @@ export function CompletedTaskCard({ task }: CompletedTaskCardProps) {
               isMobile ? "text-[10px]" : "text-xs"
             )}>
               <span className="flex items-center">
-                <Clock className={isMobile ? "h-2.5 w-2.5 mr-0.5" : "h-3 w-3 mr-1"} />
+                {!isMobile && <Clock className="h-3 w-3 mr-1" />}
                 {formatDeadline(task.deadline)}
               </span>
 

@@ -34,6 +34,7 @@ import { getExpForDifficulty } from '@/lib/utils/calculations';
 import { areAllDailyWinsCompleted, isDailyWinCompleted, hasPendingDailyWinTask, isAttributeLimitReached, getAttributeTaskCount } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { DateTimePicker } from '@/components/ui/date-time-picker';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 // Helper functions for color (move to top level)
 const getDifficultyColor = (difficulty: string) => {
@@ -106,6 +107,7 @@ const TaskDialog = ({
   );
   const [category, setCategory] = React.useState<string>(editingTask?.category || 'mental');
   const [deadline, setDeadline] = React.useState<Date | undefined>(editingTask?.deadline || selectedDate);
+  const [showReminderDialog, setShowReminderDialog] = React.useState(false);
 
   // Update form values when editingTask changes or dialog opens
   React.useEffect(() => {
@@ -215,6 +217,24 @@ const TaskDialog = ({
       return;
     }
 
+    // If editing a task, skip reminder and create directly
+    if (editingTask) {
+      handleCreateTask();
+      return;
+    }
+
+    // Show reminder dialog only for new tasks
+    setShowReminderDialog(true);
+  };
+
+  // Function to actually create/update the task after reminder confirmation
+  const handleCreateTask = () => {
+    const formData = {
+      title,
+      description,
+      difficulty
+    };
+
     // Check for daily win limitations
     if (categoryType === 'dailyWin') {
       if (isDateTodayOrPast(selectedDate) && isDailyWinCompleted(user.dailyWins, category as DailyWinCategory)) {
@@ -323,6 +343,7 @@ const TaskDialog = ({
     setCategory('mental');
     setDifficulty('medium');
     setDeadline(selectedDate);
+    setShowReminderDialog(false);
     onClose();
   };
 
@@ -349,25 +370,25 @@ const TaskDialog = ({
             handleSave();
           }} className="space-y-1.5 sm:space-y-2 pt-1 sm:pt-1.5 relative z-10">
           <div className="space-y-0.5 sm:space-y-1">
-            <Label htmlFor="title" className="text-white/80 font-medium text-sm">Title</Label>
+            <Label htmlFor="title" className="text-white/80 font-medium text-xs sm:text-sm">Title</Label>
             <Input
               id="title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Enter task title"
-              className="border-indigo-500/20 bg-gray-800/90 h-7 sm:h-8 focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all text-sm"
+              className="border-indigo-500/20 bg-gray-800/90 h-7 sm:h-8 focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all text-xs sm:text-sm"
               disabled={isTaskCompleted}
             />
           </div>
 
           <div className="space-y-0.5 sm:space-y-1">
-            <Label htmlFor="description" className="text-white/80 font-medium text-sm">Description (optional)</Label>
+            <Label htmlFor="description" className="text-white/80 font-medium text-xs sm:text-sm">Description (optional)</Label>
             <Textarea
               id="description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Enter task description"
-              className="border-indigo-500/20 bg-gray-800/90 min-h-[50px] focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all text-sm"
+              className="border-indigo-500/20 bg-gray-800/90 min-h-[50px] focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all text-xs sm:text-sm"
               disabled={isTaskCompleted}
             />
           </div>
@@ -512,11 +533,136 @@ const TaskDialog = ({
           </form>
         </div>
       </DialogContent>
+
+      {/* Deadline Reminder Dialog */}
+      <Dialog open={showReminderDialog} onOpenChange={setShowReminderDialog}>
+        <DialogContent className="glassmorphism w-[90vw] max-w-[280px] sm:max-w-[400px] p-2 sm:p-4">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-1 sm:gap-2 text-amber-300 text-sm sm:text-base">
+              <AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5" />
+              Deadline Reminder
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-2 sm:space-y-4">
+            <div className="p-2 sm:p-4 rounded-lg bg-amber-500/10 border border-amber-500/20">
+              <p className="text-xs sm:text-sm text-amber-200 mb-2 sm:mb-3">
+                Before {editingTask ? 'updating' : 'creating'} your task, please double-check:
+              </p>
+              <ul className="space-y-1 sm:space-y-2 text-xs sm:text-sm text-amber-100">
+                <li className="flex items-center gap-1 sm:gap-2">
+                  <CheckCircle2 className="h-3 w-3 sm:h-4 sm:w-4 text-green-400" />
+                  Your deadline date is correct
+                </li>
+                <li className="flex items-center gap-1 sm:gap-2">
+                  <CheckCircle2 className="h-3 w-3 sm:h-4 sm:w-4 text-green-400" />
+                  Your deadline time is set properly
+                </li>
+                <li className="flex items-center gap-1 sm:gap-2">
+                  <AlertTriangle className="h-3 w-3 sm:h-4 sm:w-4 text-amber-400" />
+                  Missing deadlines apply Shadow Penalty (-50% EXP)
+                </li>
+              </ul>
+            </div>
+
+            <div className="p-2 sm:p-3 rounded-lg bg-gray-800/50 border border-gray-600">
+              <p className="text-xs text-gray-300 mb-1 sm:mb-2">Current deadline:</p>
+              <p className="text-xs sm:text-sm font-medium text-white">
+                {deadline ? deadline.toLocaleString() : 'No deadline set'}
+              </p>
+            </div>
+
+            <div className="flex gap-1 sm:gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setShowReminderDialog(false)}
+                className="flex-1 h-7 sm:h-9 text-xs sm:text-sm"
+              >
+                Review Deadline
+              </Button>
+              <Button
+                onClick={handleCreateTask}
+                className="flex-1 bg-indigo-500 hover:bg-indigo-600 h-7 sm:h-9 text-xs sm:text-sm"
+              >
+                {editingTask ? 'Update Task' : 'Create Task'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 };
 
 const TaskCard = ({ task, onClick }: { task: any; onClick: () => void }) => {
+  const isMobile = useIsMobile();
+
+  // Format deadline for display (same as home page task cards)
+  const formatDeadline = (deadline: Date | undefined) => {
+    if (!deadline) return null;
+
+    const now = new Date();
+    const deadlineDate = new Date(deadline);
+
+    // Check if deadline is past (more precise comparison)
+    const isPast = deadlineDate.getTime() <= now.getTime();
+
+    // Calculate time remaining
+    const timeRemaining = deadlineDate.getTime() - now.getTime();
+    const hoursRemaining = timeRemaining / (1000 * 60 * 60);
+
+    // Determine urgency level
+    let urgencyLevel = "";
+    if (isPast) {
+      urgencyLevel = "overdue";
+    } else if (hoursRemaining < 2) {
+      urgencyLevel = "critical"; // Less than 2 hours
+    } else if (hoursRemaining < 6) {
+      urgencyLevel = "urgent"; // Less than 6 hours
+    } else if (hoursRemaining < 24) {
+      urgencyLevel = "warning"; // Less than 24 hours
+    }
+
+    // If deadline is today, show time only
+    const isToday =
+      deadlineDate.getDate() === now.getDate() &&
+      deadlineDate.getMonth() === now.getMonth() &&
+      deadlineDate.getFullYear() === now.getFullYear();
+
+    if (isToday) {
+      return {
+        text: `Today at ${deadlineDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
+        isPast,
+        urgencyLevel
+      };
+    }
+
+    // If deadline is tomorrow
+    const tomorrow = new Date(now);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const isTomorrow =
+      deadlineDate.getDate() === tomorrow.getDate() &&
+      deadlineDate.getMonth() === tomorrow.getMonth() &&
+      deadlineDate.getFullYear() === tomorrow.getFullYear();
+
+    if (isTomorrow) {
+      return {
+        text: `Tomorrow at ${deadlineDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
+        isPast,
+        urgencyLevel
+      };
+    }
+
+    // Otherwise, show date and time
+    return {
+      text: `${deadlineDate.toLocaleDateString()} at ${deadlineDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
+      isPast,
+      urgencyLevel
+    };
+  };
+
+  const deadlineInfo = formatDeadline(task.deadline);
+
   return (
     <div
       onClick={onClick}
@@ -548,19 +694,21 @@ const TaskCard = ({ task, onClick }: { task: any; onClick: () => void }) => {
           <div className="text-xs text-gray-400 mt-1 line-clamp-1 italic">{task.description}</div>
         )}
         {/* EXP, Deadline, and Details */}
-        <div className="flex flex-wrap items-center gap-2 mt-2 text-xs">
-          <span className="flex items-center gap-1 px-2 py-0.5 rounded-full font-bold bg-gradient-to-r from-yellow-400 to-yellow-500 text-white shadow-md">
+        <div className="flex flex-wrap items-center gap-2 mt-2">
+          <span className="flex items-center gap-1 px-2 py-0.5 rounded-full font-bold bg-gradient-to-r from-yellow-400 to-yellow-500 text-white shadow-md text-[10px] sm:text-xs">
             +{task.expReward} EXP
           </span>
-          {task.deadline && (
-            <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-300 font-semibold">
-              <span className="font-bold">Due:</span> {new Date(task.deadline).toLocaleString([], {
-                month: 'short',
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
-                hour12: window.innerWidth > 768 // Only show AM/PM on larger screens
-              })}
+          {deadlineInfo && (
+            <span className={`flex items-center gap-1 px-2 py-0.5 rounded-full font-semibold text-[10px] sm:text-xs ${
+              // Color based on urgency level (same as home page)
+              deadlineInfo.urgencyLevel === "overdue" ? "bg-red-600/20 text-red-400" :
+              deadlineInfo.urgencyLevel === "critical" ? "bg-orange-600/20 text-orange-400" :
+              deadlineInfo.urgencyLevel === "urgent" ? "bg-yellow-600/20 text-yellow-400" :
+              deadlineInfo.urgencyLevel === "warning" ? "bg-blue-600/20 text-blue-400" :
+              "bg-indigo-500/10 text-indigo-300"
+            }`}>
+              {!isMobile && <CalendarClock className="h-3 w-3" />}
+              {deadlineInfo.text}
             </span>
           )}
         </div>
@@ -621,25 +769,49 @@ const DayDialog = ({
                         <p className="text-xs text-gray-400 mt-0.5 line-clamp-1">{task.description}</p>
                       )}
                     </div>
-                    <span className="text-solo-primary text-xs font-medium">
+                    <span className="text-solo-primary text-[10px] sm:text-xs font-medium">
                       {task.expReward} EXP
                     </span>
                   </div>
-                  <div className="mt-1.5 flex items-center gap-2 text-xs text-gray-500">
+                  <div className="mt-1.5 flex items-center gap-2 text-[10px] sm:text-xs text-gray-500">
                     <span className="capitalize">{task.category}</span>
-                    {task.deadline && (
-                      <>
-                        <span>•</span>
-                        <span className="text-indigo-300">
-                          Due: {new Date(task.deadline).toLocaleString([], {
-                            month: 'short',
-                            day: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          })}
-                        </span>
-                      </>
-                    )}
+                    {(() => {
+                      // Format deadline for display (same logic as TaskCard)
+                      const formatDeadline = (deadline: Date | undefined) => {
+                        if (!deadline) return null;
+                        const now = new Date();
+                        const deadlineDate = new Date(deadline);
+                        const isToday = deadlineDate.getDate() === now.getDate() &&
+                          deadlineDate.getMonth() === now.getMonth() &&
+                          deadlineDate.getFullYear() === now.getFullYear();
+
+                        if (isToday) {
+                          return `Today at ${deadlineDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+                        }
+
+                        const tomorrow = new Date(now);
+                        tomorrow.setDate(tomorrow.getDate() + 1);
+                        const isTomorrow = deadlineDate.getDate() === tomorrow.getDate() &&
+                          deadlineDate.getMonth() === tomorrow.getMonth() &&
+                          deadlineDate.getFullYear() === tomorrow.getFullYear();
+
+                        if (isTomorrow) {
+                          return `Tomorrow at ${deadlineDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+                        }
+
+                        return `${deadlineDate.toLocaleDateString()} at ${deadlineDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+                      };
+
+                      const deadlineText = formatDeadline(task.deadline);
+                      return deadlineText ? (
+                        <>
+                          <span>•</span>
+                          <span className="text-indigo-300">
+                            {deadlineText}
+                          </span>
+                        </>
+                      ) : null;
+                    })()}
                   </div>
                 </div>
               ))}
@@ -685,6 +857,8 @@ const PlannerCalendar = ({ selected, onSelect, className }: {
 };
 
 const Planner = () => {
+  const isMobile = useIsMobile();
+
   // Use the current date as the default selected date
   const today = new Date();
 
@@ -1054,23 +1228,78 @@ const Planner = () => {
                                   <div className="flex flex-col p-3 pl-4 group-hover:translate-x-0.5 transition-transform duration-200">
                                     {/* Header with category and due date */}
                                     <div className="flex justify-between items-center mb-2">
-                                      <span className={`text-xs font-medium capitalize ${getCategoryColor(task.category)} bg-clip-text text-transparent`}>
+                                      <span className={`text-[10px] sm:text-xs font-medium capitalize ${getCategoryColor(task.category)} bg-clip-text text-transparent`}>
                                         {task.category}
                                       </span>
 
                                       <div className="flex items-center gap-2">
-                                        {task.deadline && (
-                                          <span className="text-xs flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-300 font-semibold">
-                                            <span className="font-bold">Due:</span> {new Date(task.deadline).toLocaleString([], {
-                                              day: 'numeric',
-                                              hour: '2-digit',
-                                              minute: '2-digit',
-                                              hour12: false
-                                            })}
-                                          </span>
-                                        )}
+                                        {(() => {
+                                          // Format deadline for display (same logic as TaskCard)
+                                          const formatDeadline = (deadline: Date | undefined) => {
+                                            if (!deadline) return null;
+                                            const now = new Date();
+                                            const deadlineDate = new Date(deadline);
 
-                                        <span className="flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-gradient-to-r from-yellow-400 to-amber-500 text-gray-900 shadow-sm">
+                                            // Calculate urgency level
+                                            const timeRemaining = deadlineDate.getTime() - now.getTime();
+                                            const hoursRemaining = timeRemaining / (1000 * 60 * 60);
+                                            let urgencyLevel = "";
+                                            if (deadlineDate.getTime() <= now.getTime()) {
+                                              urgencyLevel = "overdue";
+                                            } else if (hoursRemaining < 2) {
+                                              urgencyLevel = "critical";
+                                            } else if (hoursRemaining < 6) {
+                                              urgencyLevel = "urgent";
+                                            } else if (hoursRemaining < 24) {
+                                              urgencyLevel = "warning";
+                                            }
+
+                                            const isToday = deadlineDate.getDate() === now.getDate() &&
+                                              deadlineDate.getMonth() === now.getMonth() &&
+                                              deadlineDate.getFullYear() === now.getFullYear();
+
+                                            if (isToday) {
+                                              return {
+                                                text: `Today at ${deadlineDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
+                                                urgencyLevel
+                                              };
+                                            }
+
+                                            const tomorrow = new Date(now);
+                                            tomorrow.setDate(tomorrow.getDate() + 1);
+                                            const isTomorrow = deadlineDate.getDate() === tomorrow.getDate() &&
+                                              deadlineDate.getMonth() === tomorrow.getMonth() &&
+                                              deadlineDate.getFullYear() === tomorrow.getFullYear();
+
+                                            if (isTomorrow) {
+                                              return {
+                                                text: `Tomorrow at ${deadlineDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
+                                                urgencyLevel
+                                              };
+                                            }
+
+                                            return {
+                                              text: `${deadlineDate.toLocaleDateString()} at ${deadlineDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
+                                              urgencyLevel
+                                            };
+                                          };
+
+                                          const deadlineInfo = formatDeadline(task.deadline);
+                                          return deadlineInfo ? (
+                                            <span className={`text-[10px] sm:text-xs flex items-center gap-1 px-2 py-0.5 rounded-full font-semibold ${
+                                              deadlineInfo.urgencyLevel === "overdue" ? "bg-red-600/20 text-red-400" :
+                                              deadlineInfo.urgencyLevel === "critical" ? "bg-orange-600/20 text-orange-400" :
+                                              deadlineInfo.urgencyLevel === "urgent" ? "bg-yellow-600/20 text-yellow-400" :
+                                              deadlineInfo.urgencyLevel === "warning" ? "bg-blue-600/20 text-blue-400" :
+                                              "bg-indigo-500/10 text-indigo-300"
+                                            }`}>
+                                              {!isMobile && <CalendarClock className="h-3 w-3" />}
+                                              {deadlineInfo.text}
+                                            </span>
+                                          ) : null;
+                                        })()}
+
+                                        <span className="flex items-center px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold bg-gradient-to-r from-yellow-400 to-amber-500 text-gray-900 shadow-sm">
                                           +{task.expReward} EXP
                                         </span>
                                       </div>
@@ -1145,18 +1374,42 @@ const Planner = () => {
                                     {task.description && (
                                       <div className="text-xs text-gray-500 truncate pl-5 line-through">{task.description}</div>
                                     )}
-                                    <div className="text-xs text-gray-500 truncate pl-5">
+                                    <div className="text-[10px] sm:text-xs text-gray-500 truncate pl-5">
                                       {task.category}
-                                      {task.deadline && (
-                                        <span className="ml-1">
-                                          {new Date(task.deadline).toLocaleString([], {
-                                            month: 'short',
-                                            day: 'numeric',
-                                            hour: '2-digit',
-                                            minute: '2-digit'
-                                          })}
-                                        </span>
-                                      )}
+                                      {(() => {
+                                        // Format deadline for display (same logic as TaskCard)
+                                        const formatDeadline = (deadline: Date | undefined) => {
+                                          if (!deadline) return null;
+                                          const now = new Date();
+                                          const deadlineDate = new Date(deadline);
+                                          const isToday = deadlineDate.getDate() === now.getDate() &&
+                                            deadlineDate.getMonth() === now.getMonth() &&
+                                            deadlineDate.getFullYear() === now.getFullYear();
+
+                                          if (isToday) {
+                                            return `Today at ${deadlineDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+                                          }
+
+                                          const tomorrow = new Date(now);
+                                          tomorrow.setDate(tomorrow.getDate() + 1);
+                                          const isTomorrow = deadlineDate.getDate() === tomorrow.getDate() &&
+                                            deadlineDate.getMonth() === tomorrow.getMonth() &&
+                                            deadlineDate.getFullYear() === tomorrow.getFullYear();
+
+                                          if (isTomorrow) {
+                                            return `Tomorrow at ${deadlineDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+                                          }
+
+                                          return `${deadlineDate.toLocaleDateString()} at ${deadlineDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+                                        };
+
+                                        const deadlineText = formatDeadline(task.deadline);
+                                        return deadlineText ? (
+                                          <span className="ml-1">
+                                            {deadlineText}
+                                          </span>
+                                        ) : null;
+                                      })()}
                                     </div>
                                   </div>
                                 );

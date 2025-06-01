@@ -94,6 +94,7 @@ const Rewards = () => {
     getDailyCompletionDetails,
     setWeeklyReward,
     getWeeklyRewardEntry,
+    checkWeeklyReducedCompletion,
     getWeeklyCompletionDetails
   ] = useSoloLevelingStore(state => [
     state.setDailyReward,
@@ -104,6 +105,7 @@ const Rewards = () => {
     state.getDailyCompletionDetails,
     state.setWeeklyReward,
     state.getWeeklyRewardEntry,
+    state.checkWeeklyReducedCompletion,
     state.getWeeklyCompletionDetails
   ]);
 
@@ -111,13 +113,17 @@ const Rewards = () => {
   const [isHelpDialogOpen, setIsHelpDialogOpen] = useState(false);
   const [isSuggestionsDialogOpen, setIsSuggestionsDialogOpen] = useState(false);
   const [isWeeklySuggestionsDialogOpen, setIsWeeklySuggestionsDialogOpen] = useState(false);
+  const [isReducedWeeklySuggestionsDialogOpen, setIsReducedWeeklySuggestionsDialogOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [rewardText, setRewardText] = useState('');
   const [selectedSuggestion, setSelectedSuggestion] = useState<any>(null);
   const [selectedWeeklySuggestion, setSelectedWeeklySuggestion] = useState<any>(null);
+  const [selectedReducedWeeklySuggestion, setSelectedReducedWeeklySuggestion] = useState<any>(null);
   const [suggestionTargetDate, setSuggestionTargetDate] = useState<Date>(new Date());
   const [weeklyTargetDate, setWeeklyTargetDate] = useState<Date>(new Date());
+  const [reducedWeeklyTargetDate, setReducedWeeklyTargetDate] = useState<Date>(new Date());
   const [customWeeklyReward, setCustomWeeklyReward] = useState('');
+  const [customReducedWeeklyReward, setCustomReducedWeeklyReward] = useState('');
   const [showWeeklyRewards, setShowWeeklyRewards] = useState(false);
   const [showRecentDays, setShowRecentDays] = useState(false);
   const [isEditDailyRewardDialogOpen, setIsEditDailyRewardDialogOpen] = useState(false);
@@ -196,6 +202,28 @@ const Rewards = () => {
     nextSunday.setDate(nextSunday.getDate() + daysUntilSunday);
     setWeeklyTargetDate(nextSunday);
     setIsWeeklySuggestionsDialogOpen(true);
+  };
+
+  const handleReducedWeeklySuggestionSelect = (suggestion: any, targetDate: Date) => {
+    setWeeklyReward(targetDate, suggestion.text);
+    setIsReducedWeeklySuggestionsDialogOpen(false);
+    setSelectedReducedWeeklySuggestion(null);
+
+    toast({
+      title: "Reduced Weekly Reward Set!",
+      description: `Set "${suggestion.text}" for the week of ${format(targetDate, 'MMM dd, yyyy')} (Reduced Requirements)`,
+      variant: "default"
+    });
+  };
+
+  const openReducedWeeklySuggestionDialog = (suggestion: any) => {
+    setSelectedReducedWeeklySuggestion(suggestion);
+    // Default to next Sunday (end of current week)
+    const nextSunday = new Date();
+    const daysUntilSunday = 7 - nextSunday.getDay();
+    nextSunday.setDate(nextSunday.getDate() + daysUntilSunday);
+    setReducedWeeklyTargetDate(nextSunday);
+    setIsReducedWeeklySuggestionsDialogOpen(true);
   };
 
   const getCompletionStatus = (date: Date) => {
@@ -660,7 +688,7 @@ const Rewards = () => {
               {getCompletionStatus(new Date()) === 'scheduled' && (
                 <div className="text-sm text-gray-400 text-center py-4">
                   <Calendar className="h-8 w-8 text-purple-500 mx-auto mb-2" />
-                  Complete your tasks, 5 daily quests, and 3 missions to unlock your reward!
+                  Complete your tasks, 5 daily quests, and 3 missions without any missed items to unlock your reward!
                 </div>
               )}
 
@@ -854,6 +882,144 @@ const Rewards = () => {
                       {weeklyDetails.overall
                         ? 'You can claim weekly rewards when available!'
                         : 'Complete all requirements above to unlock weekly rewards.'
+                      }
+                    </p>
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
+
+          {/* Reduced Requirements Section */}
+          <div className="mt-6 p-4 rounded-lg bg-blue-500/10 border border-blue-500/20">
+            <p className="text-sm text-blue-200 mb-4">
+              <span className="font-semibold">Alternative: Reduced Weekly Requirements</span> - If you can't meet the full requirements, you can still earn weekly rewards with these reduced goals:
+            </p>
+
+            {(() => {
+              // Get current week start (Sunday)
+              const today = new Date();
+              const currentWeekStart = new Date(today);
+              currentWeekStart.setDate(today.getDate() - today.getDay());
+              currentWeekStart.setHours(0, 0, 0, 0);
+
+              const weeklyDetails = getWeeklyCompletionDetails(currentWeekStart);
+              const reduced = weeklyDetails.reducedRequirements;
+
+              return (
+                <div className="space-y-3">
+                  {/* Weekly Planner Tasks */}
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-gray-800/50 border border-gray-700">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className={`h-4 w-4 ${reduced.weeklyPlannerTasks.allCompleted ? 'text-green-500' : 'text-gray-500'}`} />
+                      <div>
+                        <span className="text-sm font-medium">All Weekly Planner Tasks</span>
+                        <div className="text-xs text-gray-400">Complete all tasks created in the weekly planner</div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className={`text-xs font-medium ${reduced.weeklyPlannerTasks.allCompleted ? 'text-green-400' : 'text-gray-400'}`}>
+                        {reduced.weeklyPlannerTasks.completed}/{reduced.weeklyPlannerTasks.total}
+                      </div>
+                      <div className="text-xs text-gray-500">completed</div>
+                    </div>
+                  </div>
+
+                  {/* Reduced Daily Quests */}
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-gray-800/50 border border-gray-700">
+                    <div className="flex items-center gap-2">
+                      <Star className={`h-4 w-4 ${reduced.dailyQuests.met ? 'text-green-500' : 'text-yellow-500'}`} />
+                      <div>
+                        <span className="text-sm font-medium">15+ Daily Quests</span>
+                        <div className="text-xs text-gray-400">Complete at least 15 daily quests this week (half of full requirement)</div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className={`text-xs font-medium ${reduced.dailyQuests.met ? 'text-green-400' : 'text-yellow-400'}`}>
+                        {reduced.dailyQuests.completed}/{reduced.dailyQuests.required}
+                      </div>
+                      <div className="text-xs text-gray-500">completed</div>
+                    </div>
+                  </div>
+
+                  {/* Reduced Main Quests */}
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-gray-800/50 border border-gray-700">
+                    <div className="flex items-center gap-2">
+                      <Sword className={`h-4 w-4 ${reduced.mainQuests.met ? 'text-green-500' : 'text-blue-500'}`} />
+                      <div>
+                        <span className="text-sm font-medium">2+ Main Quests</span>
+                        <div className="text-xs text-gray-400">Complete at least 2 main quests this week (half of full requirement)</div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className={`text-xs font-medium ${reduced.mainQuests.met ? 'text-green-400' : 'text-blue-400'}`}>
+                        {reduced.mainQuests.completed}/{reduced.mainQuests.required}
+                      </div>
+                      <div className="text-xs text-gray-500">completed</div>
+                    </div>
+                  </div>
+
+                  {/* Reduced Side Quests */}
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-gray-800/50 border border-gray-700">
+                    <div className="flex items-center gap-2">
+                      <Zap className={`h-4 w-4 ${reduced.sideQuests.met ? 'text-green-500' : 'text-orange-500'}`} />
+                      <div>
+                        <span className="text-sm font-medium">2+ Side Quests</span>
+                        <div className="text-xs text-gray-400">Complete at least 2 side quests this week (half of full requirement)</div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className={`text-xs font-medium ${reduced.sideQuests.met ? 'text-green-400' : 'text-orange-400'}`}>
+                        {reduced.sideQuests.completed}/{reduced.sideQuests.required}
+                      </div>
+                      <div className="text-xs text-gray-500">completed</div>
+                    </div>
+                  </div>
+
+                  {/* Reduced Missions */}
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-gray-800/50 border border-gray-700">
+                    <div className="flex items-center gap-2">
+                      <Target className={`h-4 w-4 ${reduced.missions.met ? 'text-green-500' : 'text-purple-500'}`} />
+                      <div>
+                        <span className="text-sm font-medium">11+ Missions</span>
+                        <div className="text-xs text-gray-400">Complete at least 11 missions this week (reduced requirement)</div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className={`text-xs font-medium ${reduced.missions.met ? 'text-green-400' : 'text-purple-400'}`}>
+                        {reduced.missions.completed}/{reduced.missions.required}
+                      </div>
+                      <div className="text-xs text-gray-500">completed</div>
+                    </div>
+                  </div>
+
+                  {/* Reduced Overall Status */}
+                  <div className={`p-3 rounded-lg border ${
+                    reduced.overall
+                      ? 'bg-green-500/10 border-green-500/20'
+                      : 'bg-blue-500/10 border-blue-500/20'
+                  }`}>
+                    <div className="flex items-center gap-2">
+                      {reduced.overall ? (
+                        <CheckCircle className="h-4 w-4 text-green-400" />
+                      ) : (
+                        <Clock className="h-4 w-4 text-blue-400" />
+                      )}
+                      <span className={`text-sm font-medium ${
+                        reduced.overall ? 'text-green-300' : 'text-blue-300'
+                      }`}>
+                        {reduced.overall
+                          ? '🎉 Reduced Requirements Met!'
+                          : '⏳ Working on Reduced Requirements'
+                        }
+                      </span>
+                    </div>
+                    <p className={`text-xs mt-1 ${
+                      reduced.overall ? 'text-green-200' : 'text-blue-200'
+                    }`}>
+                      {reduced.overall
+                        ? 'You can claim weekly rewards with the reduced requirements!'
+                        : 'Complete the reduced requirements above to unlock weekly rewards.'
                       }
                     </p>
                   </div>
@@ -1147,9 +1313,13 @@ const Rewards = () => {
                 <li>All scheduled tasks for the day</li>
                 <li>5 Daily Quests</li>
                 <li>At least 3 Missions per day</li>
+                <li className="text-red-300">⚠️ No missed tasks or missions (auto-completed with penalties)</li>
               </ul>
               <p className="text-green-300 text-sm mt-2">
                 ✨ <span className="font-semibold">Good news:</span> Main and Side quests are no longer required for daily rewards!
+              </p>
+              <p className="text-red-300 text-sm mt-2">
+                ⚠️ <span className="font-semibold">Important:</span> If any task or mission is missed (auto-completed with penalties), your daily reward cannot be claimed!
               </p>
             </div>
 
@@ -1481,7 +1651,18 @@ const Rewards = () => {
                 </div>
               </div>
 
-              <div className="flex justify-end">
+              <div className="flex gap-2 justify-between">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setIsWeeklySuggestionsDialogOpen(false);
+                    setIsReducedWeeklySuggestionsDialogOpen(true);
+                  }}
+                  className="text-blue-500 border-blue-500/30 hover:bg-blue-500/10"
+                >
+                  <Target className="h-4 w-4 mr-2" />
+                  Reduced Weekly Rewards
+                </Button>
                 <Button
                   variant="outline"
                   onClick={() => setIsWeeklySuggestionsDialogOpen(false)}
@@ -1589,6 +1770,200 @@ const Rewards = () => {
               </div>
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Reduced Weekly Suggestions Dialog */}
+      <Dialog open={isReducedWeeklySuggestionsDialogOpen} onOpenChange={setIsReducedWeeklySuggestionsDialogOpen}>
+        <DialogContent className={isMobile ? "w-[90vw] max-w-[400px]" : "max-w-[600px]"}>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Target className="h-5 w-5 text-blue-500" />
+              {selectedReducedWeeklySuggestion ? 'Set Reduced Weekly Reward' : 'Reduced Weekly Reward Suggestions'}
+            </DialogTitle>
+          </DialogHeader>
+
+          {selectedReducedWeeklySuggestion ? (
+            // Individual reduced weekly suggestion selection
+            <div className="space-y-4">
+              <div className="p-4 rounded-lg border border-blue-500/30 bg-blue-500/10">
+                <div className="flex items-center gap-3 mb-3">
+                  {React.createElement(selectedReducedWeeklySuggestion.icon, { className: "h-6 w-6 text-blue-500" })}
+                  <div>
+                    <p className="font-medium text-gray-200">{selectedReducedWeeklySuggestion.text}</p>
+                    <p className="text-sm text-gray-500">{selectedReducedWeeklySuggestion.category}</p>
+                  </div>
+                </div>
+                <div className="text-sm text-blue-200">
+                  <Target className="h-4 w-4 inline mr-1" />
+                  This is a <span className="font-semibold">reduced weekly reward</span> - perfect for completing the reduced weekly requirements!
+                </div>
+                <div className="mt-3 p-3 rounded-lg bg-blue-500/20 border border-blue-500/30">
+                  <h4 className="text-sm font-semibold text-blue-200 mb-2">Reduced Requirements:</h4>
+                  <ul className="text-xs text-blue-100 space-y-1">
+                    <li>• All Weekly Planner Tasks</li>
+                    <li>• 15+ Daily Quests (half of full requirement)</li>
+                    <li>• 2+ Main Quests (half of full requirement)</li>
+                    <li>• 2+ Side Quests (half of full requirement)</li>
+                    <li>• 11+ Missions (reduced requirement)</li>
+                  </ul>
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="reduced-weekly-target-date">Which week would you like this reward for?</Label>
+                <div className="grid grid-cols-2 gap-2 mt-2">
+                  <Button
+                    variant={reducedWeeklyTargetDate.toDateString() === currentWeekStart.toDateString() ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setReducedWeeklyTargetDate(currentWeekStart)}
+                    className="text-xs"
+                  >
+                    This Week
+                  </Button>
+                  <Button
+                    variant={reducedWeeklyTargetDate.toDateString() === nextWeekStart.toDateString() ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setReducedWeeklyTargetDate(nextWeekStart)}
+                    className="text-xs"
+                  >
+                    Next Week
+                  </Button>
+                </div>
+                <p className="text-sm text-gray-500 mt-2">
+                  Selected: {format(reducedWeeklyTargetDate, 'MMM dd')} - {format(new Date(reducedWeeklyTargetDate.getTime() + 6 * 24 * 60 * 60 * 1000), 'MMM dd, yyyy')}
+                </p>
+                <p className="text-xs text-blue-300 mt-1">
+                  💡 Complete the reduced requirements for the week to earn this reward!
+                </p>
+              </div>
+
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => handleReducedWeeklySuggestionSelect(selectedReducedWeeklySuggestion, reducedWeeklyTargetDate)}
+                  className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600"
+                >
+                  Set Reduced Weekly Reward
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setSelectedReducedWeeklySuggestion(null)}
+                  className="flex-1"
+                >
+                  Back
+                </Button>
+              </div>
+            </div>
+          ) : (
+            // All reduced weekly suggestions view
+            <div className="space-y-4">
+              {/* Custom Reward Option */}
+              <div className="p-3 rounded-lg border border-blue-500/30 bg-blue-500/10">
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Plus className="h-4 w-4 text-blue-500" />
+                    <span className="text-sm font-medium text-blue-500">Custom Reduced Weekly Reward</span>
+                  </div>
+                  <Textarea
+                    placeholder="e.g., Weekend movie night, Order takeout, Buy a small treat..."
+                    value={customReducedWeeklyReward}
+                    onChange={(e) => setCustomReducedWeeklyReward(e.target.value)}
+                    className="bg-gray-800/50 border-gray-600 text-gray-200"
+                    rows={2}
+                  />
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={() => {
+                        if (customReducedWeeklyReward.trim()) {
+                          setWeeklyReward(reducedWeeklyTargetDate, customReducedWeeklyReward.trim());
+                          setCustomReducedWeeklyReward('');
+                          setIsReducedWeeklySuggestionsDialogOpen(false);
+                          toast({
+                            title: "Reduced Weekly Reward Set!",
+                            description: `Set "${customReducedWeeklyReward.trim()}" for ${format(reducedWeeklyTargetDate, 'MMM dd, yyyy')} (Reduced Requirements)`,
+                            variant: "default"
+                          });
+                        }
+                      }}
+                      disabled={!customReducedWeeklyReward.trim()}
+                      className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600"
+                    >
+                      Set Custom Reward
+                    </Button>
+                    <div className="grid grid-cols-2 gap-1 flex-1">
+                      <Button
+                        variant={reducedWeeklyTargetDate.toDateString() === currentWeekStart.toDateString() ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setReducedWeeklyTargetDate(currentWeekStart)}
+                        className="text-xs"
+                      >
+                        This Week
+                      </Button>
+                      <Button
+                        variant={reducedWeeklyTargetDate.toDateString() === nextWeekStart.toDateString() ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setReducedWeeklyTargetDate(nextWeekStart)}
+                        className="text-xs"
+                      >
+                        Next Week
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Suggested Rewards */}
+              <div>
+                <h4 className="text-sm font-medium text-gray-300 mb-3">Or choose from reduced weekly suggestions:</h4>
+                <div className="grid grid-cols-1 gap-3 max-h-[300px] overflow-y-auto">
+                  {weeklyRewardSuggestions.map((suggestion) => {
+                    const IconComponent = suggestion.icon;
+                    return (
+                      <div
+                        key={suggestion.id}
+                        onClick={() => setSelectedReducedWeeklySuggestion(suggestion)}
+                        className="p-3 rounded-lg border border-gray-700 bg-gray-800/30 hover:bg-gray-700/50 cursor-pointer transition-all hover:border-blue-500/50 group"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="flex-shrink-0">
+                            <IconComponent className="h-5 w-5 text-blue-500 group-hover:text-blue-400 transition-colors" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-gray-200 group-hover:text-white transition-colors">
+                              {suggestion.text}
+                            </p>
+                            <p className="text-xs text-gray-500 mt-1">
+                              {suggestion.category} • Reduced Requirements
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="flex gap-2 justify-between">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setIsReducedWeeklySuggestionsDialogOpen(false);
+                    setIsWeeklySuggestionsDialogOpen(true);
+                  }}
+                  className="text-purple-500 border-purple-500/30 hover:bg-purple-500/10"
+                >
+                  <Crown className="h-4 w-4 mr-2" />
+                  Full Weekly Rewards
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setIsReducedWeeklySuggestionsDialogOpen(false)}
+                >
+                  Close
+                </Button>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>

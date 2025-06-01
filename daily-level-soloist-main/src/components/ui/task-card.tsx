@@ -277,7 +277,7 @@ export function TaskCard({ task }: TaskCardProps) {
               deadlineInfo.urgencyLevel === "warning" && "bg-blue-600/20 text-blue-400",
               !deadlineInfo.urgencyLevel && "bg-gray-600/20 text-gray-400"
             )}>
-              <Clock className={isMobile ? "h-2.5 w-2.5 mr-0.5" : "h-3 w-3 mr-1"} />
+              {!isMobile && <Clock className="h-3 w-3 mr-1" />}
               {deadlineInfo.text}
             </span>
           )}
@@ -447,6 +447,7 @@ export function TaskCard({ task }: TaskCardProps) {
               <p className="text-xs text-gray-400 mt-0.5">
                 Missing a deadline will automatically apply Shadow Penalty, reducing EXP reward by 50%.
               </p>
+
             </div>
 
             <div className="pt-1.5">

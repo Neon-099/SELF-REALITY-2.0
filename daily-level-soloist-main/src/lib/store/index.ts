@@ -12,6 +12,7 @@ import { getDB } from '../db';
 
 export type StoreState = TaskSlice & QuestSlice & MissionSlice & UserSlice & ShopSlice & PunishmentSlice & RewardJournalSlice & {
   resetAllData: () => void;
+  resetCharacterOnly: () => void;
 };
 
 // Define a custom type that extends PersistOptions and adds onError
@@ -120,6 +121,31 @@ export const useSoloLevelingStore = create<StoreState>()(
           completedMissionHistory: [],
           shopItems: [],
           // Reset punishment slice
+          chanceCounter: 0,
+          isCursed: false,
+          hasShadowFatigue: false,
+          shadowFatigueUntil: null,
+          cursedUntil: null,
+          lockedSideQuestsUntil: null,
+          missedMainQuestStreak: 0,
+          lastRedemptionDate: null,
+          hasPendingRecovery: false,
+          activeRecoveryQuestIds: null,
+        }));
+      },
+      resetCharacterOnly: () => {
+        const [set] = a;
+        set((state) => ({
+          ...state,
+          // Reset only character-related data
+          user: {
+            ...initialUser,
+            name: "Hunter",
+            // Preserve reward journal and weekly rewards
+            rewardJournal: state.user.rewardJournal || [],
+            weeklyRewards: state.user.weeklyRewards || []
+          },
+          // Reset punishment-related state
           chanceCounter: 0,
           isCursed: false,
           hasShadowFatigue: false,

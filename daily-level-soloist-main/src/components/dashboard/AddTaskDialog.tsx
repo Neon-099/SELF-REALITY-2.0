@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Difficulty, DailyWinCategory, Task } from '@/lib/types';
 import { useSoloLevelingStore } from '@/lib/store';
-import { Plus, Clock, CalendarClock } from 'lucide-react';
+import { Plus, Clock, CalendarClock, AlertTriangle, CheckCircle } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
 import { areAllDailyWinsCompleted, isDailyWinCompleted, hasPendingDailyWinTask, isAttributeLimitReached, getAttributeTaskCount } from '@/lib/utils';
@@ -39,6 +39,7 @@ export const AddTaskDialog = ({ children }: AddTaskDialogProps) => {
   const [category, setCategory] = React.useState<string>('mental');
   const [hasDeadline, setHasDeadline] = React.useState(false);
   const [deadline, setDeadline] = React.useState<Date | undefined>(new Date());
+  const [showReminderDialog, setShowReminderDialog] = React.useState(false);
 
   // Daily win categories and attribute categories
   const dailyWinCategories = ["mental", "physical", "spiritual", "intelligence"];
@@ -109,6 +110,13 @@ export const AddTaskDialog = ({ children }: AddTaskDialogProps) => {
       return;
     }
 
+    // Show reminder dialog first
+    setShowReminderDialog(true);
+  };
+
+  // Function to actually create the task after reminder confirmation
+  const handleCreateTask = () => {
+
     // Check for daily win limitations
     if (categoryType === 'dailyWin') {
       if (isDailyWinCompleted(user.dailyWins, category as DailyWinCategory)) {
@@ -169,6 +177,7 @@ export const AddTaskDialog = ({ children }: AddTaskDialogProps) => {
     setCategory('mental');
     setHasDeadline(false);
     setDeadline(undefined);
+    setShowReminderDialog(false);
     setOpen(false);
   };
 
@@ -198,24 +207,24 @@ export const AddTaskDialog = ({ children }: AddTaskDialogProps) => {
         <div className="overflow-y-auto flex-1 pr-1">
           <form onSubmit={handleSubmit} className="space-y-1.5 sm:space-y-2 pt-1 sm:pt-1.5 relative z-10">
           <div className="space-y-0.5 sm:space-y-1">
-            <Label htmlFor="title" className="text-white/80 font-medium text-sm">Title</Label>
+            <Label htmlFor="title" className="text-white/80 font-medium text-xs sm:text-sm">Title</Label>
             <Input
               id="title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Enter task title"
-              className="border-indigo-500/20 bg-gray-800/90 h-7 sm:h-8 focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all text-sm"
+              className="border-indigo-500/20 bg-gray-800/90 h-7 sm:h-8 focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all text-xs sm:text-sm"
             />
           </div>
 
           <div className="space-y-0.5 sm:space-y-1">
-            <Label htmlFor="description" className="text-white/80 font-medium text-sm">Description (optional)</Label>
+            <Label htmlFor="description" className="text-white/80 font-medium text-xs sm:text-sm">Description (optional)</Label>
             <Textarea
               id="description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Enter task description"
-              className="border-indigo-500/20 bg-gray-800/90 min-h-[50px] focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all text-sm"
+              className="border-indigo-500/20 bg-gray-800/90 min-h-[50px] focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all text-xs sm:text-sm"
             />
           </div>
 
@@ -343,6 +352,63 @@ export const AddTaskDialog = ({ children }: AddTaskDialogProps) => {
           </form>
         </div>
       </DialogContent>
+
+      {/* Deadline Reminder Dialog */}
+      <Dialog open={showReminderDialog} onOpenChange={setShowReminderDialog}>
+        <DialogContent className="glassmorphism w-[90vw] max-w-[280px] sm:max-w-[400px] p-2 sm:p-4">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-1 sm:gap-2 text-amber-300 text-sm sm:text-base">
+              <AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5" />
+              Deadline Reminder
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-2 sm:space-y-4">
+            <div className="p-2 sm:p-4 rounded-lg bg-amber-500/10 border border-amber-500/20">
+              <p className="text-xs sm:text-sm text-amber-200 mb-2 sm:mb-3">
+                Before creating your task, please double-check:
+              </p>
+              <ul className="space-y-1 sm:space-y-2 text-xs sm:text-sm text-amber-100">
+                <li className="flex items-center gap-1 sm:gap-2">
+                  <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4 text-green-400" />
+                  Your deadline date is correct
+                </li>
+                <li className="flex items-center gap-1 sm:gap-2">
+                  <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4 text-green-400" />
+                  Your deadline time is set properly
+                </li>
+                <li className="flex items-center gap-1 sm:gap-2">
+                  <AlertTriangle className="h-3 w-3 sm:h-4 sm:w-4 text-amber-400" />
+                  Missing deadlines apply Shadow Penalty (-50% EXP)
+                </li>
+              </ul>
+            </div>
+
+            <div className="p-2 sm:p-3 rounded-lg bg-gray-800/50 border border-gray-600">
+              <p className="text-xs text-gray-300 mb-1 sm:mb-2">Current deadline:</p>
+              <p className="text-xs sm:text-sm font-medium text-white">
+                {deadline ? deadline.toLocaleString() : 'No deadline set'}
+              </p>
+            </div>
+
+            <div className="flex gap-1 sm:gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setShowReminderDialog(false)}
+                className="flex-1 h-7 sm:h-9 text-xs sm:text-sm"
+              >
+                Review Deadline
+              </Button>
+              <Button
+                onClick={handleCreateTask}
+                className="flex-1 bg-indigo-500 hover:bg-indigo-600 h-7 sm:h-9 text-xs sm:text-sm"
+              >
+                Create Task
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 }
