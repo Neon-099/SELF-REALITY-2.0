@@ -31,8 +31,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 const Index = () => {
-  const [user, tasks, updateStreak, checkResetDailyWins] = useSoloLevelingStore(
-    state => [state.user, state.tasks, state.updateStreak, state.checkResetDailyWins]
+  const [user, tasks, updateStreak, checkResetDailyWins, checkAndUpdateMissedRewards] = useSoloLevelingStore(
+    state => [state.user, state.tasks, state.updateStreak, state.checkResetDailyWins, state.checkAndUpdateMissedRewards]
   );
   const { toast } = useToast();
   const [showCompletedTasks, setShowCompletedTasks] = useState(false);
@@ -62,9 +62,13 @@ const Index = () => {
     // Check if daily wins need to be reset
     checkResetDailyWins();
 
+    // Check for missed rewards
+    checkAndUpdateMissedRewards();
+
     // Set up a daily reset check
     const checkReset = () => {
       checkResetDailyWins();
+      checkAndUpdateMissedRewards();
     };
 
     // Check for reset every time the page becomes visible
@@ -83,7 +87,7 @@ const Index = () => {
     return () => {
       document.removeEventListener('visibilitychange', checkReset);
     };
-  }, [updateStreak, checkResetDailyWins, currentDate]);
+  }, [updateStreak, checkResetDailyWins, checkAndUpdateMissedRewards, currentDate]);
 
   // Memoize task filtering to prevent unnecessary recalculations
   const incompleteTasks = useMemo(() => {

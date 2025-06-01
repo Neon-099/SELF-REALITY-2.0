@@ -24,6 +24,7 @@ export interface Task {
   scheduledFor?: Date;
   missed?: boolean; // To track if the deadline was missed
   deadline?: Date; // To track task deadline for the Shadow Penalty system
+  isWeeklyPlannerTask?: boolean; // To track if task was created in weekly planner for reduced requirements
 }
 
 export interface Quest {

@@ -290,7 +290,8 @@ const TaskDialog = ({
         createdAt: editingTask.createdAt,
         scheduledFor: editingTask.scheduledFor,
         deadline: deadline,
-        missed: editingTask.missed
+        missed: editingTask.missed,
+        isWeeklyPlannerTask: editingTask.isWeeklyPlannerTask || true
       };
 
       // Delete the old task
@@ -322,7 +323,8 @@ const TaskDialog = ({
         expReward: getExpForDifficulty(formData.difficulty as Difficulty),
         scheduledFor: selectedDate,
         createdAt: new Date(),
-        deadline: deadline
+        deadline: deadline,
+        isWeeklyPlannerTask: true
       };
 
       // Add the new task
