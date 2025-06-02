@@ -530,7 +530,7 @@ const AddTaskDialog = ({ questId, onClose }: { questId: string; onClose: () => v
         <label className="text-sm font-medium">Deadline</label>
         <div className="flex items-center justify-between mb-2">
           <div className="text-xs text-indigo-300 flex items-center">
-            {!isMobile && <CalendarClock className="h-3 w-3 mr-1" />} Automatic deadline enforcement
+            <CalendarClock className="h-3 w-3 mr-1" /> Automatic deadline enforcement
           </div>
         </div>
 
