@@ -106,8 +106,6 @@ const Milestones = () => {
         </div>
       </div>
 
-
-
       {/* Level Milestones */}
       <div className={`bg-solo-dark border border-gray-800 rounded-lg ${isMobile ? 'p-3' : 'p-6'} shadow-lg`}>
         <div className={`flex items-center ${isMobile ? 'gap-2 mb-3' : 'gap-3 mb-6'}`}>
@@ -157,48 +155,33 @@ const Milestones = () => {
             {/* Milestone Levels */}
             {[
               { level: 1, rank: 'F', title: 'Novice Hunter' },
-              { level: 5, rank: 'F+', title: 'Aspiring Hunter' },
-              { level: 10, rank: 'F++', title: 'Developing Hunter' },
-              { level: 15, rank: 'E', title: 'Beginner Hunter' },
-              { level: 20, rank: 'E+', title: 'Competent Hunter' },
-              { level: 25, rank: 'D', title: 'Skilled Hunter' },
-              { level: 35, rank: 'D+', title: 'Proficient Hunter' },
-              { level: 40, rank: 'C', title: 'Advanced Hunter' },
-              { level: 50, rank: 'C+', title: 'Expert Hunter' },
-              { level: 60, rank: 'B', title: 'Elite Hunter' },
-              { level: 75, rank: 'B+', title: 'Master Hunter' },
-              { level: 90, rank: 'A', title: 'Grand Master Hunter' },
-              { level: 105, rank: 'A+', title: 'Legendary Hunter' },
-              { level: 120, rank: 'S', title: 'Mythical Hunter' },
-              { level: 140, rank: 'S+', title: 'Transcendent Hunter' },
-              { level: 160, rank: 'SS', title: 'Divine Hunter' },
-              { level: 180, rank: 'SS+', title: 'Sovereign Hunter' },
-              { level: 200, rank: 'SSS', title: 'Supreme Hunter' }
+              { level: 31, rank: 'E', title: 'Beginner Hunter' },
+              { level: 61, rank: 'D', title: 'Skilled Hunter' },
+              { level: 91, rank: 'C', title: 'Advanced Hunter' },
+              { level: 121, rank: 'B', title: 'Elite Hunter' },
+              { level: 151, rank: 'A', title: 'Master Hunter' },
+              { level: 181, rank: 'S', title: 'Grand Master Hunter' },
+              { level: 271, rank: 'SS', title: 'Legendary Hunter' },
+              { level: 366, rank: 'SSS', title: 'Mythical Hunter' }
             ].map(({ level, rank, title }) => {
               const achieved = user.level >= level;
               const milestoneText = `Rank ${rank} - ${title}`;
 
               return (
                 <div key={level} className={`${isMobile ? 'ml-6' : 'ml-10'} relative`}>
-                  <div className={`absolute ${isMobile ? '-left-8 w-6 h-6' : '-left-14 w-10 h-10'} top-0 rounded-full flex items-center justify-center
-                    ${achieved ? 'bg-green-500 shadow-lg' : 'bg-gray-700 shadow'}
-                  `}>
-                    {achieved ? (
-                      <span className={`text-white font-extrabold ${isMobile ? 'text-xs' : 'text-lg'} drop-shadow-glow`}>{level}</span>
-                    ) : (
-                      <span className={`text-gray-300 font-bold ${isMobile ? 'text-xs' : 'text-lg'}`}>{level}</span>
-                    )}
+                  <div className={`absolute ${isMobile ? '-left-8 w-6 h-6' : '-left-14 w-10 h-10'} top-0 rounded-full flex items-center justify-center shadow-lg
+                    ${achieved ? 'bg-gradient-to-br from-solo-primary to-solo-secondary' : 'bg-gray-700'}`}>
+                    <span className={`text-white font-extrabold ${isMobile ? 'text-xs' : 'text-lg'} drop-shadow-glow`}>{level}</span>
                   </div>
-                  <div className={`$
-                    {achieved ? 'bg-green-500/10 border border-green-500/30 shadow-lg' : 'bg-gray-800/40 shadow'}
-                  ${isMobile ? 'p-3' : 'p-5'} rounded-lg`}>
-                    <h3 className={`${isMobile ? 'text-sm' : 'text-lg'} font-bold bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent drop-shadow-glow`}>
-                      {achieved ? `Level ${level} - ${milestoneText} - Achieved!` : `Level ${level} - ${milestoneText}`}
+                  <div className={`bg-gray-800/40 ${isMobile ? 'p-3' : 'p-5'} rounded-lg shadow transition-colors duration-300
+                    ${achieved ? 'border border-solo-primary/20 hover:bg-solo-primary/10' : 'border border-gray-800 hover:bg-gray-800/50'}`}>
+                    <h3 className={`${isMobile ? 'text-sm' : 'text-xl'} font-bold transition-colors duration-300
+                      ${achieved ? 'bg-gradient-to-r from-solo-primary to-solo-secondary bg-clip-text text-transparent drop-shadow-glow' : 'text-gray-400'}`}>
+                      {milestoneText}
                     </h3>
-                    <p className={`text-gray-300 ${isMobile ? 'text-xs' : 'text-base'} font-semibold`}>
-                      {achieved
-                        ? "You've reached this milestone! Keep going!"
-                        : `Reach level ${level} to unlock this milestone and rank up`}
+                    <p className={`${isMobile ? 'text-xs' : 'text-base'} font-semibold transition-colors duration-300
+                      ${achieved ? 'text-gray-300' : 'text-gray-500'}`}>
+                      Level {level} Required
                     </p>
                   </div>
                 </div>

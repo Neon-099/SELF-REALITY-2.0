@@ -91,3 +91,23 @@ export const calculateRank = (level: number): Rank => {
   if (level >= 31) return 'E';
   return 'F';
 };
+
+/**
+ * Calculates the EXP bonus multiplier based on rank
+ * @param rank The current rank
+ * @returns The EXP bonus multiplier (e.g., 1.1 for 10% bonus)
+ */
+export const getRankExpBonus = (rank: Rank): number => {
+  const bonusMultipliers: Record<Rank, number> = {
+    'F': 1.0,    // No bonus
+    'E': 1.1,    // 10% bonus
+    'D': 1.2,    // 20% bonus
+    'C': 1.3,    // 30% bonus
+    'B': 1.4,    // 40% bonus
+    'A': 1.5,    // 50% bonus
+    'S': 1.6,    // 60% bonus
+    'SS': 1.7,   // 70% bonus
+    'SSS': 1.8   // 80% bonus
+  };
+  return bonusMultipliers[rank] || 1.0;
+};

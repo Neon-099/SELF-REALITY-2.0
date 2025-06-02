@@ -115,9 +115,6 @@ export const useSoloLevelingStore = create<StoreState>()(
           user: { ...initialUser, name: "Hunter", rewardJournal: [] },
           // Reset all other slices to their initial states
           tasks: [],
-          quests: [],
-          missions: [],
-          completedMissionHistory: [],
           shopItems: [],
           // Reset punishment slice
           chanceCounter: 0,

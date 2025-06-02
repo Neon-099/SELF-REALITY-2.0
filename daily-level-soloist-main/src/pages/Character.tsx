@@ -20,119 +20,101 @@ import ShadowPenalty from '@/components/punishment/ShadowPenalty';
 const rankDetails = [
   {
     rank: 'SSS',
-    levelReq: 360,
+    levelReq: 366,
     icon: <Crown size={16} />,
     color: 'text-yellow-400',
     description: 'Ultimate hunter status - the pinnacle of achievement.',
     benefits: [
       'Triple EXP gain from all activities',
-      'Access to legendary quests',
-      'Unique titles and achievements',
-      'Maximum gold conversion rate'
+      '5 Main & 5 Side quests per day'
     ]
   },
   {
     rank: 'SS',
-    levelReq: 270,
+    levelReq: 271,
     icon: <Trophy size={16} />,
     color: 'text-purple-400',
     description: 'Elite hunter with increased rewards and rare quest access.',
     benefits: [
       'Double EXP gain from all activities',
-      'Access to rare quests',
-      'Special titles',
-      'Improved gold conversion rate'
+      '4 Main & 4 Side quests per day'
     ]
   },
   {
     rank: 'S',
-    levelReq: 180,
+    levelReq: 181,
     icon: <Star size={16} />,
     color: 'text-blue-400',
     description: 'Advanced hunter with bonus rewards and special missions.',
     benefits: [
       '50% bonus EXP gain',
-      'Access to advanced quests',
-      'Special missions',
-      'Better gold conversion'
+      '4 Main & 4 Side quests per day'
     ]
   },
   {
     rank: 'A',
-    levelReq: 150,
+    levelReq: 151,
     icon: 'A',
     color: 'text-green-400',
     description: 'Skilled hunter with improved rewards.',
     benefits: [
       '30% bonus EXP gain',
-      'Access to skilled quests',
-      'Improved mission rewards',
-      'Standard gold conversion'
+      '3 Main & 3 Side quests per day'
     ]
   },
   {
     rank: 'B',
-    levelReq: 120,
+    levelReq: 121,
     icon: 'B',
     color: 'text-emerald-400',
     description: 'Experienced hunter with decent rewards.',
     benefits: [
       '20% bonus EXP gain',
-      'Access to intermediate quests',
-      'Better mission variety',
-      'Basic gold conversion'
+      '3 Main & 3 Side quests per day'
     ]
   },
   {
     rank: 'C',
-    levelReq: 90,
+    levelReq: 91,
     icon: 'C',
     color: 'text-teal-400',
     description: 'Progressing hunter with standard rewards.',
     benefits: [
       '10% bonus EXP gain',
-      'Access to regular quests',
-      'Standard missions',
-      'Basic rewards'
+      '3 Main & 3 Side quests per day'
     ]
   },
   {
     rank: 'D',
-    levelReq: 60,
+    levelReq: 61,
     icon: 'D',
     color: 'text-cyan-400',
     description: 'Developing hunter with basic rewards.',
     benefits: [
       '5% bonus EXP gain',
-      'Access to basic quests',
-      'Simple missions',
-      'Basic rewards'
+      '2 Main & 2 Side quests per day'
     ]
   },
   {
     rank: 'E',
-    levelReq: 30,
+    levelReq: 31,
     icon: 'E',
     color: 'text-orange-500',
     description: 'Beginning hunter with standard rewards.',
     benefits: [
       'Standard EXP gain',
-      'Access to beginner quests',
-      'Basic missions',
-      'Standard rewards'
+      '2 Main & 2 Side quests per day'
     ]
   },
   {
     rank: 'F',
-    levelReq: 0,
+    levelReq: 1,
     icon: 'F',
     color: 'text-gray-500',
     description: 'Beginning hunter with standard rewards.',
     benefits: [
       'Standard EXP gain',
-      'Access to beginner quests',
-      'Basic missions',
-      'Standard rewards'
+      '2 Main & 2 Side quests per day'
     ]
   }
 ];

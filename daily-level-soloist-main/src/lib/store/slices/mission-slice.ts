@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { differenceInDays, differenceInHours, addDays } from 'date-fns';
 import { toast } from '@/hooks/use-toast';
 import { getDB } from '../../db';
+import { getRankExpBonus } from '../../utils/calculations';
 
 export interface MissionSlice {
   missions: Mission[];
@@ -77,7 +78,7 @@ export const createMissionSlice: StateCreator<MissionSlice & any> = (set, get) =
   },
   
   updateMissionTasks: async (id: string, completedTaskIndices: number[]) => {
-    const { missions } = get();
+    const { missions, user } = get();
     const mission = missions.find((m: Mission) => m.id === id);
     
     if (!mission || mission.completed) return;
@@ -102,17 +103,21 @@ export const createMissionSlice: StateCreator<MissionSlice & any> = (set, get) =
       const { addExp } = get();
       const completedMission = { ...mission, completed: true, completedAt: new Date(), completedTaskIndices };
       
+      // Get rank-based EXP bonus
+      const rankBonus = getRankExpBonus(user.rank);
+      const finalExpReward = Math.floor(mission.expReward * rankBonus);
+      
       set((state: MissionSlice) => ({
         completedMissionHistory: [...state.completedMissionHistory, completedMission]
       }));
       
-      // Award EXP for mission completion
-      addExp(mission.expReward);
+      // Award EXP for mission completion with rank bonus
+      addExp(finalExpReward);
       
       // Show toast
       toast({
         title: "Mission Completed!",
-        description: `You earned ${mission.expReward} EXP for completing "${mission.title}"`,
+        description: `You earned ${finalExpReward} EXP for completing "${mission.title}" (${Math.round((rankBonus - 1) * 100)}% bonus from rank)`,
       });
       
       // Try to also save to IndexedDB for extra persistence
@@ -134,7 +139,7 @@ export const createMissionSlice: StateCreator<MissionSlice & any> = (set, get) =
   },
   
   completeMission: async (id: string) => {
-    const { missions, addExp } = get();
+    const { missions, addExp, user } = get();
     const mission = missions.find((m: Mission) => m.id === id);
     
     if (!mission || mission.completed) return;
@@ -146,18 +151,22 @@ export const createMissionSlice: StateCreator<MissionSlice & any> = (set, get) =
     // Add to completed history
     const completedMission = { ...mission, completed: true, completedAt: new Date() };
     
+    // Get rank-based EXP bonus
+    const rankBonus = getRankExpBonus(user.rank);
+    const finalExpReward = Math.floor(mission.expReward * rankBonus);
+    
     set((state: MissionSlice) => ({
       missions: updatedMissions,
       completedMissionHistory: [...state.completedMissionHistory, completedMission]
     }));
     
-    // Award EXP for mission completion
-    addExp(mission.expReward);
+    // Award EXP for mission completion with rank bonus
+    addExp(finalExpReward);
     
     // Show toast
     toast({
       title: "Mission Completed!",
-      description: `You earned ${mission.expReward} EXP for completing "${mission.title}"`,
+      description: `You earned ${finalExpReward} EXP for completing "${mission.title}" (${Math.round((rankBonus - 1) * 100)}% bonus from rank)`,
     });
     
     // Try to also save to IndexedDB for extra persistence

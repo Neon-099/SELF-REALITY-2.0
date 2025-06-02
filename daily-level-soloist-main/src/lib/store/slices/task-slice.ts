@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { getExpForDifficulty } from '../../utils/calculations';
 import { UserSlice } from './user-slice';
 import { toast } from '@/hooks/use-toast';
+import { getRankExpBonus } from '../../utils/calculations';
 
 export interface TaskSlice {
   tasks: Task[];
@@ -49,7 +50,7 @@ export const createTaskSlice: StateCreator<
     }));
   },
   completeTask: (id) => {
-    const { tasks, addExp, addStatExp, updateDailyWin, getExpModifier } = get();
+    const { tasks, addExp, addStatExp, updateDailyWin, getExpModifier, user } = get();
     const task = tasks.find(t => t.id === id);
 
     if (!task || task.completed) return;
@@ -64,9 +65,12 @@ export const createTaskSlice: StateCreator<
 
     // Get experience modifier from punishment system
     const expModifier = getExpModifier();
+    
+    // Get rank-based EXP bonus
+    const rankBonus = getRankExpBonus(user.rank);
 
-    // Calculate final exp with modifier
-    const finalExpReward = Math.floor(task.expReward * expModifier);
+    // Calculate final exp with both modifiers
+    const finalExpReward = Math.floor(task.expReward * expModifier * rankBonus);
 
     // Update task status
     set((state: TaskSlice) => ({
@@ -75,7 +79,7 @@ export const createTaskSlice: StateCreator<
       )
     }));
 
-    // Add experience points with modifier applied
+    // Add experience points with modifiers applied
     addExp(finalExpReward);
 
     // Add stat experience

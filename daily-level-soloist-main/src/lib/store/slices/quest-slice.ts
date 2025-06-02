@@ -1,7 +1,7 @@
 import { StateCreator } from 'zustand';
 import { Quest, Task, DailyWinCategory, Difficulty, Stat } from '../../types';
 import { v4 as uuidv4 } from 'uuid';
-import { calculateExpToNextLevel, calculateRank } from '../../utils/calculations';
+import { calculateExpToNextLevel, calculateRank, getRankExpBonus } from '../../utils/calculations';
 import { toast } from '@/hooks/use-toast';
 import { StoreState } from '../index';
 
@@ -40,6 +40,22 @@ const attributeToDailyWin = (attributeCategory: string): DailyWinCategory | null
     case 'spiritual': return 'spiritual';
     case 'social': return 'mental'; // Default social to mental
     default: return null;
+  }
+};
+
+// Helper to get quest limits based on rank
+const getQuestLimitsByRank = (rank: Rank): { mainQuests: number; sideQuests: number; dailyQuests: number; missions: number } => {
+  switch (rank) {
+    case 'SSS': return { mainQuests: 5, sideQuests: 5, dailyQuests: 4, missions: 4 };
+    case 'SS': return { mainQuests: 4, sideQuests: 4, dailyQuests: 4, missions: 4 };
+    case 'S': return { mainQuests: 4, sideQuests: 4, dailyQuests: 3, missions: 3 };
+    case 'A': return { mainQuests: 3, sideQuests: 3, dailyQuests: 3, missions: 3 };
+    case 'B': return { mainQuests: 3, sideQuests: 3, dailyQuests: 3, missions: 3 };
+    case 'C': return { mainQuests: 3, sideQuests: 3, dailyQuests: 2, missions: 3 };
+    case 'D': return { mainQuests: 2, sideQuests: 2, dailyQuests: 2, missions: 3 };
+    case 'E': return { mainQuests: 2, sideQuests: 2, dailyQuests: 2, missions: 2 };
+    case 'F': return { mainQuests: 2, sideQuests: 2, dailyQuests: 2, missions: 2 };
+    default: return { mainQuests: 2, sideQuests: 2, dailyQuests: 2, missions: 2 };
   }
 };
 
@@ -206,9 +222,12 @@ export const createQuestSlice: StateCreator<StoreState, [], [], QuestSlice> = (s
         // Get the experience modifier from punishment system
         const getExpModifier = get().getExpModifier;
         const expModifier = getExpModifier();
+        
+        // Get rank-based EXP bonus
+        const rankBonus = getRankExpBonus(state.user.rank);
 
-        // Calculate the modified EXP reward
-        const finalExpReward = Math.floor(completedTask.expReward * expModifier);
+        // Calculate the modified EXP reward with both modifiers
+        const finalExpReward = Math.floor(completedTask.expReward * expModifier * rankBonus);
 
         let { exp, level, expToNextLevel } = state.user;
         exp += finalExpReward;
@@ -222,14 +241,20 @@ export const createQuestSlice: StateCreator<StoreState, [], [], QuestSlice> = (s
         // Call increaseStatFree after the state update
         setTimeout(() => {
           // Add stat points with modifier applied
-          const statExpReward = Math.floor(8 * expModifier);
+          const statExpReward = Math.floor(8 * expModifier * rankBonus);
           get().addStatExp(attributeStat, statExpReward);
 
           // Notify user if a penalty was applied
           if (expModifier < 1) {
             toast({
               title: "Quest Task Completed",
-              description: `You earned ${finalExpReward} EXP and ${statExpReward} attribute points (${Math.round(expModifier * 100)}% rate due to penalty)`,
+              description: `You earned ${finalExpReward} EXP and ${statExpReward} attribute points (${Math.round(expModifier * 100)}% rate due to penalty, ${Math.round((rankBonus - 1) * 100)}% bonus from rank)`,
+              variant: "default"
+            });
+          } else {
+            toast({
+              title: "Quest Task Completed",
+              description: `You earned ${finalExpReward} EXP and ${statExpReward} attribute points (${Math.round((rankBonus - 1) * 100)}% bonus from rank)`,
               variant: "default"
             });
           }
@@ -399,7 +424,8 @@ export const createQuestSlice: StateCreator<StoreState, [], [], QuestSlice> = (s
       }
 
       const expModifier = getExpModifier();
-      const finalExpReward = Math.floor(quest.expReward * expModifier);
+      const rankBonus = getRankExpBonus(user.rank);
+      const finalExpReward = Math.floor(quest.expReward * expModifier * rankBonus);
       const now = new Date();
       let missedDeadline = false;
 
@@ -431,18 +457,15 @@ export const createQuestSlice: StateCreator<StoreState, [], [], QuestSlice> = (s
       let toastDescription = `${quest.title} - You earned ${finalExpReward} EXP and ${Math.floor(finalExpReward / 10)} gold`;
 
       if (expModifier < 1) {
-        toastDescription += ` (${Math.round(expModifier * 100)}% rate due to penalty)`;
-      }
-
-      if (missedDeadline) {
-        toastTitle = "Quest Completed Late";
-        toastDescription += " (Deadline missed)";
+        toastDescription += ` (${Math.round(expModifier * 100)}% rate due to penalty, ${Math.round((rankBonus - 1) * 100)}% bonus from rank)`;
+      } else {
+        toastDescription += ` (${Math.round((rankBonus - 1) * 100)}% bonus from rank)`;
       }
 
       toast({
         title: toastTitle,
         description: toastDescription,
-        variant: missedDeadline ? "default" : "default",
+        variant: "default"
       });
 
       if (quest.isRecoveryQuest && activeRecoveryQuestIds && activeRecoveryQuestIds.length > 0) {
@@ -535,17 +558,30 @@ export const createQuestSlice: StateCreator<StoreState, [], [], QuestSlice> = (s
         dailyQuestsCompleted: completedTodayDailyQuests
       };
     },
-    hasReachedDailyLimit: (isMainQuest, isDaily) => {
-      if (isDaily) return false; // Daily quests have no limit
+    hasReachedDailyLimit: (isMainQuest: boolean, isDaily: boolean) => {
+      const { quests, user } = get();
+      const today = new Date();
+      const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      const todayEnd = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
 
-      const { getDailyQuestCompletionStatus } = get();
-      const status = getDailyQuestCompletionStatus();
+      // Get quest limits based on user's rank
+      const { mainQuests, sideQuests } = getQuestLimitsByRank(user.rank);
+
+      // Count completed quests today
+      const completedToday = quests.filter(q => 
+        q.completed && 
+        q.completedAt && 
+        new Date(q.completedAt) >= todayStart && 
+        new Date(q.completedAt) <= todayEnd
+      );
 
       if (isMainQuest) {
-        return status.mainQuestsCompleted >= 1;
-      } else {
-        return status.sideQuestsCompleted >= 1;
+        return completedToday.filter(q => q.isMainQuest && !q.isDaily).length >= mainQuests;
+      } else if (!isDaily) {
+        return completedToday.filter(q => !q.isMainQuest && !q.isDaily && !q.isRecoveryQuest).length >= sideQuests;
       }
+
+      return false; // Daily quests have no limit
     }
   };
 };

@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { CheckCircle, Swords, Star, ListTodo, ChevronDown, ChevronUp, Sword, Coins, Filter, Database, X, CalendarClock, Shield, Clock, Eye, EyeOff, Sunrise, CalendarDays, Plus, AlertCircle, HelpCircle } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogClose, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { toast } from '@/hooks/use-toast';
-import { DailyWinCategory, Difficulty, Quest, Task as QuestTask } from '@/lib/types';
+import { DailyWinCategory, Difficulty, Quest, Task as QuestTask, Rank } from '@/lib/types';
 import { isSameDay, format } from 'date-fns';
 import { getDB } from '@/lib/db';
 import { DateTimePicker } from '@/components/ui/date-time-picker';
@@ -30,6 +30,22 @@ const expRewards: { [key in Difficulty]: number } = {
 
 // Define a type for quest types
 type QuestType = 'main' | 'side' | 'daily';
+
+// Add this near the top of the file, after imports
+const getQuestLimitsByRank = (rank: Rank): { mainQuests: number; sideQuests: number; dailyQuests: number; missions: number } => {
+  switch (rank) {
+    case 'SSS': return { mainQuests: 5, sideQuests: 5, dailyQuests: 4, missions: 4 };
+    case 'SS': return { mainQuests: 4, sideQuests: 4, dailyQuests: 4, missions: 4 };
+    case 'S': return { mainQuests: 4, sideQuests: 4, dailyQuests: 3, missions: 3 };
+    case 'A': return { mainQuests: 3, sideQuests: 3, dailyQuests: 3, missions: 3 };
+    case 'B': return { mainQuests: 3, sideQuests: 3, dailyQuests: 3, missions: 3 };
+    case 'C': return { mainQuests: 3, sideQuests: 3, dailyQuests: 2, missions: 3 };
+    case 'D': return { mainQuests: 2, sideQuests: 2, dailyQuests: 2, missions: 3 };
+    case 'E': return { mainQuests: 2, sideQuests: 2, dailyQuests: 2, missions: 2 };
+    case 'F': return { mainQuests: 2, sideQuests: 2, dailyQuests: 2, missions: 2 };
+    default: return { mainQuests: 2, sideQuests: 2, dailyQuests: 2, missions: 2 };
+  }
+};
 
 const AddQuestDialog = ({ onClose, isMobile }: { onClose: () => void; isMobile: boolean }) => {
   const addQuest = useSoloLevelingStore(state => state.addQuest);
@@ -766,7 +782,7 @@ const Quests = () => {
   });
 
   // Get daily quests for today only (main section display)
-  const dailyQuests = questsData.filter(quest =>
+  const todayDailyQuests = questsData.filter(quest =>
     quest.isDaily === true &&
     !quest.completed && // Skip completed daily quests
     quest.deadline && isSameDay(new Date(quest.deadline), new Date()) // Only show today's daily quests
@@ -824,6 +840,10 @@ const Quests = () => {
 
   // Get daily completion status
   const dailyStatus = getDailyQuestCompletionStatus();
+
+  // Add this after the dailyStatus declaration
+  const user = useSoloLevelingStore(state => state.user);
+  const { mainQuests, sideQuests, dailyQuests: dailyQuestLimit, missions } = getQuestLimitsByRank(user.rank);
 
   const renderQuests = () => {
     switch (activeFilter) {
@@ -1116,11 +1136,12 @@ const Quests = () => {
             <div className="bg-solo-dark border border-green-500/20 rounded-lg p-4">
               <div className="mb-4">
                 <p className="text-gray-400">Daily quests reset every day. Complete them to earn rewards and maintain your streak.</p>
+                <p className="text-gray-400 text-sm mt-2">Daily Limit: {dailyQuestLimit} quests (Rank {user.rank})</p>
               </div>
 
-              {dailyQuests.length > 0 ? (
+              {todayDailyQuests.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                  {dailyQuests.slice(0, isMobile ? 2 : 4).map((quest) => (
+                  {todayDailyQuests.slice(0, isMobile ? 2 : dailyQuestLimit).map((quest) => (
                     <DailyQuestCard key={quest.id} quest={quest} onComplete={handleCompleteDailyQuest} />
                   ))}
                 </div>
@@ -2369,9 +2390,9 @@ const Quests = () => {
                 </Dialog>
               </div>
 
-              {dailyQuests.length > 0 ? (
+              {todayDailyQuests.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                  {dailyQuests.slice(0, isMobile ? 2 : 4).map((quest) => (
+                  {todayDailyQuests.slice(0, isMobile ? 2 : dailyQuestLimit).map((quest) => (
                     <DailyQuestCard key={quest.id} quest={quest} onComplete={handleCompleteDailyQuest} />
                   ))}
                 </div>
@@ -2379,6 +2400,7 @@ const Quests = () => {
                 <div className="bg-solo-dark border border-green-500/20 rounded-lg p-4">
                   <div className="mb-4">
                     <p className="text-gray-400">Daily quests reset every day. Complete them to earn rewards and maintain your streak.</p>
+                    <p className="text-gray-400 text-sm mt-2">Daily Limit: {dailyQuestLimit} quests (Rank {user.rank})</p>
               </div>
                   <div className="bg-solo-dark border border-gray-800 rounded-lg p-4 text-center">
                     <p className="text-gray-400">No active daily quests available.</p>
@@ -2481,8 +2503,8 @@ const Quests = () => {
                   <div>
                     <h3 className="font-semibold text-white/90 mb-2">Quest Types</h3>
                     <ul className="text-gray-300 space-y-1 list-disc list-inside">
-                      <li><span className="font-medium text-yellow-400">Main Quests:</span> Important objectives with high rewards (1 per day limit)</li>
-                      <li><span className="font-medium text-indigo-400">Side Quests:</span> Optional challenges for extra experience (1 per day limit)</li>
+                      <li><span className="font-medium text-yellow-400">Main Quests:</span> Important objectives with high rewards ({mainQuests} per day limit)</li>
+                      <li><span className="font-medium text-indigo-400">Side Quests:</span> Optional challenges for extra experience ({sideQuests} per day limit)</li>
                       <li><span className="font-medium text-green-400">Daily Quests:</span> Time-limited tasks that reset daily (unlimited)</li>
                     </ul>
                   </div>
@@ -2497,10 +2519,9 @@ const Quests = () => {
                     </ul>
                   </div>
 
-                  <div>
-                    <h3 className="font-semibold text-white/90 mb-2">Daily Limits</h3>
+                  <div><h3 className="font-semibold text-white/90 mb-2">Daily Limits</h3>
                     <p className="text-gray-300 leading-relaxed">
-                      You can only complete 1 Main Quest and 1 Side Quest per day. Daily Quests have no limits but must be completed by midnight to avoid Shadow Penalty.
+                      You can complete {mainQuests} Main Quest{mainQuests > 1 ? 's' : ''} and {sideQuests} Side Quest{sideQuests > 1 ? 's' : ''} per day. Daily Quests have no limits but must be completed by midnight to avoid Shadow Penalty.
                     </p>
                   </div>
                 </div>
@@ -2565,20 +2586,17 @@ const Quests = () => {
         <h3 className="text-lg font-semibold text-solo-text mb-3 flex items-center gap-2">
           {!isMobile && <CalendarClock size={20} className="text-blue-500" />}
           Today's Progress
-        </h3>
-        <div className={`grid gap-4 ${isMobile ? 'grid-cols-2' : 'grid-cols-3'}`}>
+        </h3><div className={`grid gap-4 ${isMobile ? 'grid-cols-2' : 'grid-cols-3'}`}>
           <div className="flex items-center justify-between p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
             <div className="flex items-center gap-2">
               <Swords size={16} className="text-yellow-500" />
               <span className={`${isMobile ? 'text-xs' : 'text-sm'} font-medium text-yellow-400`}>{isMobile ? 'Main' : 'Main Quests'}</span>
             </div>
             <div className="flex items-center gap-1">
-              <span className={`${isMobile ? 'text-base' : 'text-lg'} font-bold ${dailyStatus.mainQuestsCompleted >= 1 ? 'text-green-400' : 'text-yellow-400'}`}>
-                {dailyStatus.mainQuestsCompleted}
-              </span>
+              <span className={`${isMobile ? 'text-base' : 'text-lg'} font-bold ${dailyStatus.mainQuestsCompleted >= mainQuests ? 'text-green-400' : 'text-yellow-400'}`}>{dailyStatus.mainQuestsCompleted}</span>
               <span className={`${isMobile ? 'text-sm' : 'text-base'} text-gray-400`}>/</span>
-              <span className={`${isMobile ? 'text-sm' : 'text-base'} text-gray-400`}>1</span>
-              {dailyStatus.mainQuestsCompleted >= 1 && <CheckCircle size={isMobile ? 14 : 16} className="text-green-400 ml-1" />}
+              <span className={`${isMobile ? 'text-sm' : 'text-base'} text-gray-400`}>{mainQuests}</span>
+              {dailyStatus.mainQuestsCompleted >= mainQuests && <CheckCircle size={isMobile ? 14 : 16} className="text-green-400 ml-1" />}
             </div>
           </div>
           <div className="flex items-center justify-between p-3 bg-indigo-500/10 border border-indigo-500/20 rounded-lg">
@@ -2587,12 +2605,10 @@ const Quests = () => {
               <span className={`${isMobile ? 'text-xs' : 'text-sm'} font-medium text-indigo-400`}>{isMobile ? 'Side' : 'Side Quests'}</span>
             </div>
             <div className="flex items-center gap-1">
-              <span className={`${isMobile ? 'text-base' : 'text-lg'} font-bold ${dailyStatus.sideQuestsCompleted >= 1 ? 'text-green-400' : 'text-indigo-400'}`}>
-                {dailyStatus.sideQuestsCompleted}
-              </span>
+              <span className={`${isMobile ? 'text-base' : 'text-lg'} font-bold ${dailyStatus.sideQuestsCompleted >= sideQuests ? 'text-green-400' : 'text-indigo-400'}`}>{dailyStatus.sideQuestsCompleted}</span>
               <span className={`${isMobile ? 'text-sm' : 'text-base'} text-gray-400`}>/</span>
-              <span className={`${isMobile ? 'text-sm' : 'text-base'} text-gray-400`}>1</span>
-              {dailyStatus.sideQuestsCompleted >= 1 && <CheckCircle size={isMobile ? 14 : 16} className="text-green-400 ml-1" />}
+              <span className={`${isMobile ? 'text-sm' : 'text-base'} text-gray-400`}>{sideQuests}</span>
+              {dailyStatus.sideQuestsCompleted >= sideQuests && <CheckCircle size={isMobile ? 14 : 16} className="text-green-400 ml-1" />}
             </div>
           </div>
           {/* Hide Daily Quests on mobile */}
