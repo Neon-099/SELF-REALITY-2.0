@@ -1,5 +1,5 @@
 import { StateCreator } from 'zustand';
-import { Quest, Task, DailyWinCategory, Difficulty, Stat } from '../../types';
+import { Quest, Task, DailyWinCategory, Difficulty, Stat, Rank } from '../../types';
 import { v4 as uuidv4 } from 'uuid';
 import { calculateExpToNextLevel, calculateRank, getRankExpBonus } from '../../utils/calculations';
 import { toast } from '@/hooks/use-toast';
