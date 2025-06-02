@@ -4,7 +4,8 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
+import { CustomDialogContent } from '@/components/ui/custom-dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import {
@@ -41,7 +42,14 @@ import {
   CalendarDays,
   Sword,
   Eye,
-  EyeOff
+  EyeOff,
+  Info,
+  Bed,
+  PenTool,
+  Power,
+  Smartphone,
+  Wallet,
+  TrendingUp
 } from 'lucide-react';
 import { format, isToday, addDays } from 'date-fns';
 import { toast } from '@/hooks/use-toast';
@@ -49,40 +57,74 @@ import { MissedRewardCard } from '@/components/ui/missed-reward-card';
 
 // Reward suggestions with icons and categories
 const rewardSuggestions = [
-  { id: 1, text: "Watch a movie or TV show", icon: Tv, category: "Entertainment" },
-  { id: 2, text: "Order your favorite food", icon: Utensils, category: "Food" },
-  { id: 3, text: "Buy something you've been wanting", icon: ShoppingBag, category: "Shopping" },
-  { id: 4, text: "Play video games for 1-2 hours", icon: GamepadIcon, category: "Entertainment" },
-  { id: 5, text: "Listen to music or a podcast", icon: Headphones, category: "Entertainment" },
-  { id: 6, text: "Read a book or magazine", icon: BookOpen, category: "Learning" },
-  { id: 7, text: "Enjoy a special coffee or tea", icon: Coffee, category: "Food" },
-  { id: 8, text: "Take a relaxing bath", icon: Heart, category: "Self-care" },
-  { id: 9, text: "Go out with friends", icon: Heart, category: "Social" },
-  { id: 10, text: "Buy a new book or course", icon: BookOpen, category: "Learning" },
-  { id: 11, text: "Treat yourself to dessert", icon: Utensils, category: "Food" },
-  { id: 12, text: "Listen to your favorite album", icon: Music, category: "Entertainment" },
-  { id: 13, text: "Take a day off from chores", icon: Heart, category: "Self-care" },
-  { id: 14, text: "Buy new clothes or accessories", icon: ShoppingBag, category: "Shopping" },
-  { id: 15, text: "Have a movie marathon", icon: Tv, category: "Entertainment" },
+  { id: 1, text: "Watch one episode of your favorite series guilt-free", icon: Tv, category: "Entertainment" },
+  { id: 2, text: "Enjoy a fancy homemade smoothie or favorite snack", icon: Utensils, category: "Food" },
+  { id: 3, text: "Take a long, relaxing shower with music or candles", icon: Music, category: "Self-care" },
+  { id: 4, text: "Spend 30 minutes on a hobby (art, gaming, reading)", icon: Palette, category: "Hobby" },
+  { id: 5, text: "Go for a sunset walk or solo nature moment", icon: MapPin, category: "Nature" },
+  { id: 6, text: "Buy a small digital good (game skin, music, app)", icon: ShoppingBag, category: "Shopping" },
+  { id: 7, text: "Put on comfy clothes and do nothing for 20 minutes", icon: Home, category: "Self-care" },
+  { id: 8, text: "Try a new coffee/tea drink from your favorite spot", icon: Coffee, category: "Food" },
+  { id: 9, text: "Play a short nostalgic video game", icon: GamepadIcon, category: "Entertainment" },
+  { id: 10, text: "Listen to a podcast or playlist with no multitasking", icon: Headphones, category: "Entertainment" },
+  { id: 11, text: "Rearrange or clean your favorite workspace nook", icon: Home, category: "Productivity" },
+  { id: 12, text: "Journal with stickers, prompts, or doodles", icon: BookOpen, category: "Reflection" },
+  { id: 13, text: "Guilt-free 1-hour nap or sleep in the next morning", icon: Bed, category: "Rest" },
+  { id: 14, text: "Watch a YouTube documentary on a topic you love", icon: Tv, category: "Learning" },
+  { id: 15, text: "Take aesthetic pictures of your room, setup, or journal", icon: Camera, category: "Creativity" },
+  { id: 16, text: "Try out a new app or tool you've been curious about", icon: Smartphone, category: "Tech" },
+  { id: 17, text: "Buy a ₱50–₱100 item just for fun", icon: ShoppingBag, category: "Shopping" },
+  { id: 18, text: "Create a victory playlist and jam to 2–3 songs", icon: Music, category: "Music" },
+  { id: 19, text: "20-minute digital detox + lie down and do nothing", icon: Power, category: "Rest" },
+  { id: 20, text: "Doodle, write a poem, or sketch something silly", icon: PenTool, category: "Creativity" },
 ];
 
 // Weekly reward suggestions - more substantial rewards for completing a full week
 const weeklyRewardSuggestions = [
-  { id: 1, text: "Weekend getaway or day trip", icon: MapPin, category: "Travel" },
-  { id: 2, text: "Expensive dinner at a nice restaurant", icon: Utensils, category: "Food" },
-  { id: 3, text: "Buy something you've been saving for", icon: ShoppingBag, category: "Shopping" },
-  { id: 4, text: "Full spa day or massage", icon: Heart, category: "Self-care" },
-  { id: 5, text: "Concert, show, or event tickets", icon: Music, category: "Entertainment" },
-  { id: 6, text: "New hobby equipment or supplies", icon: Palette, category: "Hobbies" },
-  { id: 7, text: "Professional photoshoot or experience", icon: Camera, category: "Experience" },
-  { id: 8, text: "Weekend with friends or family", icon: Users, category: "Social" },
-  { id: 9, text: "Home upgrade or decoration", icon: Home, category: "Lifestyle" },
-  { id: 10, text: "Fitness equipment or gym membership", icon: Dumbbell, category: "Health" },
-  { id: 11, text: "Online course or certification", icon: BookOpen, category: "Learning" },
-  { id: 12, text: "Gaming setup upgrade or new console", icon: GamepadIcon, category: "Entertainment" },
-  { id: 13, text: "Weekend of complete relaxation", icon: Heart, category: "Self-care" },
-  { id: 14, text: "Adventure activity (skydiving, etc.)", icon: Zap, category: "Adventure" },
-  { id: 15, text: "Premium subscription or service", icon: Crown, category: "Lifestyle" },
+  { id: 1, text: "Buy something from your wishlist (₱500–₱1500 range)", icon: ShoppingBag, category: "Shopping" },
+  { id: 2, text: "Go on a solo date (coffee shop, bookstore, park)", icon: Coffee, category: "Self-care" },
+  { id: 3, text: "Take a half-day adventure (museum, hike, beach, mall)", icon: MapPin, category: "Experience" },
+  { id: 4, text: "Order your favorite meal guilt-free", icon: Utensils, category: "Food" },
+  { id: 5, text: "Plan a fun group activity or hangout with close friends", icon: Users, category: "Social" },
+  { id: 6, text: "Book a massage, haircut, or self-care appointment", icon: Heart, category: "Self-care" },
+  { id: 7, text: "Buy a new book, journal, or skill-building resource", icon: BookOpen, category: "Learning" },
+  { id: 8, text: "Upgrade your workspace or room (plant, light, etc.)", icon: Home, category: "Lifestyle" },
+  { id: 9, text: "Enroll in a short course or challenge yourself with a new skill", icon: Award, category: "Learning" },
+  { id: 10, text: "Buy a tool, app, or software that boosts productivity", icon: Zap, category: "Productivity" },
+  { id: 11, text: "Take a \"Play Day\" — all rest, no guilt", icon: Heart, category: "Rest" },
+  { id: 12, text: "Have a themed movie night with snacks and lights", icon: Tv, category: "Entertainment" },
+  { id: 13, text: "Print or design a \"badge\" for completing the week", icon: Award, category: "Achievement" },
+  { id: 14, text: "Save ₱200–₱500 into a \"Victory Vault\" for bigger rewards", icon: Wallet, category: "Finance" },
+  { id: 15, text: "Have a sleep-in Saturday with no alarms or tasks", icon: Bed, category: "Rest" },
+  { id: 16, text: "Invest in something future-you will thank you for", icon: TrendingUp, category: "Growth" },
+  { id: 17, text: "Get a new outfit piece or accessory", icon: ShoppingBag, category: "Shopping" },
+  { id: 18, text: "Take a solo journaling and reflection trip with coffee", icon: BookOpen, category: "Reflection" },
+  { id: 19, text: "Claim a \"Power Token\" — redeemable later for big prizes", icon: Sparkles, category: "Achievement" },
+  { id: 20, text: "Create a physical or digital reward wall with photos and notes", icon: Camera, category: "Creativity" },
+];
+
+// Reduced weekly reward suggestions - smaller, easier rewards for reduced requirements
+const reducedWeeklyRewardSuggestions = [
+  { id: 1, text: "Buy a small snack or drink you love", icon: Utensils, category: "Food" },
+  { id: 2, text: "Take a 20-minute walk or stretch session to reset", icon: Dumbbell, category: "Self-care" },
+  { id: 3, text: "Listen to an album or curated playlist start to finish", icon: Headphones, category: "Entertainment" },
+  { id: 4, text: "Take a 30-minute guilt-free break with no screen multitasking", icon: Clock, category: "Rest" },
+  { id: 5, text: "Call or text someone positive in your life", icon: Users, category: "Social" },
+  { id: 6, text: "Do a mini room clean-up to symbolically refresh", icon: Sparkles, category: "Productivity" },
+  { id: 7, text: "Watch one short film or documentary (15–30 min)", icon: Tv, category: "Entertainment" },
+  { id: 8, text: "Have a warm drink and write down 3 things you did well", icon: Coffee, category: "Reflection" },
+  { id: 9, text: "Create a reflection page: \"What went wrong, and what's next?\"", icon: BookOpen, category: "Reflection" },
+  { id: 10, text: "Light a candle and just sit with calm music for 10 minutes", icon: Music, category: "Self-care" },
+  { id: 11, text: "Read one inspiring article, essay, or chapter", icon: BookOpen, category: "Learning" },
+  { id: 12, text: "Watch 1–2 motivational videos to reset your mindset", icon: Zap, category: "Motivation" },
+  { id: 13, text: "Redeem a \"half reward\" from your personal reward stash", icon: Gift, category: "Reward" },
+  { id: 14, text: "Treat yourself to a ₱50 or lower item just for showing up", icon: ShoppingBag, category: "Shopping" },
+  { id: 15, text: "Postpone a bigger reward and bank it as a \"Next Week Bonus\"", icon: CalendarDays, category: "Planning" },
+  { id: 16, text: "Doodle or create something unstructured to relax", icon: PenTool, category: "Creativity" },
+  { id: 17, text: "Make your bed and tidy your zone — small effort, big reset", icon: Home, category: "Productivity" },
+  { id: 18, text: "Set a \"soft goal\" for the next week and design a low-stress plan", icon: Target, category: "Planning" },
+  { id: 19, text: "Gift yourself a 1-hour creative or learning block", icon: Award, category: "Self-improvement" },
+  { id: 20, text: "Go somewhere new in your city for a fresh experience (short trip)", icon: MapPin, category: "Experience" },
 ];
 
 const Rewards = () => {
@@ -138,6 +180,7 @@ const Rewards = () => {
   const [showRecentDays, setShowRecentDays] = useState(false);
   const [isEditDailyRewardDialogOpen, setIsEditDailyRewardDialogOpen] = useState(false);
   const [editingDailyReward, setEditingDailyReward] = useState('');
+  const [showReducedRequirements, setShowReducedRequirements] = useState(false);
 
   const stats = getRewardJournalStats();
   const todayEntry = getDailyRewardEntry(new Date());
@@ -529,10 +572,10 @@ const Rewards = () => {
                   Weekly Reward Ideas
                 </h3>
                 <div className="mb-4 p-3 rounded-lg bg-purple-500/10 border border-purple-500/20">
-                  <p className="text-sm text-purple-200">
-                    <Crown className="h-4 w-4 inline mr-2" />
-                    <span className="font-semibold">Weekly rewards</span> are bigger, more meaningful rewards for completing an entire week of goals.
-                    Set these for motivation to maintain consistency over 7 days!
+                  <p className={`text-purple-200 mb-4 ${isMobile ? "text-[11px]" : "text-sm"}`}>
+                    <Crown className="h-4 w-4 mr-2 inline-block" />
+                    Weekly rewards are <span className="font-semibold">bigger, more meaningful</span> rewards for completing an entire week of goals.
+                    Perfect for maintaining long-term motivation!
                   </p>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -903,7 +946,7 @@ const Rewards = () => {
                       }`}>
                         {weeklyDetails.overall
                           ? '🎉 Weekly Requirements Met!'
-                          : '⚠️ Weekly Requirements Not Met'
+                          : 'Keep Going!'
                         }
                       </span>
                     </div>
@@ -912,7 +955,12 @@ const Rewards = () => {
                     }`}>
                       {weeklyDetails.overall
                         ? 'You can claim weekly rewards when available!'
-                        : 'Complete all requirements above to unlock weekly rewards.'
+                        : (
+                          <>
+                            You didn't meet all the strict weekly requirements this time, but don't give up!<br />
+                            <span className="block mt-1">You can still earn a reward by meeting the <button className="text-blue-400 underline hover:text-blue-300 transition px-0 py-0 text-xs font-semibold" onClick={() => setShowReducedRequirements(true)}>Reduced Requirements</button>.</span>
+                          </>
+                        )
                       }
                     </p>
                   </div>
@@ -922,16 +970,22 @@ const Rewards = () => {
           </div>
 
           {/* Reduced Requirements Section */}
-          <div className="mt-6 p-4 rounded-lg bg-blue-500/10 border border-blue-500/20">
+          <div className="mt-6">
+            <button
+              className="text-xs text-blue-400 underline hover:text-blue-300 transition mb-2"
+              onClick={() => setShowReducedRequirements((prev) => !prev)}
+            >
+              {showReducedRequirements ? 'Hide Reduced Requirements' : 'Show Reduced Requirements'}
+            </button>
+            {showReducedRequirements && (
+              <div className="p-4 rounded-lg bg-blue-500/10 border border-blue-500/20">
             <p className="text-sm text-blue-200 mb-4">
               <span className="font-semibold">Alternative: Reduced Weekly Requirements</span> - If you can't meet the full requirements, you can still earn weekly rewards with these reduced goals:
             </p>
-
             {(() => {
               // Get current weekly details with forced update dependency
               const weeklyDetails = getCurrentWeeklyDetails();
               const reduced = weeklyDetails.reducedRequirements;
-
               return (
                 <div className="space-y-3">
                   {/* Weekly Planner Tasks */}
@@ -955,7 +1009,6 @@ const Rewards = () => {
                       )}
                     </div>
                   </div>
-
                   {/* Reduced Daily Quests */}
                   <div className="flex items-center justify-between p-3 rounded-lg bg-gray-800/50 border border-gray-700">
                     <div className="flex items-center gap-2">
@@ -975,7 +1028,6 @@ const Rewards = () => {
                       />
                     </div>
                   </div>
-
                   {/* Reduced Main Quests */}
                   <div className="flex items-center justify-between p-3 rounded-lg bg-gray-800/50 border border-gray-700">
                     <div className="flex items-center gap-2">
@@ -995,7 +1047,6 @@ const Rewards = () => {
                       />
                     </div>
                   </div>
-
                   {/* Reduced Side Quests */}
                   <div className="flex items-center justify-between p-3 rounded-lg bg-gray-800/50 border border-gray-700">
                     <div className="flex items-center gap-2">
@@ -1015,7 +1066,6 @@ const Rewards = () => {
                       />
                     </div>
                   </div>
-
                   {/* Reduced Missions */}
                   <div className="flex items-center justify-between p-3 rounded-lg bg-gray-800/50 border border-gray-700">
                     <div className="flex items-center gap-2">
@@ -1035,7 +1085,6 @@ const Rewards = () => {
                       />
                     </div>
                   </div>
-
                   {/* Reduced Overall Status */}
                   <div className={`p-3 rounded-lg border ${
                     reduced.overall
@@ -1069,6 +1118,8 @@ const Rewards = () => {
                 </div>
               );
             })()}
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -1399,63 +1450,58 @@ const Rewards = () => {
 
       {/* Help Dialog */}
       <Dialog open={isHelpDialogOpen} onOpenChange={setIsHelpDialogOpen}>
-        <DialogContent className={isMobile ? "w-[90vw] max-w-[400px]" : "max-w-[500px]"}>
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <HelpCircle className="h-5 w-5 text-solo-primary" />
-              How the Custom Reward Journal Works
+        <CustomDialogContent className={
+          [
+            "glassmorphism flex flex-col text-solo-text rounded-xl",
+            "before:!absolute before:!inset-0 before:!rounded-xl",
+            "before:!bg-gradient-to-br before:!from-yellow-500/10 before:!to-amber-500/5",
+            "before:!backdrop-blur-xl before:!-z-10",
+            isMobile ? "w-[90vw] max-w-[350px] p-3 max-h-[80vh]" : "max-w-md max-h-[85vh] p-6"
+          ].join(' ')
+        }>
+          <DialogHeader className="flex-shrink-0">
+            <DialogTitle className={`font-semibold tracking-wide flex items-center gap-2 ${isMobile ? "text-lg" : "text-xl"} text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-amber-500 drop-shadow-sm`}>
+              <HelpCircle className="w-5 h-5 text-yellow-400" />
+              Reward Journal Help
             </DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 text-sm">
+          <div className={`flex-1 overflow-y-auto space-y-4 ${isMobile ? "text-sm" : "text-base"}`}>
+            <div className="space-y-3">
             <div>
-              <h4 className="font-semibold text-solo-primary mb-2">🎯 Set Your Daily Reward</h4>
-              <p className="text-gray-300">
-                Each day, set a personal reward for completing ALL your tasks and quests.
-                This creates a motivational contract with yourself.
+                <h3 className="font-semibold text-white/90 mb-2">What is the Reward Journal?</h3>
+                <p className="text-gray-300 leading-relaxed">
+                  The Reward Journal helps you stay motivated by letting you set daily and weekly rewards for completing your goals. Track your progress, celebrate your wins, and build positive habits!
               </p>
             </div>
-
             <div>
-              <h4 className="font-semibold text-solo-primary mb-2">✅ Complete Everything</h4>
-              <p className="text-gray-300">
-                To unlock your reward, you must complete:
-              </p>
-              <ul className="list-disc list-inside text-gray-400 mt-2 space-y-1">
-                <li>All scheduled tasks for the day</li>
-                <li>5 Daily Quests</li>
-                <li>At least 3 Missions per day</li>
-                <li className="text-red-300">⚠️ No missed tasks or missions (auto-completed with penalties)</li>
+                <h3 className="font-semibold text-white/90 mb-2">How to Use</h3>
+                <ul className="text-gray-300 space-y-1 list-disc list-inside">
+                  <li><span className="font-medium text-yellow-400">Set Daily Rewards:</span> Choose a reward for each day to motivate yourself to complete all your tasks and quests.</li>
+                  <li><span className="font-medium text-purple-400">Set Weekly Rewards:</span> Plan a bigger reward for completing a full week of goals.</li>
+                  <li><span className="font-medium text-green-400">Claim Rewards:</span> When you complete everything, claim your reward and celebrate!</li>
+                  <li><span className="font-medium text-blue-400">Track Progress:</span> Build streaks and see your reward history to stay motivated.</li>
               </ul>
-              <p className="text-green-300 text-sm mt-2">
-                ✨ <span className="font-semibold">Good news:</span> Main and Side quests are no longer required for daily rewards!
-              </p>
-              <p className="text-red-300 text-sm mt-2">
-                ⚠️ <span className="font-semibold">Important:</span> If any task or mission is missed (auto-completed with penalties), your daily reward cannot be claimed!
-              </p>
             </div>
-
             <div>
-              <h4 className="font-semibold text-solo-primary mb-2">🎁 Claim Your Reward</h4>
-              <p className="text-gray-300">
-                When you complete everything, your reward becomes claimable.
-                The system will celebrate your achievement!
-              </p>
+                <h3 className="font-semibold text-white/90 mb-2">Tips for Success</h3>
+                <ul className="text-gray-300 space-y-1 list-disc list-inside">
+                  <li>Pick rewards that genuinely excite you.</li>
+                  <li>Be consistent—set your rewards in advance for the week.</li>
+                  <li>Don't be too hard on yourself if you miss a day—use reduced requirements to stay on track!</li>
+                </ul>
             </div>
-
-            <div>
-              <h4 className="font-semibold text-solo-primary mb-2">📊 Track Your Progress</h4>
-              <p className="text-gray-300">
-                Build streaks, track your success rate, and see your reward history.
-                Use this data to understand what motivates you most.
-              </p>
             </div>
           </div>
-          <div className="flex justify-end">
-            <Button onClick={() => setIsHelpDialogOpen(false)}>
+          <DialogFooter className="flex-shrink-0 border-t border-gray-700 pt-4">
+            <Button
+              variant="outline"
+              onClick={() => setIsHelpDialogOpen(false)}
+              className={isMobile ? "w-full h-9 text-sm" : "w-full h-10 text-base"}
+            >
               Got it!
             </Button>
-          </div>
-        </DialogContent>
+          </DialogFooter>
+        </CustomDialogContent>
       </Dialog>
 
       {/* Set Reward Dialog */}
@@ -1499,10 +1545,10 @@ const Rewards = () => {
 
       {/* Suggestions Dialog */}
       <Dialog open={isSuggestionsDialogOpen} onOpenChange={setIsSuggestionsDialogOpen}>
-        <DialogContent className={isMobile ? "w-[90vw] max-w-[400px]" : "max-w-[600px]"}>
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Lightbulb className="h-5 w-5 text-yellow-500" />
+        <DialogContent className={isMobile ? "w-[90vw] max-w-[350px] p-4" : "max-w-[600px]"}>
+          <DialogHeader className={isMobile ? "pb-2" : ""}>
+            <DialogTitle className={`flex items-center gap-2 ${isMobile ? "text-base" : ""}`}>
+              <Lightbulb className={isMobile ? "h-4 w-4" : "h-5 w-5"} text-yellow-500 />
               {selectedSuggestion ? 'Set Reward' : 'Daily Reward Suggestions'}
             </DialogTitle>
           </DialogHeader>
@@ -1512,16 +1558,16 @@ const Rewards = () => {
             <div className="space-y-4">
               <div className="p-4 rounded-lg border border-gray-700 bg-gray-800/50">
                 <div className="flex items-center gap-3 mb-3">
-                  {React.createElement(selectedSuggestion.icon, { className: "h-6 w-6 text-solo-primary" })}
+                  {React.createElement(selectedSuggestion.icon, { className: `${isMobile ? "h-5 w-5" : "h-6 w-6"} text-solo-primary` })}
                   <div>
-                    <p className="font-medium text-gray-200">{selectedSuggestion.text}</p>
-                    <p className="text-sm text-gray-500">{selectedSuggestion.category}</p>
+                    <p className={`font-medium text-gray-200 ${isMobile ? "text-sm" : ""}`}>{selectedSuggestion.text}</p>
+                    <p className={`text-gray-500 ${isMobile ? "text-xs" : "text-sm"}`}>{selectedSuggestion.category}</p>
                   </div>
                 </div>
               </div>
 
               <div>
-                <Label htmlFor="target-date">When would you like this reward?</Label>
+                <Label htmlFor="target-date" className={isMobile ? "text-sm" : ""}>When would you like this reward?</Label>
                 <div className="grid grid-cols-3 gap-2 mt-2">
                   <Button
                     variant={suggestionTargetDate.toDateString() === new Date().toDateString() ? "default" : "outline"}
@@ -1548,7 +1594,7 @@ const Rewards = () => {
                     Day After
                   </Button>
                 </div>
-                <p className="text-sm text-gray-500 mt-2">
+                <p className={`text-gray-500 mt-2 ${isMobile ? "text-xs" : "text-sm"}`}>
                   Selected: {format(suggestionTargetDate, 'MMMM dd, yyyy')}
                 </p>
               </div>
@@ -1614,10 +1660,10 @@ const Rewards = () => {
 
       {/* Weekly Suggestions Dialog */}
       <Dialog open={isWeeklySuggestionsDialogOpen} onOpenChange={setIsWeeklySuggestionsDialogOpen}>
-        <DialogContent className={isMobile ? "w-[90vw] max-w-[400px]" : "max-w-[600px]"}>
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <CalendarDays className="h-5 w-5 text-purple-500" />
+        <DialogContent className={isMobile ? "w-[90vw] max-w-[350px] p-4" : "max-w-[600px]"}>
+          <DialogHeader className={isMobile ? "pb-2" : ""}>
+            <DialogTitle className={`flex items-center gap-2 ${isMobile ? "text-base" : ""}`}>
+              <CalendarDays className={isMobile ? "h-4 w-4" : "h-5 w-5"} text-purple-500 />
               {selectedWeeklySuggestion ? 'Set Weekly Reward' : 'Weekly Reward Suggestions'}
             </DialogTitle>
           </DialogHeader>
@@ -1627,20 +1673,20 @@ const Rewards = () => {
             <div className="space-y-4">
               <div className="p-4 rounded-lg border border-purple-500/30 bg-purple-500/10">
                 <div className="flex items-center gap-3 mb-3">
-                  {React.createElement(selectedWeeklySuggestion.icon, { className: "h-6 w-6 text-purple-500" })}
+                  {React.createElement(selectedWeeklySuggestion.icon, { className: `${isMobile ? "h-5 w-5" : "h-6 w-6"} text-purple-500` })}
                   <div>
-                    <p className="font-medium text-gray-200">{selectedWeeklySuggestion.text}</p>
-                    <p className="text-sm text-gray-500">{selectedWeeklySuggestion.category}</p>
+                    <p className={`font-medium text-gray-200 ${isMobile ? "text-sm" : ""}`}>{selectedWeeklySuggestion.text}</p>
+                    <p className={`text-gray-500 ${isMobile ? "text-xs" : "text-sm"}`}>{selectedWeeklySuggestion.category}</p>
                   </div>
                 </div>
-                <div className="text-sm text-purple-200">
-                  <Crown className="h-4 w-4 inline mr-1" />
+                <div className={`text-purple-200 ${isMobile ? "text-xs" : "text-sm"}`}>
+                  <Crown className={`${isMobile ? "h-3 w-3" : "h-4 w-4"} mr-1 inline-block`} />
                   This is a <span className="font-semibold">weekly reward</span> - perfect for completing 7 days of consistent progress!
                 </div>
               </div>
 
               <div>
-                <Label htmlFor="weekly-target-date">Which week would you like this reward for?</Label>
+                <Label htmlFor="weekly-target-date" className={isMobile ? "text-sm" : ""}>Which week would you like this reward for?</Label>
                 <div className="grid grid-cols-2 gap-2 mt-2">
                   <Button
                     variant={weeklyTargetDate.toDateString() === currentWeekStart.toDateString() ? "default" : "outline"}
@@ -1659,10 +1705,10 @@ const Rewards = () => {
                     Next Week
                   </Button>
                 </div>
-                <p className="text-sm text-gray-500 mt-2">
+                <p className={`text-gray-500 mt-2 ${isMobile ? "text-xs" : "text-sm"}`}>
                   Selected: {format(weeklyTargetDate, 'MMM dd')} - {format(new Date(weeklyTargetDate.getTime() + 6 * 24 * 60 * 60 * 1000), 'MMM dd, yyyy')}
                 </p>
-                <p className="text-xs text-purple-300 mt-1">
+                <p className={`text-gray-300 mt-1 ${isMobile ? "text-xs" : "text-sm"}`}>
                   💡 Complete all your daily goals for the week to earn this reward!
                 </p>
               </div>
@@ -1687,8 +1733,8 @@ const Rewards = () => {
             // All weekly suggestions view
             <div className="space-y-4">
               <div className="p-3 rounded-lg bg-purple-500/10 border border-purple-500/20">
-                <p className="text-sm text-purple-200">
-                  <Crown className="h-4 w-4 inline mr-2" />
+                <p className={`text-purple-200 mb-4 ${isMobile ? "text-[11px]" : "text-sm"}`}>
+                  <Crown className="h-4 w-4 mr-2 inline-block" />
                   Weekly rewards are <span className="font-semibold">bigger, more meaningful</span> rewards for completing an entire week of goals.
                   Perfect for maintaining long-term motivation!
                 </p>
@@ -1703,10 +1749,10 @@ const Rewards = () => {
                       <span className="text-sm font-medium text-purple-300">Create Custom Weekly Reward</span>
                     </div>
                     <Textarea
-                      placeholder="e.g., Weekend spa day, New video game, Special dinner out..."
+                      placeholder={isMobile ? "e.g., Spa day, Game, Dinner out..." : "e.g., Weekend spa day, New video game, Special dinner out..."}
                       value={customWeeklyReward}
                       onChange={(e) => setCustomWeeklyReward(e.target.value)}
-                      className="bg-gray-800/50 border-gray-600 text-gray-200"
+                      className={`bg-gray-800/50 border-gray-600 text-gray-200 ${isMobile ? "text-xs placeholder:text-[11px]" : ""}`}
                       rows={2}
                     />
                     {customWeeklyReward.trim() && (
@@ -1788,10 +1834,10 @@ const Rewards = () => {
 
       {/* Edit Daily Reward Dialog */}
       <Dialog open={isEditDailyRewardDialogOpen} onOpenChange={setIsEditDailyRewardDialogOpen}>
-        <DialogContent className={isMobile ? "w-[90vw] max-w-[400px]" : "max-w-[600px]"}>
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Gift className="h-5 w-5 text-solo-primary" />
+        <DialogContent className={isMobile ? "w-[90vw] max-w-[350px] p-4" : "max-w-[600px]"}>
+          <DialogHeader className={isMobile ? "pb-2" : ""}>
+            <DialogTitle className={`flex items-center gap-2 ${isMobile ? "text-base" : ""}`}>
+              <Gift className={isMobile ? "h-4 w-4" : "h-5 w-5"} text-solo-primary />
               Edit Daily Reward for {format(selectedDate, 'MMMM dd, yyyy')}
             </DialogTitle>
           </DialogHeader>
@@ -1886,10 +1932,10 @@ const Rewards = () => {
 
       {/* Reduced Weekly Suggestions Dialog */}
       <Dialog open={isReducedWeeklySuggestionsDialogOpen} onOpenChange={setIsReducedWeeklySuggestionsDialogOpen}>
-        <DialogContent className={isMobile ? "w-[90vw] max-w-[400px]" : "max-w-[600px]"}>
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Target className="h-5 w-5 text-blue-500" />
+        <DialogContent className={isMobile ? "w-[90vw] max-w-[350px] p-4" : "max-w-[600px]"}>
+          <DialogHeader className={isMobile ? "pb-2" : ""}>
+            <DialogTitle className={`flex items-center gap-2 ${isMobile ? "text-base" : ""}`}>
+              <Target className={isMobile ? "h-4 w-4" : "h-5 w-5"} text-blue-500 />
               {selectedReducedWeeklySuggestion ? 'Set Reduced Weekly Reward' : 'Reduced Weekly Reward Suggestions'}
             </DialogTitle>
           </DialogHeader>
@@ -1899,19 +1945,19 @@ const Rewards = () => {
             <div className="space-y-4">
               <div className="p-4 rounded-lg border border-blue-500/30 bg-blue-500/10">
                 <div className="flex items-center gap-3 mb-3">
-                  {React.createElement(selectedReducedWeeklySuggestion.icon, { className: "h-6 w-6 text-blue-500" })}
+                  {React.createElement(selectedReducedWeeklySuggestion.icon, { className: `${isMobile ? "h-5 w-5" : "h-6 w-6"} text-blue-500` })}
                   <div>
-                    <p className="font-medium text-gray-200">{selectedReducedWeeklySuggestion.text}</p>
-                    <p className="text-sm text-gray-500">{selectedReducedWeeklySuggestion.category}</p>
+                    <p className={`font-medium text-gray-200 ${isMobile ? "text-sm" : ""}`}>{selectedReducedWeeklySuggestion.text}</p>
+                    <p className={`text-gray-500 ${isMobile ? "text-xs" : "text-sm"}`}>{selectedReducedWeeklySuggestion.category}</p>
                   </div>
                 </div>
-                <div className="text-sm text-blue-200">
-                  <Target className="h-4 w-4 inline mr-1" />
+                <div className={`text-blue-200 ${isMobile ? "text-xs" : "text-sm"}`}>
+                  <Target className={`${isMobile ? "h-3 w-3" : "h-4 w-4"} mr-1 inline-block`} />
                   This is a <span className="font-semibold">reduced weekly reward</span> - perfect for completing the reduced weekly requirements!
                 </div>
                 <div className="mt-3 p-3 rounded-lg bg-blue-500/20 border border-blue-500/30">
-                  <h4 className="text-sm font-semibold text-blue-200 mb-2">Reduced Requirements:</h4>
-                  <ul className="text-xs text-blue-100 space-y-1">
+                  <h4 className={`font-semibold text-blue-200 mb-2 ${isMobile ? "text-xs" : "text-sm"}`}>Reduced Requirements:</h4>
+                  <ul className={`text-blue-100 space-y-1 ${isMobile ? "text-xs" : "text-sm"}`}>
                     <li>• All Weekly Tasks (any tasks scheduled for the week)</li>
                     <li>• 15+ Daily Quests (half of full requirement)</li>
                     <li>• 2+ Main Quests (half of full requirement)</li>
@@ -1922,13 +1968,13 @@ const Rewards = () => {
               </div>
 
               <div>
-                <Label htmlFor="reduced-weekly-target-date">Which week would you like this reward for?</Label>
+                <Label htmlFor="reduced-weekly-target-date" className={isMobile ? "text-sm" : ""}>Which week would you like this reward for?</Label>
                 <div className="grid grid-cols-2 gap-2 mt-2">
                   <Button
                     variant={reducedWeeklyTargetDate.toDateString() === currentWeekStart.toDateString() ? "default" : "outline"}
                     size="sm"
                     onClick={() => setReducedWeeklyTargetDate(currentWeekStart)}
-                    className="text-xs"
+                    className={isMobile ? "text-[10px] px-2 py-1" : "text-xs"}
                   >
                     This Week
                   </Button>
@@ -1936,16 +1982,20 @@ const Rewards = () => {
                     variant={reducedWeeklyTargetDate.toDateString() === nextWeekStart.toDateString() ? "default" : "outline"}
                     size="sm"
                     onClick={() => setReducedWeeklyTargetDate(nextWeekStart)}
-                    className="text-xs"
+                    className={isMobile ? "text-[10px] px-2 py-1" : "text-xs"}
                   >
                     Next Week
                   </Button>
                 </div>
-                <p className="text-sm text-gray-500 mt-2">
+                <p className={`text-gray-500 mt-2 ${isMobile ? "text-xs" : "text-sm"}`}>
+                  <span className={isMobile ? "text-[10px]" : ""}>
                   Selected: {format(reducedWeeklyTargetDate, 'MMM dd')} - {format(new Date(reducedWeeklyTargetDate.getTime() + 6 * 24 * 60 * 60 * 1000), 'MMM dd, yyyy')}
+                  </span>
                 </p>
-                <p className="text-xs text-blue-300 mt-1">
+                <p className={`text-gray-300 mt-1 ${isMobile ? "text-xs" : "text-sm"}`}>
+                  <span className={isMobile ? "text-[10px]" : ""}>
                   💡 Complete the reduced requirements for the week to earn this reward!
+                  </span>
                 </p>
               </div>
 
@@ -2027,7 +2077,7 @@ const Rewards = () => {
               <div>
                 <h4 className="text-sm font-medium text-gray-300 mb-3">Or choose from reduced weekly suggestions:</h4>
                 <div className="grid grid-cols-1 gap-3 max-h-[300px] overflow-y-auto">
-                  {weeklyRewardSuggestions.map((suggestion) => {
+                  {reducedWeeklyRewardSuggestions.map((suggestion) => {
                     const IconComponent = suggestion.icon;
                     return (
                       <div

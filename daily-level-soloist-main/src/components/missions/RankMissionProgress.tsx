@@ -1021,19 +1021,7 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
             )}
           </div>
 
-          <DialogFooter className={cn(
-            "flex-shrink-0 flex items-center justify-center border-t border-gray-700",
-            isMobile ? "mt-2 pt-2" : "mt-4 pt-4"
-          )}>
-            <Button
-              variant="outline"
-              onClick={() => setTaskDialogOpen(false)}
-              className={cn("w-full text-center", isMobile ? "h-8 text-xs" : "h-9 text-sm")}
-            >
-              Close
-            </Button>
-          </DialogFooter>
-        </DialogContent>
+                  </DialogContent>
       </Dialog>
 
       {/* Mission Preview Dialog */}
@@ -1144,15 +1132,8 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
 
           <DialogFooter className={cn(
             "flex-shrink-0 flex gap-2 border-t border-gray-700",
-            isMobile ? "mt-2 pt-2 flex-col" : "mt-4 pt-4 items-center justify-between"
+            isMobile ? "mt-2 pt-2 flex-col" : "mt-4 pt-4 items-center justify-center"
           )}>
-            <Button
-              variant="outline"
-              onClick={() => setPreviewDialogOpen(false)}
-              className={cn(isMobile ? "h-8 text-xs" : "h-9 text-sm flex-1")}
-            >
-              Close
-            </Button>
             <Button
               onClick={handleStartMission}
               className={cn(

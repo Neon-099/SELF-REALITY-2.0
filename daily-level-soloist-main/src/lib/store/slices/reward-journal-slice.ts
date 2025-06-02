@@ -7,6 +7,7 @@ export interface RewardJournalSlice {
   // Reward Journal Actions
   setDailyReward: (date: Date, customReward: string) => void;
   checkDailyCompletion: (date: Date) => boolean;
+  checkDailyRequirementsMet: (date: Date) => boolean;
   claimDailyReward: (date: Date) => void;
   getDailyRewardEntry: (date: Date) => RewardJournalEntry | undefined;
   getRewardJournalStats: () => {
@@ -179,8 +180,54 @@ export const createRewardJournalSlice: StateCreator<
     return entry ? entry.completed : false;
   },
 
+  checkDailyRequirementsMet: (date: Date) => {
+    const state = get();
+    const { tasks = [], missions = [], getDailyQuestCompletionStatus } = state;
+    const dateKey = date.toDateString();
+    const today = new Date().toDateString();
+
+    // Only check for today or past dates
+    if (new Date(dateKey) > new Date(today)) {
+      return false;
+    }
+
+    // For today, use real-time checking
+    if (dateKey === today) {
+      // Check all tasks for today
+      const tasksForToday = tasks.filter((task: any) => {
+        const taskDate = task.scheduledFor ? new Date(task.scheduledFor) : new Date(task.createdAt);
+        return taskDate.toDateString() === dateKey;
+      });
+
+      // Check if all tasks are completed AND none are missed
+      const allTasksCompleted = tasksForToday.length === 0 || tasksForToday.every((task: any) => task.completed);
+      const noMissedTasks = tasksForToday.every((task: any) => !task.missed);
+
+      // Check quest completion for today
+      const questStatus = getDailyQuestCompletionStatus ? getDailyQuestCompletionStatus() : { mainQuestsCompleted: 0, sideQuestsCompleted: 0, dailyQuestsCompleted: 0 };
+      const dailyQuestsCompleted = questStatus.dailyQuestsCompleted >= 5; // Require 5 daily quests
+
+      // Check mission completion for today - require at least 3 missions completed
+      const completedMissionsToday = missions.filter((mission: any) => {
+        if (!mission.completed || !mission.completedAt) return false;
+        const completedDate = new Date(mission.completedAt);
+        return completedDate.toDateString() === dateKey;
+      });
+      const missionRequirementMet = completedMissionsToday.length >= 3;
+
+      // Check if any missions are missed
+      const noMissedMissions = completedMissionsToday.every((mission: any) => !mission.missed);
+
+      // Return true if requirements are met, regardless of whether a custom reward is set
+      return allTasksCompleted && noMissedTasks && dailyQuestsCompleted && missionRequirementMet && noMissedMissions;
+    }
+
+    // For past dates, check if requirements were met
+    return get().checkDailyCompletion(date);
+  },
+
   claimDailyReward: (date: Date) => {
-    const { user, checkDailyCompletion } = get();
+    const { user, checkDailyCompletion, checkDailyRequirementsMet } = get();
     const dateKey = date.toDateString();
     const today = new Date().toDateString();
 
@@ -194,25 +241,59 @@ export const createRewardJournalSlice: StateCreator<
       return;
     }
 
-    // Ensure rewardJournal exists
-    if (!user.rewardJournal) {
-      user.rewardJournal = [];
-    }
-
-    const entryIndex = user.rewardJournal.findIndex(
-      (entry: RewardJournalEntry) => new Date(entry.date).toDateString() === dateKey
-    );
-
-    if (entryIndex < 0) {
+    // Check if daily requirements are met
+    const requirementsMet = checkDailyRequirementsMet(date);
+    if (!requirementsMet) {
       toast({
-        title: "No Reward Set",
-        description: "You haven't set a reward for this day.",
+        title: "Reward Not Unlocked",
+        description: "Complete all your tasks, 5 daily quests, and at least 3 missions without any missed items to unlock your reward!",
         variant: "destructive"
       });
       return;
     }
 
-    const entry = user.rewardJournal[entryIndex];
+    // Ensure rewardJournal exists
+    if (!user.rewardJournal) {
+      user.rewardJournal = [];
+    }
+
+    let entryIndex = user.rewardJournal.findIndex(
+      (entry: RewardJournalEntry) => new Date(entry.date).toDateString() === dateKey
+    );
+
+    // If no entry exists, create a default one
+    if (entryIndex < 0) {
+      const defaultEntry: RewardJournalEntry = {
+        id: uuidv4(),
+        date: new Date(date),
+        customReward: "Daily Achievement Unlocked! 🎉", // Default reward message
+        completed: true,
+        claimed: false,
+        requiredTasks: {
+          allTasks: true,
+          mainQuest: true,
+          sideQuest: true,
+          dailyQuests: true,
+          missionTasks: true
+        }
+      };
+
+      set((state: any) => {
+        const updatedJournal = [...state.user.rewardJournal];
+        updatedJournal.push(defaultEntry);
+        return {
+          user: {
+            ...state.user,
+            rewardJournal: updatedJournal
+          }
+        };
+      });
+
+      entryIndex = user.rewardJournal.length; // Will be the index of the newly added entry
+    }
+
+    // Get the updated entry
+    const entry = get().user.rewardJournal[entryIndex] || get().user.rewardJournal[get().user.rewardJournal.length - 1];
 
     if (entry.claimed) {
       toast({
@@ -223,25 +304,20 @@ export const createRewardJournalSlice: StateCreator<
       return;
     }
 
-    const isCompleted = checkDailyCompletion(date);
-
-    if (!isCompleted) {
-      toast({
-        title: "Reward Not Unlocked",
-        description: "Complete all your tasks, 5 daily quests, and at least 3 missions without any missed items to unlock your reward!",
-        variant: "destructive"
-      });
-      return;
-    }
-
     set((state: any) => {
       const updatedJournal = [...state.user.rewardJournal];
-      updatedJournal[entryIndex] = {
-        ...updatedJournal[entryIndex],
-        completed: true,
-        claimed: true,
-        claimedAt: new Date()
-      };
+      const finalEntryIndex = updatedJournal.findIndex(
+        (entry: RewardJournalEntry) => new Date(entry.date).toDateString() === dateKey
+      );
+      
+      if (finalEntryIndex >= 0) {
+        updatedJournal[finalEntryIndex] = {
+          ...updatedJournal[finalEntryIndex],
+          completed: true,
+          claimed: true,
+          claimedAt: new Date()
+        };
+      }
 
       return {
         user: {
@@ -252,7 +328,7 @@ export const createRewardJournalSlice: StateCreator<
     });
 
     toast({
-      title: "🎉 Reward Unlocked!",
+      title: "🎉 Daily Reward Claimed!",
       description: `Congratulations! You've earned: "${entry.customReward}"`,
       variant: "default"
     });
