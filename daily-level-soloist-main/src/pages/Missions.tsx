@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Lock, Plus, Star, HelpCircle } from 'lucide-react';
+import { Lock, Plus, Star, HelpCircle, Eye, EyeOff } from 'lucide-react';
 import { useSoloLevelingStore } from '@/lib/store';
 import { Rank, Mission, Difficulty } from '@/lib/types';
 import { PredefinedMission } from '@/data/predefined-missions';
@@ -126,6 +126,7 @@ const Missions = () => {
   const { toast } = useToast();
   const [showModal, setShowModal] = useState(false);
   const [showHelpDialog, setShowHelpDialog] = useState(false);
+  const [showRecentMissions, setShowRecentMissions] = useState(false); // Default to hidden
   const isMobile = useIsMobile();
   const [newMission, setNewMission] = useState({
     title: '',
@@ -373,11 +374,36 @@ const Missions = () => {
           <h2 className="text-2xl font-bold text-primary">
             Recently Added Missions
           </h2>
-          <Badge variant="outline" className="px-3 py-1">
-            Last {displayMissions.length} added
-          </Badge>
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="px-3 py-1">
+              Last {displayMissions.length} added
+            </Badge>
+            {/* Hide/Show toggle button - only on mobile */}
+            {isMobile && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="gap-1 text-gray-400 hover:text-white"
+                onClick={() => setShowRecentMissions(!showRecentMissions)}
+              >
+                {showRecentMissions ? (
+                  <>
+                  <EyeOff className="h-4 w-4" />
+                  Hide
+                  </>
+                ) : (
+                  <>
+                  <Eye className="h-4 w-4" />
+                  Show
+                  </>
+                )}
+              </Button>
+            )}
+          </div>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Conditionally render missions grid based on toggle state */}
+        {(showRecentMissions || !isMobile) && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {displayMissions.map(mission => {
             const rankGradient = getRankColor(mission.rank);
             const rankSolid = getRankSolidColor(mission.rank);
@@ -425,14 +451,14 @@ const Missions = () => {
               </div>
             );
           })}
-        </div>
+          </div>
+        )}
       </div>
     );
   };
 
   return (
-    <div className="min-h-screen">
-      <div className="container mx-auto px-4 py-6 space-y-8">
+    <div className="space-y-8">
         <div className="space-y-8">
           <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-solo-primary to-solo-secondary bg-clip-text text-transparent drop-shadow-glow mb-4 flex items-center gap-2">
             <Lock className="h-8 w-8 text-yellow-400 drop-shadow-glow" />
@@ -803,7 +829,6 @@ const Missions = () => {
           {/* Recently Added Missions Section */}
           {renderRecentMissions()}
         </div>
-      </div>
     </div>
   );
 };
