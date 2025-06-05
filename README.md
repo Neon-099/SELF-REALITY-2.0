@@ -1,0 +1,1 @@
+Self Reality 2.0 is a gamified personal development and productivity application built with modern web technologies. It transforms daily tasks and goals into an RPG-like experience where users level up their character through real-life achievements.
