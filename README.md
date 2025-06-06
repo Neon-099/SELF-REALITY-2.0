@@ -37,8 +37,8 @@ https://self-reality.netlify.app/
 9. Progress Tracking
 10. Technical Features
 
- ## 📬 **Contact**
-👤  Niño Emman  
-📧  Email: [Emmannatividad099@gmail.com](mailto:Emmannnatividad099@gmail.com)
-🔗  Portfolio: portfolio.com
-🐙  GitHub: [github.com/Neon-099](https://github.com/Neon-099)
+ # 📬 **Contact**
+👤 Niño Emman.  
+📧 Email: [Emmannatividad099@gmail.com](mailto:Emmannnatividad099@gmail.com)
+🔗 Portfolio: portfolio.com
+🐙 GitHub: [github.com/Neon-099](https://github.com/Neon-099)
