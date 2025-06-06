@@ -4,7 +4,7 @@
 
 
 <h2>🔗Live Demo</h2>
-(https://self-reality.netlify.app/)
+https://self-reality.netlify.app/
 
 
 <h3>Preview</h3>
