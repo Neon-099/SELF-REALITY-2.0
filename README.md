@@ -26,6 +26,13 @@ https://self-reality.netlify.app/
 
 
 ## ⚡ Features 
+✅ **User Authentication** – Secure login and registration using JWT  
+✅ **Product Listings** – Users can add, edit, and manage their products  
+✅ **Buyer Dashboard** – Explore products, add to cart, and make purchases  
+✅ **Seller Dashboard** – Track product sales, manage inventory, and update listings  
+✅ **Stripe Payment Integration** – Secure and seamless checkout using Stripe  
+✅ **Responsive & Optimized UI** – Built with Tailwind CSS & Framer Motion  
+✅ **API-Driven Backend** – Powered by Express.js and MongoDB for seamless data management
 
 
 📬 **Contact**
