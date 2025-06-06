@@ -1,9 +1,9 @@
 
-<h1> 🚀Self-Reality-Leveling – Gamified Personal Development </h1>
+# 🚀Self-Reality-Leveling – Gamified Personal Development 
 <p>Self Reality-Leveling is a gamified personal development and productivity application built with modern web technologies. It transforms daily tasks and goals into an RPG-like experience where users level up their character through real-life achievements.</p>
 
 
-<h2>🔗Live Demo</h2>
+# 🔗Live Demo
 https://self-reality.netlify.app/
 
 
@@ -18,14 +18,18 @@ https://self-reality.netlify.app/
 ![image](https://github.com/user-attachments/assets/b144474a-f7da-4a83-86d7-93f9b9ab845e)
 
 
-<h3>🛠️Tech Stacks</h3> 
-<ul>
-  <li><b>Frontend:</b> React, TypeScript, Vite, shadcn/ui + Tailwind CSS</li>
-  <li><b>State Management:</b> Zustand with persistence</li>
-  <li><b>Database:</b> IndexedDB (client-side storage)</li>
-  <li><b>Hosting:</b> Netlify(Frontend)</li>
-</ul>
+## 🛠️ Tech Stacks
+- **Frontend:** React, TypeScript, Vite, shadcn/ui + Tailwind CSS
+- **State Management:** Zustand with persistence
+- **Database:** IndexedDB (client-side storage)
+- **Hosting:** Netlify(Frontend)
 
-<h3>⚡Features</h3>
 
-  
+## ⚡ Features 
+
+
+📬 **Contact**
+👤 Niño Emman  
+📧 Email: [Emmannatividad099@gmail.com](mailto:Emmannnatividad099@gmail.com)
+🔗 Portfolio: portfoli.com
+🐙 GitHub: [github.com/Neon-099](https://github.com/Neon-099)
