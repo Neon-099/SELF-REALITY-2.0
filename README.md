@@ -38,7 +38,7 @@ https://self-reality.netlify.app/
 10. Technical Features
 
 📬 **Contact**  
-👤 Joenel Sevellejo  
-📧 Email: [joenelsevellejo831@gmail.com](mailto:joenelsevellejo831@gmail.com)  
-🔗 Portfolio: yourportfolio.com //soon  
-🐙 GitHub: [github.com/Tobikun11-Arch](https://github.com/Tobikun11-Arch)
+👤 Niño Emman  
+📧 Email: [Emmannatividad099@gmail.com](mailto:Emmannatividad099@gmail.com)  
+🔗 Portfolio: portfolio.com //soon  
+🐙 GitHub: [github.com/Neon-099](https://github.com/Neon-099)
