@@ -72,7 +72,7 @@ Performance Optimized: Virtualized lists for large datasets
 Error Handling: Comprehensive error boundaries and recovery
 
 
- 📬 **Contact**
+ ## 📬 **Contact**
 👤 Niño Emman  
 📧 Email: [Emmannatividad099@gmail.com](mailto:Emmannnatividad099@gmail.com)
 🔗 Portfolio: portfolio.com
