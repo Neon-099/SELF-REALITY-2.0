@@ -7,8 +7,9 @@
 https://self-reality.netlify.app/
 
 
-##Preview
+## 📸Preview
 ![image](https://github.com/user-attachments/assets/5e6afcd9-cdeb-432e-986f-52081b937380)
+![image](https://github.com/user-attachments/assets/bb70ccd6-5921-4cc5-b201-468fe54db774)
 ![image](https://github.com/user-attachments/assets/ffe6bf6a-3428-435b-82a0-83325e91b90f)
 ![image](https://github.com/user-attachments/assets/206b883f-f8ab-4627-81a5-a0aeb1cda8ff)
 ![image](https://github.com/user-attachments/assets/00246c27-b822-4d59-93c6-d93912e7e0ab)
