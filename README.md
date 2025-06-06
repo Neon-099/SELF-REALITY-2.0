@@ -39,6 +39,6 @@ https://self-reality.netlify.app/
 
  # 📬 **Contact**
 👤 Niño Emman.  
-📧 Email: [Emmannatividad099@gmail.com](mailto:Emmannnatividad099@gmail.com)
-🔗 Portfolio: portfolio.com
-🐙 GitHub: [github.com/Neon-099](https://github.com/Neon-099)
+📧 Email: [Emmannatividad099@gmail.com](mailto:Emmannnatividad099@gmail.com).
+🔗 Portfolio: portfolio.com.
+🐙 GitHub: [github.com/Neon-099](https://github.com/Neon-099).
