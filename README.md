@@ -21,7 +21,7 @@ https://self-reality.netlify.app/
 <ul>
   <li><b>Frontend:</b> React, TypeScript, Vite, shadcn/ui + Tailwind CSS</li>
   <li><b>State Management:</b> Zustand with persistence</li>
-  <li>Database: IndexedDB (client-side storage)</li>
+  <li><b>Database:</b> IndexedDB (client-side storage)</li>
   <li><b>Hosting:</b> Netlify(Frontend)</li>
 </ul>
 
