@@ -16,6 +16,7 @@ import { endOfDay } from 'date-fns';
 import { getDB, SoloistDB } from '@/lib/db';
 import { Quest, ShopItem } from '@/lib/types';
 import ShadowPenalty from '@/components/punishment/ShadowPenalty';
+import { LoadingScreen } from '@/components/ui/loading-screen';
 
 const rankDetails = [
   {
@@ -584,7 +585,7 @@ const Character = () => {
   };
 
   if (!user) {
-    return <div className="p-8 text-center">Loading character data...</div>;
+    return <LoadingScreen message="Loading character data..." />;
   }
 
   const currentRankInfo = rankDetails.find(r => r.rank === user.rank);
@@ -1134,9 +1135,7 @@ const Character = () => {
           </div>
 
           {isLoadingDb ? (
-            <div className="text-center py-4">
-              <p className="text-sm sm:text-base">Loading database contents...</p>
-            </div>
+            <LoadingScreen message="Loading database contents..." />
           ) : dbContents ? (
             <div className="space-y-3 sm:space-y-4">
               <div>

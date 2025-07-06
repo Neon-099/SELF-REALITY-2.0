@@ -10,6 +10,7 @@ import { Calendar, DayClickEventHandler } from '@/components/ui/calendar';
 import { format, isEqual, isBefore, isAfter, isToday, addDays } from 'date-fns';
 import { CalendarIcon, ChevronLeft, ChevronRight, Calendar as CalendarDayIcon } from 'lucide-react';
 import { Mission } from '@/lib/types';
+import { LoadingScreen } from '@/components/ui/loading-screen';
 
 export default function MissionBoard() {
   const { toast } = useToast();
@@ -190,9 +191,7 @@ export default function MissionBoard() {
       )}
 
       {isLoading ? (
-        <div className="p-8 flex justify-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
-        </div>
+        <LoadingScreen message="Loading mission board..." />
       ) : error ? (
         <div className="p-4 bg-red-900/10 border border-red-800 rounded-lg text-center">
           <p>{error}</p>

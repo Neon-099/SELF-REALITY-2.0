@@ -22,6 +22,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { formatRelative, addDays } from 'date-fns';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
+import { LoadingScreen } from '@/components/ui/loading-screen';
 
 interface RankMissionProgressProps {
   missions: PredefinedMission[];
@@ -385,8 +386,8 @@ export default function RankMissionProgress({ missions, rankName, totalDays, ran
   const renderMissionCards = () => {
     if (isLoading) {
       return (
-        <div className="col-span-2 flex justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+        <div className="col-span-2">
+          <LoadingScreen message="Loading missions..." />
         </div>
       );
     }

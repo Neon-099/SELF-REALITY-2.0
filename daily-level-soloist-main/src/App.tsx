@@ -18,15 +18,6 @@ const Planner = lazy(() => import("./pages/Planner"));
 const Rewards = lazy(() => import("./pages/Rewards"));
 const LandingPage = lazy(() => import("./pages/LandingPage"));
 
-// Loading component for Suspense fallback
-const PageLoader = () => (
-  <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-solo-dark to-gray-900">
-    <div className="text-center">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500 mx-auto mb-4"></div>
-      <p className="text-gray-300">Loading...</p>
-    </div>
-  </div>
-);
 import { useEffect, useState } from "react";
 import { useSoloLevelingStore } from "./lib/store";
 import ErrorBoundary from "./components/ErrorBoundary";
@@ -179,7 +170,7 @@ const App = () => {
           <Sonner />
           <BrowserRouter>
             <CurseChecker />
-            <Suspense fallback={<PageLoader />}>
+            <Suspense fallback={<LoadingScreen message="Loading page..." />}>
               <Routes>
                 <Route path="/" element={<LandingPage />} />
                 <Route element={<Layout />}>

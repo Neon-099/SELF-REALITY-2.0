@@ -16,6 +16,7 @@ import { Badge } from '@/components/ui/badge';
 import { motion } from 'framer-motion';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
+import { LoadingScreen } from '@/components/ui/loading-screen';
 
 // Utility function to convert Mission to PredefinedMission format
 const convertMissionToPredefined = (mission: Mission): PredefinedMission => {
@@ -778,9 +779,7 @@ const Missions = () => {
           {/* Missions View */}
           <div className="rounded-lg p-6 shadow-md border border-border/30">
             {isLoading ? (
-              <div className="flex justify-center p-8">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-              </div>
+              <LoadingScreen message="Loading missions..." />
             ) : error ? (
               <div className="text-center p-8 text-destructive">
                 <p>{error}</p>
