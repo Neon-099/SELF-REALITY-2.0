@@ -1,7 +1,6 @@
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Layout } from "./components/layout/Layout";
 import { Suspense, lazy } from "react";
@@ -86,7 +85,6 @@ const UserSetup = () => {
   );
 };
 
-const queryClient = new QueryClient();
 
 // Component to check for curse status and missed deadlines
 function CurseChecker(): React.ReactNode {
@@ -164,84 +162,82 @@ const App = () => {
 
   return (
     <ErrorBoundary>
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <CurseChecker />
-            <Suspense fallback={<LoadingScreen message="Loading page..." />}>
-              <Routes>
-                <Route path="/" element={<LandingPage />} />
-                <Route element={<Layout />}>
-                  {/* Main dashboard - primary entry point */}
-                  <Route path="/home" element={
-                    <ErrorBoundary>
-                      <Index />
-                    </ErrorBoundary>
-                  } />
-                  <Route path="/dashboard" element={<Navigate to="/home" replace />} />
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <CurseChecker />
+          <Suspense fallback={<LoadingScreen message="Loading page..." />}>
+            <Routes>
+              <Route path="/" element={<LandingPage />} />
+              <Route element={<Layout />}>
+                {/* Main dashboard - primary entry point */}
+                <Route path="/home" element={
+                  <ErrorBoundary>
+                    <Index />
+                  </ErrorBoundary>
+                } />
+                <Route path="/dashboard" element={<Navigate to="/home" replace />} />
 
-                  {/* Character management */}
-                  <Route path="/character" element={
-                    <ErrorBoundary>
-                      <Character />
-                    </ErrorBoundary>
-                  } />
-                  <Route path="/profile" element={<Navigate to="/character" replace />} />
+                {/* Character management */}
+                <Route path="/character" element={
+                  <ErrorBoundary>
+                    <Character />
+                  </ErrorBoundary>
+                } />
+                <Route path="/profile" element={<Navigate to="/character" replace />} />
 
-                  {/* Weekly planning */}
-                  <Route path="/planner" element={
-                    <ErrorBoundary>
-                      <Planner />
-                    </ErrorBoundary>
-                  } />
-                  <Route path="/weekly-planner" element={<Navigate to="/planner" replace />} />
+                {/* Weekly planning */}
+                <Route path="/planner" element={
+                  <ErrorBoundary>
+                    <Planner />
+                  </ErrorBoundary>
+                } />
+                <Route path="/weekly-planner" element={<Navigate to="/planner" replace />} />
 
-                  {/* Quest system */}
-                  <Route path="/quests" element={
-                    <ErrorBoundary>
-                      <Quests />
-                    </ErrorBoundary>
-                  } />
-                  <Route path="/quest-system" element={<Navigate to="/quests" replace />} />
+                {/* Quest system */}
+                <Route path="/quests" element={
+                  <ErrorBoundary>
+                    <Quests />
+                  </ErrorBoundary>
+                } />
+                <Route path="/quest-system" element={<Navigate to="/quests" replace />} />
 
-                  {/* Mission management */}
-                  <Route path="/missions" element={
-                    <ErrorBoundary>
-                      <Missions />
-                    </ErrorBoundary>
-                  } />
-                  <Route path="/mission-board" element={<Navigate to="/missions" replace />} />
+                {/* Mission management */}
+                <Route path="/missions" element={
+                  <ErrorBoundary>
+                    <Missions />
+                  </ErrorBoundary>
+                } />
+                <Route path="/mission-board" element={<Navigate to="/missions" replace />} />
 
-                  {/* Shop */}
-                  <Route path="/shop" element={
-                    <ErrorBoundary>
-                      <Shop />
-                    </ErrorBoundary>
-                  } />
+                {/* Shop */}
+                <Route path="/shop" element={
+                  <ErrorBoundary>
+                    <Shop />
+                  </ErrorBoundary>
+                } />
 
-                  {/* Rewards Journal */}
-                  <Route path="/rewards" element={
-                    <ErrorBoundary>
-                      <Rewards />
-                    </ErrorBoundary>
-                  } />
+                {/* Rewards Journal */}
+                <Route path="/rewards" element={
+                  <ErrorBoundary>
+                    <Rewards />
+                  </ErrorBoundary>
+                } />
 
-                  {/* Achievement tracking */}
-                  <Route path="/milestones" element={
-                    <ErrorBoundary>
-                      <Milestones />
-                    </ErrorBoundary>
-                  } />
-                  <Route path="/achievements" element={<Navigate to="/milestones" replace />} />
-                </Route>
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </Suspense>
-          </BrowserRouter>
-        </TooltipProvider>
-      </QueryClientProvider>
+                {/* Achievement tracking */}
+                <Route path="/milestones" element={
+                  <ErrorBoundary>
+                    <Milestones />
+                  </ErrorBoundary>
+                } />
+                <Route path="/achievements" element={<Navigate to="/milestones" replace />} />
+              </Route>
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Suspense>
+        </BrowserRouter>
+      </TooltipProvider>
     </ErrorBoundary>
   );
 };

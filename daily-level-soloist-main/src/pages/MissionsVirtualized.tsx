@@ -3,7 +3,7 @@ import { Lock, Plus, Star, HelpCircle, Eye, EyeOff } from 'lucide-react';
 import { useSoloLevelingStore } from '@/lib/store';
 import { Rank, Mission, Difficulty } from '@/lib/types';
 import { PredefinedMission } from '@/data/predefined-missions';
-import RankMissionProgress from '@/components/missions/RankMissionProgress';
+import RankMissionProgressVirtualized from '@/components/missions/RankMissionProgressVirtualized';
 import RankBadgesTimeline from '@/components/missions/RankBadgesTimeline';
 import { useToast } from '@/components/ui/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -17,7 +17,6 @@ import { motion } from 'framer-motion';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import { LoadingScreen } from '@/components/ui/loading-screen';
-
 
 // Utility function to convert Mission to PredefinedMission format
 const convertMissionToPredefined = (mission: Mission): PredefinedMission => {
@@ -38,6 +37,7 @@ interface RankLevel {
   isLocked: boolean;
   missions: PredefinedMission[];
 }
+
 // Define all rank levels with their UI properties
 const createRankLevels = (): RankLevel[] => [
   {
@@ -114,7 +114,7 @@ const createRankLevels = (): RankLevel[] => [
   }
 ];
 
-const Missions = () => {
+const MissionsVirtualized = () => {
   const [currentRankIndex, setCurrentRankIndex] = useState(0);
   const { user, missions, addMission } = useSoloLevelingStore(state => ({
     user: state.user,
@@ -464,7 +464,7 @@ const Missions = () => {
         <div className="space-y-8">
           <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-solo-primary to-solo-secondary bg-clip-text text-transparent drop-shadow-glow mb-4 flex items-center gap-2">
             <Lock className="h-8 w-8 text-yellow-400 drop-shadow-glow" />
-            Missions
+            Missions (Virtualized)
           </h1>
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-2">
@@ -739,6 +739,13 @@ const Missions = () => {
                         Complete missions in lower ranks to unlock higher rank missions. Each rank has a specific number of days that must be completed to progress.
                       </p>
                     </div>
+
+                    <div>
+                      <h3 className="font-semibold text-white/90 mb-2">Performance Improvements</h3>
+                      <p className="text-gray-300 leading-relaxed">
+                        This virtualized version uses pagination and virtual scrolling to handle large numbers of missions efficiently, reducing lag and improving performance.
+                      </p>
+                    </div>
                   </div>
                 </div>
 
@@ -796,8 +803,9 @@ const Missions = () => {
                 <Lock className="mx-auto h-12 w-12 text-gray-400 mb-4" />
                 <p className="text-gray-400 mb-4">
                   Complete the previous rank missions to unlock {currentRank.name} missions.
-                </p><div className="opacity-50">
-                  <RankMissionProgress
+                </p>
+                <div className="opacity-50">
+                  <RankMissionProgressVirtualized
                     key={currentRank.id}
                     missions={currentRank.missions}
                     rankName={currentRank.name}
@@ -814,7 +822,7 @@ const Missions = () => {
                 </p>
               </div>
             ) : (
-              <RankMissionProgress
+              <RankMissionProgressVirtualized
                 key={currentRank.id}
                 missions={currentRank.missions}
                 rankName={currentRank.name}
@@ -832,4 +840,4 @@ const Missions = () => {
   );
 };
 
-export default Missions;
+export default MissionsVirtualized;

@@ -29,7 +29,7 @@ export default defineConfig(({ mode }) => {
             vendor: ['react', 'react-dom'],
             router: ['react-router-dom'],
             ui: ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu'],
-            utils: ['zustand', '@tanstack/react-query']
+            utils: ['zustand']
           },
           // Optimize chunk file names
           chunkFileNames: 'assets/js/[name]-[hash].js',

@@ -81,30 +81,32 @@ export function Header() {
     <header className="sticky top-0 z-40 backdrop-blur-md bg-solo-dark/80 border-b border-gray-800/30 shadow-md">
       <div className="container flex justify-between items-center py-3 px-4">
         <div className="flex items-center">
-          <Link to="/" className="hover:opacity-80 transition-opacity">
-            {isMobile ? (
-              <div className="flex items-center gap-1">
+          {isMobile ? (
+            <div className="flex items-center gap-1">
+              <Link to="/" className="flex items-center gap-1 hover:opacity-80 transition-opacity">
                 <Sparkles className="h-5 w-5 text-solo-primary" />
                 <h1 className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-solo-primary to-solo-secondary glow-text">
                   Self Reality
                 </h1>
-                <Link to="/rewards" className="ml-2 hover:scale-110 transition-transform duration-200 relative">
-                  <Gift className={`h-5 w-5 transition-all duration-300 ${
-                    hasRewardsReady 
-                      ? 'text-yellow-400 animate-gift-glow' 
-                      : 'text-yellow-500 hover:text-yellow-400'
-                  }`} />
-                  {hasRewardsReady && (
-                    <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full animate-ping"></div>
-                  )}
-                </Link>
-              </div>
-            ) : (
+              </Link>
+              <Link to="/rewards" className="ml-2 hover:scale-110 transition-transform duration-200 relative">
+                <Gift className={`h-5 w-5 transition-all duration-300 ${
+                  hasRewardsReady
+                    ? 'text-yellow-400 animate-gift-glow'
+                    : 'text-yellow-500 hover:text-yellow-400'
+                }`} />
+                {hasRewardsReady && (
+                  <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full animate-ping"></div>
+                )}
+              </Link>
+            </div>
+          ) : (
+            <Link to="/" className="hover:opacity-80 transition-opacity">
               <h1 className="text-2xl font-bold text-solo-primary glow-text">
                 Self Reality Leveling
               </h1>
-            )}
-          </Link>
+            </Link>
+          )}
         </div>
         
         <div className="flex items-center">
