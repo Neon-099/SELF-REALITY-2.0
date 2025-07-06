@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { ArrowRight, Award, Shield, Star, Sword } from 'lucide-react';
+import { ArrowRight, CalendarDays, Gift, Skull, Award, Shield, Star, Swords } from 'lucide-react';
 import { CharacterNameDialog } from '@/components/CharacterNameDialog';
 import { useSoloLevelingStore } from '@/lib/store';
 
@@ -47,10 +47,50 @@ export default function Landing() {
           <Card className="bg-solo-dark/50 border-gray-800">
             <CardContent className="pt-6">
               <div className="rounded-full w-12 h-12 bg-solo-primary/20 flex items-center justify-center mb-4">
-                <Sword className="text-solo-primary" />
+                <CalendarDays className="text-solo-primary" />
               </div>
-              <h3 className="text-lg font-semibold mb-2">Daily Quests</h3>
-              <p className="text-gray-400">Complete daily challenges to earn experience and gold.</p>
+              <h3 className="text-lg font-semibold mb-2">Daily/Weekly tasks</h3>
+              <p className="text-gray-400">You can set your weekly tasks and later render it on daily tasks when the day comes.</p>
+            </CardContent>
+          </Card>
+          
+          <Card className="bg-solo-dark/50 border-gray-800">
+            <CardContent className="pt-6">
+              <div className="rounded-full w-12 h-12 bg-solo-primary/20 flex items-center justify-center mb-4">
+                <Swords className="text-solo-primary" />
+              </div>
+              <h3 className="text-lg font-semibold mb-2">Main, Side, and Daily Quests</h3>
+              <p className="text-gray-400">Complete main, side and non negotiable daily challenges to earn experience and gold.</p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-solo-dark/50 border-gray-800">
+            <CardContent className="pt-6">
+              <div className="rounded-full w-12 h-12 bg-solo-primary/20 flex items-center justify-center mb-4">
+                <Shield className="text-solo-primary" />
+              </div>
+              <h3 className="text-lg font-semibold mb-2">Daily/Weekly Missions</h3>
+              <p className="text-gray-400">Take on challenging missions to test your abilities.</p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-solo-dark/50 border-gray-800">
+            <CardContent className="pt-6">
+              <div className="rounded-full w-12 h-12 bg-solo-primary/20 flex items-center justify-center mb-4">
+                <Skull className="text-solo-primary" />
+              </div>
+              <h3 className="text-lg font-semibold mb-2">Shadow Penalty</h3>
+              <p className="text-gray-400">A consequence you'll face if you fail yo complete any challenges or tasks.</p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-solo-dark/50 border-gray-800">
+            <CardContent className="pt-6">
+              <div className="rounded-full w-12 h-12 bg-solo-primary/20 flex items-center justify-center mb-4">
+                <Gift className="text-solo-primary" />
+              </div>
+              <h3 className="text-lg font-semibold mb-2">Reward System</h3>
+              <p className="text-gray-400">You can create your daily, weekly reward system after completing each requirements.</p>
             </CardContent>
           </Card>
 
@@ -67,22 +107,14 @@ export default function Landing() {
           <Card className="bg-solo-dark/50 border-gray-800">
             <CardContent className="pt-6">
               <div className="rounded-full w-12 h-12 bg-solo-primary/20 flex items-center justify-center mb-4">
-                <Shield className="text-solo-primary" />
-              </div>
-              <h3 className="text-lg font-semibold mb-2">Weekly Missions</h3>
-              <p className="text-gray-400">Take on challenging missions to test your abilities.</p>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-solo-dark/50 border-gray-800">
-            <CardContent className="pt-6">
-              <div className="rounded-full w-12 h-12 bg-solo-primary/20 flex items-center justify-center mb-4">
                 <Award className="text-solo-primary" />
               </div>
               <h3 className="text-lg font-semibold mb-2">Achievements</h3>
               <p className="text-gray-400">Unlock rewards and titles as you accomplish goals.</p>
             </CardContent>
           </Card>
+
+          
         </div>
 
         {/* CTA Section */}
