@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useLayoutEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSoloLevelingStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -2516,12 +2516,19 @@ const Quests = () => {
                       <li>Choose quest type, set experience rewards</li>
                       <li>Add multiple tasks to break down complex objectives</li>
                       <li>Set deadlines to stay motivated</li>
+                      <li>Quest Experience Guide; to see how much EXP you can set from each quest depending on your rank and quest category</li>
                     </ul>
                   </div>
 
                   <div><h3 className="font-semibold text-white/90 mb-2">Daily Limits</h3>
                     <p className="text-gray-300 leading-relaxed">
-                      You can complete {mainQuests} Main Quest{mainQuests > 1 ? 's' : ''} and {sideQuests} Side Quest{sideQuests > 1 ? 's' : ''} per day. Daily Quests have no limits but must be completed by midnight to avoid Shadow Penalty.
+                      You can complete {mainQuests} Main Quest{mainQuests > 1 ? 's' : ''} and {sideQuests} Side Quest{sideQuests > 1 ? 's' : ''} per day (depends on your rank). Daily Quests have no limits but must be completed by midnight to avoid Shadow Penalty.
+                    </p>
+                  </div>
+
+                  <div>
+                    <h3 className="font-semibold text-white/90 mb-2">Quest Experience Guide</h3>
+                    <p className="text-gray-300 leading-relaxed">
                     </p>
                   </div>
                 </div>

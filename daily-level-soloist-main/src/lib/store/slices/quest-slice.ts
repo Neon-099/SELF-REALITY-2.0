@@ -96,7 +96,7 @@ export const createQuestSlice: StateCreator<StoreState, [], [], QuestSlice> = (s
       }));
     },
     startQuest: (id) => {
-      const { quests } = get();
+      const { quests, user } = get();
       const quest = quests.find(q => q.id === id);
 
       if (!quest) return;
@@ -129,20 +129,23 @@ export const createQuestSlice: StateCreator<StoreState, [], [], QuestSlice> = (s
           )
         ).length;
 
+        // Get quest limits based on user's rank
+        const { mainQuests, sideQuests } = getQuestLimitsByRank(user.rank);
+
         // Check limits
-        if (quest.isMainQuest && startedOrCompletedTodayMainQuests >= 1) {
+        if (quest.isMainQuest && startedOrCompletedTodayMainQuests >= mainQuests) {
           toast({
             title: "Daily Limit Reached",
-            description: "You can only start/complete 1 main quest per day. Try again tomorrow!",
+            description: `You can only start/complete ${mainQuests} main quest${mainQuests > 1 ? 's' : ''} per day. Try again tomorrow!`,
             variant: "destructive"
           });
           return;
         }
 
-        if (!quest.isMainQuest && !quest.isRecoveryQuest && startedOrCompletedTodaySideQuests >= 1) {
+        if (!quest.isMainQuest && !quest.isRecoveryQuest && startedOrCompletedTodaySideQuests >= sideQuests) {
           toast({
             title: "Daily Limit Reached",
-            description: "You can only start/complete 1 side quest per day. Try again tomorrow!",
+            description: `You can only start/complete ${sideQuests} side quest${sideQuests > 1 ? 's' : ''} per day. Try again tomorrow!`,
             variant: "destructive"
           });
           return;
@@ -273,7 +276,7 @@ export const createQuestSlice: StateCreator<StoreState, [], [], QuestSlice> = (s
       });
     },
     canCompleteQuest: (id) => {
-      const { quests, areSideQuestsLocked } = get();
+      const { quests, areSideQuestsLocked, user } = get();
       const quest = quests.find(q => q.id === id);
 
       // Quest not found
@@ -320,20 +323,23 @@ export const createQuestSlice: StateCreator<StoreState, [], [], QuestSlice> = (s
           )
         ).length;
 
+        // Get quest limits based on user's rank
+        const { mainQuests, sideQuests } = getQuestLimitsByRank(user.rank);
+
         // Check limits
-        if (quest.isMainQuest && usedTodayMainQuests >= 1) {
+        if (quest.isMainQuest && usedTodayMainQuests >= mainQuests) {
           toast({
             title: "Daily Limit Reached",
-            description: "You can only start/complete 1 main quest per day. Try again tomorrow!",
+            description: `You can only start/complete ${mainQuests} main quest${mainQuests > 1 ? 's' : ''} per day. Try again tomorrow!`,
             variant: "destructive"
           });
           return false;
         }
 
-        if (!quest.isMainQuest && !quest.isRecoveryQuest && usedTodaySideQuests >= 1) {
+        if (!quest.isMainQuest && !quest.isRecoveryQuest && usedTodaySideQuests >= sideQuests) {
           toast({
             title: "Daily Limit Reached",
-            description: "You can only start/complete 1 side quest per day. Try again tomorrow!",
+            description: `You can only start/complete ${sideQuests} side quest${sideQuests > 1 ? 's' : ''} per day. Try again tomorrow!`,
             variant: "destructive"
           });
           return false;
@@ -349,7 +355,7 @@ export const createQuestSlice: StateCreator<StoreState, [], [], QuestSlice> = (s
       return true;
     },
     canStartQuest: (id) => {
-      const { quests, areSideQuestsLocked } = get();
+      const { quests, areSideQuestsLocked, user } = get();
       const quest = quests.find(q => q.id === id);
 
       // Quest not found
@@ -391,12 +397,15 @@ export const createQuestSlice: StateCreator<StoreState, [], [], QuestSlice> = (s
           )
         ).length;
 
+        // Get quest limits based on user's rank
+        const { mainQuests, sideQuests } = getQuestLimitsByRank(user.rank);
+
         // Check limits
-        if (quest.isMainQuest && usedTodayMainQuests >= 1) {
+        if (quest.isMainQuest && usedTodayMainQuests >= mainQuests) {
           return false;
         }
 
-        if (!quest.isMainQuest && !quest.isRecoveryQuest && usedTodaySideQuests >= 1) {
+        if (!quest.isMainQuest && !quest.isRecoveryQuest && usedTodaySideQuests >= sideQuests) {
           return false;
         }
       }
